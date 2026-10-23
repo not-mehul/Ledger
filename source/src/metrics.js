@@ -1,0 +1,138 @@
+export const METRICS = [
+  {
+    id: "greenery",
+    label: "Greenery & Nature Access",
+    weight: 2,
+    cat: "env",
+    high: true,
+    lo: "Barren",
+    hi: "Lush",
+  },
+  {
+    id: "airQuality",
+    label: "Air Quality",
+    weight: 1.5,
+    cat: "env",
+    high: false,
+    lo: "Polluted",
+    hi: "Pristine",
+  },
+  {
+    id: "temperature",
+    label: "Temperature Comfort",
+    weight: 1,
+    cat: "env",
+    high: false,
+    lo: "Unbearable",
+    hi: "Perfect",
+  },
+  {
+    id: "visualBeauty",
+    label: "Visual Beauty",
+    weight: 1,
+    cat: "city",
+    high: false,
+    lo: "Dull",
+    hi: "Stunning",
+  },
+  {
+    id: "cleanliness",
+    label: "Cleanliness",
+    weight: 1,
+    cat: "city",
+    high: false,
+    lo: "Grimy",
+    hi: "Immaculate",
+  },
+  {
+    id: "walkability",
+    label: "Walkability",
+    weight: 1,
+    cat: "city",
+    high: false,
+    lo: "Car-only",
+    hi: "Walk heaven",
+  },
+  {
+    id: "foodQuality",
+    label: "Food Quality",
+    weight: 2,
+    cat: "food",
+    high: true,
+    lo: "Disappointing",
+    hi: "Exceptional",
+  },
+  {
+    id: "foodAffordability",
+    label: "Food Affordability",
+    weight: 1,
+    cat: "food",
+    high: false,
+    lo: "Expensive",
+    hi: "Very cheap",
+  },
+  {
+    id: "safety",
+    label: "Safety",
+    weight: 2,
+    cat: "people",
+    high: true,
+    lo: "Unsafe",
+    hi: "Very safe",
+  },
+  {
+    id: "friendliness",
+    label: "Friendliness",
+    weight: 1,
+    cat: "people",
+    high: false,
+    lo: "Hostile",
+    hi: "Welcoming",
+  },
+  {
+    id: "internet",
+    label: "Internet Speed",
+    weight: 2,
+    cat: "practical",
+    high: true,
+    lo: "Unusable",
+    hi: "Blazing fast",
+  },
+  {
+    id: "returnDesire",
+    label: "Return Desire",
+    weight: 2,
+    cat: "overall",
+    high: true,
+    lo: "Never again",
+    hi: "Must return",
+  },
+];
+
+// Maps a metric's `cat` to the container <div> in index.html that holds its slider.
+export const CATEGORY_CONTAINERS = {
+  env: "cat-env",
+  city: "cat-city",
+  food: "cat-food",
+  people: "cat-people",
+  practical: "cat-practical",
+  overall: "cat-overall",
+};
+
+// Grouping used by the logbook card detail view and the Markdown export.
+export const METRIC_GROUPS = [
+  {
+    label: "🌿 Environment & Nature",
+    ids: ["greenery", "airQuality", "temperature"],
+  },
+  {
+    label: "🏙️ City Feel",
+    ids: ["visualBeauty", "cleanliness", "walkability"],
+  },
+  { label: "🍽️ Food Scene", ids: ["foodQuality", "foodAffordability"] },
+  { label: "👥 People & Safety", ids: ["safety", "friendliness"] },
+  { label: "⚡ Practical", ids: ["internet"] },
+  { label: "🧭 Overall", ids: ["returnDesire"] },
+];
+
+export const TOTAL_WEIGHT = METRICS.reduce((sum, m) => sum + m.weight, 0);

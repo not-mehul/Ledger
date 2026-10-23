@@ -1,0 +1,16 @@
+{
+	"appId": "com.travellogbook.app",
+	"appName": "Travel Logbook",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false
+	},
+	"plugins": {
+		"CapacitorSQLite": {
+			"androidIsEncryption": false
+		}
+	}
+}
