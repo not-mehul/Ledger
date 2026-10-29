@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Vite build output
+dist/
+
+# Capacitor generated platform — keep your manifest changes elsewhere
+android/
+
+# Editor / OS noise
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Environment
+.env
+.env.local
