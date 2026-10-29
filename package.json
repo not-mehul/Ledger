@@ -1,0 +1,25 @@
+{
+  "name": "travel-logbook",
+  "version": "1.0.0",
+  "description": "Travel Logbook — a record of cities, their character, and your place in them.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "icons": "npx capacitor-assets generate --android",
+    "sync": "npm run build && npx cap sync android",
+    "android": "npm run build && npx cap copy android && npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.1",
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/filesystem": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0",
+    "vite": "^5.4.10"
+  }
+}
