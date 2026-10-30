@@ -83,8 +83,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 37 is the target SDK; 36 covers the previous release.
-        api-level: ['37.0', '36']
+        # 37 is the target SDK; 36 covers the previous release. Ledger uses no
+        # Google APIs, so API 37 runs on the leaner AOSP ("default") image.
+        include:
+          - api-level: '37.0'
+            target: default
+          - api-level: '36'
+            target: google_apis
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
@@ -99,7 +104,7 @@ jobs:
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
-          target: google_apis
+          target: ${{ matrix.target }}
           arch: x86_64
           cores: 4
           ram-size: 4096M

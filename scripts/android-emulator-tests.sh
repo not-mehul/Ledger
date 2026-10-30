@@ -52,12 +52,32 @@ ensure_installed "$PKG.test" "$TEST_APK"
 # Re-check right before running: a restart could have dropped an install.
 ensure_installed "$PKG" "$APP_APK"
 
-OUT=$(adb shell am instrument -w -r "$PKG.test/androidx.test.runner.AndroidJUnitRunner")
+run_tests() {
+  adb shell am instrument -w -r "$PKG.test/androidx.test.runner.AndroidJUnitRunner" || true
+}
+
+dump_crashes() {
+  echo "---- crash buffer ----" >&2
+  adb logcat -d -b crash 2>/dev/null | tail -150 >&2 || true
+}
+
+OUT=$(run_tests)
 echo "$OUT"
+# A crash of Android itself (not the app) is environmental: retry once.
+if grep -q "System has crashed" <<<"$OUT"; then
+  dump_crashes
+  echo "The emulator's system server crashed; retrying the tests once." >&2
+  wait_for_system
+  ensure_installed "$PKG" "$APP_APK"
+  ensure_installed "$PKG.test" "$TEST_APK"
+  OUT=$(run_tests)
+  echo "$OUT"
+fi
 # Raw output reports status 0 per passing test, -2 per failure and -1 per error.
 passed=$(grep -c "INSTRUMENTATION_STATUS_CODE: 0" <<<"$OUT" || true)
-if grep -qE "INSTRUMENTATION_STATUS_CODE: -[12]|INSTRUMENTATION_FAILED|Process crashed" <<<"$OUT" \
+if grep -qE "INSTRUMENTATION_STATUS_CODE: -[12]|INSTRUMENTATION_FAILED|INSTRUMENTATION_ABORTED|Process crashed" <<<"$OUT" \
   || ! grep -q "INSTRUMENTATION_CODE: -1" <<<"$OUT" || [[ "$passed" -lt 1 ]]; then
+  dump_crashes
   echo "Instrumented tests failed." >&2
   exit 1
 fi
