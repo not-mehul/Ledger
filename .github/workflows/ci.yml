@@ -77,9 +77,14 @@ jobs:
             android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
   android-emulator:
-    name: Android emulator tests (API 37)
+    name: Android emulator tests (API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
     needs: android
+    strategy:
+      fail-fast: false
+      matrix:
+        # 37 is the target SDK; 36 covers the previous release.
+        api-level: ['37.0', '36']
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
@@ -93,11 +98,17 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: '37.0'
+          api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6G
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          # Start adb before the emulator; if the emulator comes up first it can
+          # stay "offline" for the whole boot timeout.
+          pre-emulator-launch-script: adb start-server
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
           script: scripts/android-emulator-tests.sh apks
 
   ios:
