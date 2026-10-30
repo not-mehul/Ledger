@@ -99,7 +99,7 @@ Locally, Playwright can reuse an installed Chromium with
 | Lint, typecheck, unit tests | `npm run check` and a production build |
 | End-to-end | Playwright: entries, photos, share cards, custom metrics, every export format and backup restore, map, theme and language |
 | Android build | Debug, R8-minified release and test APKs, Android lint |
-| Android emulator (API 37) | Espresso-Web tests driving the real WebView and on-device storage, then a launch smoke test of the minified release build |
+| Android emulator (API 36, 37) | Espresso-Web tests driving the real WebView and on-device storage, then a launch smoke test of the minified release build. API 37 is non-blocking for now: the current emulator image crashes its own system process (see ROADMAP.md) |
 | iOS | Simulator build with Xcode |
 
 APKs are uploaded as workflow artifacts.

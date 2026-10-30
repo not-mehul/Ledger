@@ -2,8 +2,10 @@
 
 ## Done in 2.1
 
-- Release builds shrunk with R8; targets Android 17 (API 37), verified
-  on an API 37 emulator in CI.
+- Release builds shrunk with R8; targets Android 17 (API 37). The full
+  instrumented and release smoke tests pass on an API 36 emulator in CI;
+  on API 37 the app launches and passes its first test before the
+  emulator's own system process crashes (see below).
 - User-defined metrics and categories.
 - Offline city autocomplete and a map of visited places.
 - Photos on entries and shareable city cards.
@@ -15,6 +17,12 @@
 - UI rebuilt on Svelte 5.
 
 ## Still to do
+
+- **Make the API 37 emulator job blocking again.** Current API 37 images
+  crash `system_server` in its task-snapshot thread
+  (`Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma`), so
+  that CI job is marked `experimental`. Flip it back once a fixed system
+  image ships, and give Ledger a pass on a physical Android 17 device.
 
 - **Rotate the old signing key and clean history.** `keystore.jks` and a
   24 MB APK are still in early commits. Sign Ledger with a new key and
