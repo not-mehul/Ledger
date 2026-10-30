@@ -8,31 +8,50 @@ set -euo pipefail
 
 DIR=${1:?usage: android-emulator-tests.sh <apk dir>}
 PKG=io.github.notmehul.ledger
+APP_APK="$DIR/debug/app-debug.apk"
+TEST_APK="$DIR/androidTest/debug/app-debug-androidTest.apk"
 
-# sys.boot_completed can flip before the package manager accepts installs.
-wait_for_package_manager() {
-  for _ in $(seq 1 60); do
-    adb shell pm path android >/dev/null 2>&1 && return 0
+# sys.boot_completed can flip before the package and activity services are
+# usable, and a fresh image may still restart system_server once.
+wait_for_system() {
+  for _ in $(seq 1 90); do
+    if adb shell pm path android >/dev/null 2>&1 && adb shell am get-current-user >/dev/null 2>&1; then
+      return 0
+    fi
     sleep 2
   done
-  echo "Package manager never became ready." >&2
+  echo "System services never became ready." >&2
   return 1
 }
 
-install() {
+is_installed() {
+  local out
+  out=$(adb shell pm path "$1" 2>/dev/null || true)
+  [[ "$out" == *package:* ]]
+}
+
+# Installs the APK unless the package is already present; retries on failures.
+ensure_installed() {
+  local pkg=$1 apk=$2
   for attempt in 1 2 3 4 5; do
-    adb install -r "$1" && return 0
-    echo "Install attempt $attempt failed; retrying…" >&2
-    sleep 5
-    wait_for_package_manager
+    is_installed "$pkg" && return 0
+    adb install -r "$apk" || echo "Install attempt $attempt of $pkg failed; retrying…" >&2
+    sleep 3
+    wait_for_system
   done
-  return 1
+  is_installed "$pkg"
 }
 
 adb wait-for-device
-wait_for_package_manager
-install "$DIR/debug/app-debug.apk"
-install "$DIR/androidTest/debug/app-debug-androidTest.apk"
+wait_for_system
+sleep 10 # let a post-boot system_server restart happen before installing
+wait_for_system
+
+ensure_installed "$PKG" "$APP_APK"
+ensure_installed "$PKG.test" "$TEST_APK"
+# Re-check right before running: a restart could have dropped an install.
+ensure_installed "$PKG" "$APP_APK"
+
 OUT=$(adb shell am instrument -w -r "$PKG.test/androidx.test.runner.AndroidJUnitRunner")
 echo "$OUT"
 # Raw output reports status 0 per passing test, -2 per failure and -1 per error.

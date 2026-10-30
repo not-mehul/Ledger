@@ -19,23 +19,34 @@ adb logcat -c
 adb shell am start -W -n "$PKG/.MainActivity"
 
 # The WebView exposes its content to UI Automator once rendered.
+rendered=""
 for _ in $(seq 1 30); do
   sleep 2
-  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || continue
-  if adb shell cat /sdcard/ui.xml | grep -qi 'save entry'; then
+  ui=$(adb exec-out uiautomator dump /dev/tty 2>/dev/null || true)
+  if grep -qi 'save entry' <<<"$ui"; then
     rendered=1
     break
   fi
 done
 
-if adb logcat -d | grep -E "FATAL EXCEPTION|ClassNotFoundException|NoSuchMethodException" ; then
+PID=$(adb shell pidof "$PKG" | tr -d '\r' || true)
+# Only this app's crashes and missing-class errors count, not other processes'.
+# (Output is captured first: with pipefail, `cmd | grep -q` can fail on SIGPIPE.)
+crashes=$(adb logcat -d -b crash || true)
+app_log=""
+[[ -n "$PID" ]] && app_log=$(adb logcat -d --pid="$PID" || true)
+if grep -q "$PKG" <<<"$crashes" \
+  || grep -E "FATAL EXCEPTION|ClassNotFoundException|NoSuchMethodException|NoClassDefFoundError" <<<"$app_log"; then
   echo "Release build crashed or hit a missing class (check R8 keep rules)." >&2
   exit 1
 fi
-if [[ -z "${rendered:-}" ]]; then
-  echo "App never rendered its entry form." >&2
-  adb logcat -d | tail -200 >&2
+if [[ -z "$PID" ]]; then
+  echo "App is not running." >&2
   exit 1
 fi
-adb shell pidof "$PKG" >/dev/null || { echo "App is not running." >&2; exit 1; }
+if [[ -z "$rendered" ]]; then
+  echo "App never rendered its entry form." >&2
+  tail -100 <<<"$app_log" >&2
+  exit 1
+fi
 echo "Release smoke test passed."
