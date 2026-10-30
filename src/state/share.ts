@@ -1,20 +1,18 @@
 import { photoUrl } from '../data/photo-store';
 import type { Entry } from '../domain/entry';
-import { activeCategories, metricsIn } from '../domain/metrics';
+import { categoryAverage, type YearReview } from '../domain/insights';
+import { activeCategories } from '../domain/metrics';
 import { categoryName, locale, t } from '../i18n/index.svelte';
 import { formatMonth } from '../lib/dates';
-import { renderCard } from '../lib/share-card';
+import { renderCard, renderReviewCard } from '../lib/share-card';
 import { shareFile } from '../platform/output';
 import { ledger } from './ledger.svelte';
 
 /** Average rating per category, for categories the entry has ratings in. */
 export function categoryAverages(entry: Entry): { label: string; average: number }[] {
   return activeCategories(ledger.config).flatMap((cat) => {
-    const values = metricsIn(ledger.config, cat.id)
-      .map((m) => entry.ratings[m.id])
-      .filter((v): v is number => typeof v === 'number');
-    if (!values.length) return [];
-    return [{ label: categoryName(cat), average: values.reduce((a, b) => a + b, 0) / values.length }];
+    const average = categoryAverage(entry, ledger.config, cat.id);
+    return average === null ? [] : [{ label: categoryName(cat), average }];
   });
 }
 
@@ -33,5 +31,22 @@ export async function shareEntryCard(entry: Entry): Promise<void> {
   await shareFile(
     { name: `ledger-${slug}.png`, data: new Uint8Array(await blob.arrayBuffer()), mime: 'image/png' },
     t('action.share'),
+  );
+}
+
+export async function shareYearReview(review: YearReview, stats: { value: string; label: string }[]): Promise<void> {
+  const blob = await renderReviewCard({
+    kicker: review.year === null ? t('insights.allTime') : t('insights.review'),
+    title: review.year === null ? t('insights.reviewTitleAll') : t('insights.reviewTitle', { year: review.year }),
+    stats,
+    best: review.best
+      ? { label: t('insights.best'), city: review.best.entry.city, score: review.best.value }
+      : undefined,
+    winners: review.winners.map((w) => ({ label: categoryName(w.category), city: w.entry.city, average: w.average })),
+    brand: 'Ledger',
+  });
+  await shareFile(
+    { name: `ledger-${review.year ?? 'all-time'}-review.png`, data: new Uint8Array(await blob.arrayBuffer()), mime: 'image/png' },
+    t('insights.share'),
   );
 }

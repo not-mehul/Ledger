@@ -24,7 +24,8 @@ test('switches theme and language, and remembers them', async ({ page }) => {
   await page.click('[data-theme-option="light"]');
   await page.selectOption('#languageSelect', 'de');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await expect(page.locator('#tabSettings')).toHaveText('Einstellungen');
+  await expect(page.locator('#tabSettings')).toHaveAccessibleName('Einstellungen');
+  await expect(page.locator('#tabInsights')).toHaveText('Auswertung');
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');

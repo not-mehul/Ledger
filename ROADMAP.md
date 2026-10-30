@@ -16,6 +16,12 @@
   languages.
 - UI rebuilt on Svelte 5.
 
+## Done since 2.1 (unreleased)
+
+- Insights tab: year in review with a share card, rankings per category
+  or metric, and value signals that suggest metric weights from how each
+  metric correlates with "would return". Settings moved to a gear button.
+
 ## Still to do
 
 - **Make the API 37 emulator job blocking again.** Current API 37 images
@@ -31,8 +37,8 @@
   TestFlight, with signing secrets in CI.
 - **Richer visits.** Exact dates or ranges, repeat visits to a city, and a
   timeline of how a rating changed.
-- **Compare and rank.** Side-by-side comparison, per-category leaderboards
-  and charts.
+- **Compare.** Side-by-side comparison of two or three cities, and
+  charts of scores over time (rankings are done).
 - **Background backups.** Today automatic backups run when the app opens;
   a WorkManager / BGTaskScheduler job could run them without opening it.
 - **Cloud sync.** Optional sync through the user's own storage (Google

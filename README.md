@@ -13,7 +13,7 @@ calls.
 ## Features
 
 - **Weighted scoring** with a live score dial. Metrics are yours to
-  rename, re-weight, reorder, hide or add (Settings → Metrics); scores
+  rename, re-weight, reorder, hide or add (⚙ Settings → Metrics); scores
   update everywhere and only count what an entry actually rated.
 - **City autocomplete** from an offline list of 34,000 cities, which also
   places the entry on the map.
@@ -22,6 +22,11 @@ calls.
   unambiguous.
 - **Photos** from the gallery or camera, with a full-screen viewer, and a
   shareable **city card** image.
+- **Insights.** A **year in review** (cities, countries, months on the
+  road, distance, best and worst city, category winners) with a shareable
+  card; **rankings** by overall score, any category or any single metric;
+  and **what you actually value**, which compares each metric with how
+  much you'd return to a city and suggests weights that match.
 - **Export** as Markdown, CSV, JSON, or a full `.zip` backup with photos;
   **import** any of them, including Travel Logbook exports. The most
   recently saved copy of each entry wins.

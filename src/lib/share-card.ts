@@ -1,5 +1,5 @@
 // ============================================================
-// Renders an entry as a 1080×1350 PNG "city card" for sharing.
+// Renders 1080×1350 PNG cards for sharing: a single city, or a year in review.
 // Always uses the dark brand palette, whatever the app theme.
 // ============================================================
 
@@ -160,6 +160,108 @@ export async function renderCard(data: CardData): Promise<Blob> {
   }
 
   // Footer.
+  ctx.fillStyle = C.amber;
+  ctx.font = `italic 400 40px ${SERIF}`;
+  ctx.fillText(data.brand, PAD, H - 56);
+
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Canvas export failed'))), 'image/png'),
+  );
+}
+
+// ---------- year in review ----------
+
+export interface ReviewCardData {
+  /** e.g. "Year in review" */
+  kicker: string;
+  /** e.g. "2025 in Ledger" */
+  title: string;
+  /** Up to six big numbers with labels. */
+  stats: { value: string; label: string }[];
+  best?: { label: string; city: string; score: number };
+  /** Category winners: "Food Scene" → "Kyoto", 9.0 */
+  winners: { label: string; city: string; average: number }[];
+  brand: string;
+}
+
+export async function renderReviewCard(data: ReviewCardData): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2D canvas unavailable');
+
+  ctx.fillStyle = C.surface;
+  ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(W * 0.9, 0, 0, W * 0.9, 0, W);
+  glow.addColorStop(0, 'rgba(212, 165, 116, 0.2)');
+  glow.addColorStop(1, 'rgba(212, 165, 116, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  let y = PAD + 30;
+  ctx.fillStyle = C.amber;
+  ctx.font = `500 24px ${MONO}`;
+  spaced(ctx, data.kicker.toUpperCase(), PAD, y, 8);
+  y += 100;
+  ctx.fillStyle = C.cream;
+  const titleSize = fitFont(ctx, data.title, W - PAD * 2, 96, 48, SERIF);
+  ctx.font = `italic 400 ${titleSize}px ${SERIF}`;
+  ctx.fillText(data.title, PAD, y);
+
+  // Stats grid: three columns, two rows.
+  y += 110;
+  const colW = (W - PAD * 2) / 3;
+  data.stats.slice(0, 6).forEach((stat, i) => {
+    const x = PAD + (i % 3) * colW;
+    const rowY = y + Math.floor(i / 3) * 170;
+    ctx.fillStyle = C.cream;
+    fitFont(ctx, stat.value, colW - 24, 80, 36, MONO);
+    ctx.fillText(stat.value, x, rowY + 70);
+    ctx.fillStyle = C.label;
+    ctx.font = `500 20px ${SANS}`;
+    spaced(ctx, stat.label.toUpperCase(), x, rowY + 110, 3);
+  });
+  y += 340 + 30;
+
+  // Divider.
+  ctx.fillStyle = C.track;
+  ctx.fillRect(PAD, y, W - PAD * 2, 2);
+  y += 70;
+
+  if (data.best) {
+    const color = scoreTier(data.best.score).color;
+    ctx.fillStyle = C.label;
+    ctx.font = `500 22px ${SANS}`;
+    spaced(ctx, data.best.label.toUpperCase(), PAD, y, 4);
+    y += 66;
+    ctx.fillStyle = C.cream;
+    fitFont(ctx, data.best.city, W - PAD * 2 - 200, 64, 36, SERIF);
+    ctx.fillText(data.best.city, PAD, y);
+    ctx.fillStyle = color;
+    ctx.font = `500 60px ${MONO}`;
+    ctx.textAlign = 'right';
+    ctx.fillText(String(Math.round(data.best.score)), W - PAD, y);
+    ctx.textAlign = 'left';
+    y += 70;
+  }
+
+  for (const w of data.winners.slice(0, 5)) {
+    ctx.fillStyle = C.label;
+    ctx.font = `500 21px ${SANS}`;
+    spaced(ctx, w.label.toUpperCase().slice(0, 24), PAD, y, 3);
+    ctx.fillStyle = C.cream;
+    ctx.font = `400 30px ${SERIF}`;
+    const city = w.city.length > 22 ? `${w.city.slice(0, 21)}…` : w.city;
+    ctx.fillText(city, PAD + 470, y);
+    ctx.fillStyle = scoreTier(w.average * 10).color;
+    ctx.font = `400 26px ${MONO}`;
+    ctx.textAlign = 'right';
+    ctx.fillText(w.average.toFixed(1), W - PAD, y);
+    ctx.textAlign = 'left';
+    y += 50;
+  }
+
   ctx.fillStyle = C.amber;
   ctx.font = `italic 400 40px ${SERIF}`;
   ctx.fillText(data.brand, PAD, H - 56);

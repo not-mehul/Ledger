@@ -2,7 +2,7 @@
 
 import type { Entry } from '../domain/entry';
 
-export type Tab = 'entry' | 'ledger' | 'map' | 'settings';
+export type Tab = 'entry' | 'ledger' | 'map' | 'insights' | 'settings';
 export type ToastKind = 'success' | 'error' | 'info';
 
 class UiState {
