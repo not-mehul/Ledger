@@ -1,11 +1,12 @@
 // Thin wrapper over @capacitor/filesystem for the app's private data
-// directory (native: the app's files dir, included in OS backups;
-// web: IndexedDB).
+// directory: Android's files dir (Auto Backup rules in res/xml), iOS's
+// Library (iCloud-backed, hidden from the Files app — unlike Documents,
+// which Ledger shares for exports), and IndexedDB on the web.
 
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { base64ToBytes, bytesToBase64 } from '../lib/base64';
 
-const dir = Directory.Data;
+const dir = Directory.Library;
 
 export async function readText(path: string): Promise<string> {
   const { data } = await Filesystem.readFile({ path, directory: dir, encoding: Encoding.UTF8 });
