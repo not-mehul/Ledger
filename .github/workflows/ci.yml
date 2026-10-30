@@ -123,6 +123,9 @@ jobs:
           # Start adb before the emulator; if the emulator comes up first it can
           # stay "offline" for the whole boot timeout.
           pre-emulator-launch-script: adb start-server
+          # Keep boot + tests (5 min each, one retry) well inside the job's
+          # timeout so a stuck emulator fails the job instead of cancelling it.
+          emulator-boot-timeout: 420
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
           script: scripts/android-emulator-tests.sh apks
 

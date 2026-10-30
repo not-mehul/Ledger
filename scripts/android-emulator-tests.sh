@@ -57,7 +57,7 @@ ensure_installed "$PKG" "$APP_APK"
 
 run_tests() {
   # `am instrument -w` blocks until the run ends; never let it hang the job.
-  timeout 600 adb shell am instrument -w -r "$PKG.test/androidx.test.runner.AndroidJUnitRunner" || true
+  timeout 300 adb shell am instrument -w -r "$PKG.test/androidx.test.runner.AndroidJUnitRunner" || true
 }
 
 dump_crashes() {
