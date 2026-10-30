@@ -1,17 +1,34 @@
 // ============================================================
 // Markdown export / import.
-// Each entry embeds its JSON in an HTML comment so a file written
-// by `buildMarkdown` can be read back losslessly by `parseMarkdown`.
+// Each entry embeds its JSON in an HTML comment, and the metric
+// configuration is embedded once, so a file written by
+// `buildMarkdown` can be read back losslessly by `parseMarkdown`.
 // Files exported by Travel Logbook (the app's former name) use the
-// same format and import cleanly.
+// same entry format and import cleanly.
 // ============================================================
 
-import { normalizeEntry, sortEntries, type Entry } from '../domain/entry';
-import { CATEGORIES, RATING_DEFAULT, RATING_MAX, metricsIn } from '../domain/metrics';
-import { scoreTier } from '../domain/score';
+import { sortEntries, type Entry } from '../domain/entry';
+import { activeCategories, metricsIn, normalizeConfig, RATING_MAX, type MetricConfig } from '../domain/metrics';
+import { calcScore, scoreTier } from '../domain/score';
+import { categoryName, metricName, type Locale, type Translate } from '../i18n/index.svelte';
+import { normalizeEntry } from '../domain/entry';
 import { formatMonth } from './dates';
 
+export interface ExportContext {
+  config: MetricConfig;
+  t: Translate;
+  locale: Locale;
+}
+
+export interface ParsedImport {
+  entries: Entry[];
+  /** Data blocks that were present but could not be read. */
+  skipped: number;
+  config?: MetricConfig;
+}
+
 const DATA_RE = /^<!-- data:(.*) -->$/;
+const METRICS_RE = /^<!-- metrics:(.*) -->$/;
 
 function bar(value: number, max = RATING_MAX): string {
   const filled = Math.max(0, Math.min(max, Math.round(value)));
@@ -19,8 +36,8 @@ function bar(value: number, max = RATING_MAX): string {
 }
 
 /** JSON can only contain "-->" inside strings, where "\u003e" is an equivalent escape. */
-function embedJson(entry: Entry): string {
-  return JSON.stringify(entry).replaceAll('-->', '--\\u003e');
+function embedJson(value: unknown): string {
+  return JSON.stringify(value).replaceAll('-->', '--\\u003e');
 }
 
 /** Cells can't contain raw pipes or newlines. */
@@ -28,48 +45,51 @@ function cell(text: string): string {
   return text.replaceAll('|', '\\|').replaceAll('\n', ' ');
 }
 
-export function buildMarkdown(entries: readonly Entry[], now = new Date()): string {
-  const exportDate = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  const exportTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+export function buildMarkdown(entries: readonly Entry[], ctx: ExportContext, now = new Date()): string {
+  const { config, t, locale } = ctx;
+  const exported = now.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
 
   const lines: string[] = [
-    '# 🧭 Ledger',
-    '*A record of cities visited, their character, and your place in them.*',
+    `# 🧭 ${t('md.title')}`,
+    `*${t('md.subtitle')}*`,
     '',
-    `> **Total cities logged:** ${entries.length}`,
-    `> **Exported:** ${exportDate} · ${exportTime}`,
+    `> **${t('md.total')}:** ${entries.length}`,
+    `> **${t('md.exported')}:** ${exported}`,
     `<!-- exportedAt:${now.toISOString()} -->`,
+    `<!-- metrics:${embedJson(config)} -->`,
     '',
     '---',
     '',
   ];
 
   for (const e of sortEntries(entries, 'date')) {
-    const { marker } = scoreTier(e.score);
+    const score = calcScore(e.ratings, config);
+    const scoreText = score === null ? '—' : `${scoreTier(score).marker} **${score}** / 100`;
     lines.push(
       `## ${e.city} · ${e.state}`,
-      `*${formatMonth(e.date)} · ${marker} Score: **${e.score}** / 100*`,
+      `*${formatMonth(e.date, locale)} · ${scoreText}*`,
       '',
       `<!-- data:${embedJson(e)} -->`,
       '',
     );
 
-    for (const cat of CATEGORIES) {
-      lines.push(`### ${cat.label}`, '| Metric | Rating | Weight |', '|--------|--------|--------|');
-      for (const m of metricsIn(cat.id)) {
-        const val = e.ratings[m.id] ?? RATING_DEFAULT;
-        lines.push(`| ${cell(m.label)} | \`${bar(val)}\` ${val}/${RATING_MAX} | ×${m.weight} |`);
+    for (const cat of activeCategories(config)) {
+      const rated = metricsIn(config, cat.id).filter((m) => typeof e.ratings[m.id] === 'number');
+      if (!rated.length) continue;
+      lines.push(
+        `### ${cat.icon ? `${cat.icon} ` : ''}${categoryName(cat, t)}`,
+        `| ${t('md.metric')} | ${t('md.rating')} | ${t('md.weight')} |`,
+        '|--------|--------|--------|',
+      );
+      for (const m of rated) {
+        const val = e.ratings[m.id]!;
+        lines.push(`| ${cell(metricName(m, t))} | \`${bar(val)}\` ${val}/${RATING_MAX} | ×${m.weight} |`);
       }
       lines.push('');
     }
 
     if (e.notes) {
-      lines.push('### Notes', `> ${e.notes.replaceAll('\n', '\n> ')}`, '');
+      lines.push(`### ${t('md.notes')}`, `> ${e.notes.replaceAll('\n', '\n> ')}`, '');
     }
     lines.push('---', '');
   }
@@ -77,31 +97,31 @@ export function buildMarkdown(entries: readonly Entry[], now = new Date()): stri
   return lines.join('\n');
 }
 
-function parseEntryJson(json: string): Entry | null {
+function parseJson(json: string): unknown {
   try {
-    return normalizeEntry(JSON.parse(json));
+    return JSON.parse(json);
   } catch {
-    return null;
+    return undefined;
   }
 }
 
-export interface ParseResult {
-  entries: Entry[];
-  /** Data blocks that were present but could not be read. */
-  skipped: number;
-}
+export function parseMarkdown(markdown: string): ParsedImport {
+  const result: ParsedImport = { entries: [], skipped: 0 };
 
-export function parseMarkdown(markdown: string): ParseResult {
-  const entries: Entry[] = [];
-  let skipped = 0;
-
-  for (const line of markdown.split(/\r?\n/)) {
-    const match = DATA_RE.exec(line.trim());
-    if (!match) continue;
-    const entry = parseEntryJson(match[1]!);
-    if (entry) entries.push(entry);
-    else skipped++;
+  for (const raw of markdown.split(/\r?\n/)) {
+    const line = raw.trim();
+    const metrics = METRICS_RE.exec(line);
+    if (metrics) {
+      const config = parseJson(metrics[1]!);
+      if (config) result.config = normalizeConfig(config);
+      continue;
+    }
+    const data = DATA_RE.exec(line);
+    if (!data) continue;
+    const entry = normalizeEntry(parseJson(data[1]!));
+    if (entry) result.entries.push(entry);
+    else result.skipped++;
   }
 
-  return { entries, skipped };
+  return result;
 }

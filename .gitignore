@@ -22,3 +22,7 @@ keystore.properties
 # Environment
 .env
 .env.local
+
+# Test output
+test-results/
+playwright-report/

@@ -1,42 +1,56 @@
-import { METRICS, RATING_DEFAULT, RATING_MAX } from './metrics';
+import { RATING_MAX, activeMetrics, type MetricConfig } from './metrics';
 
 export type Ratings = Record<string, number>;
 
-const TOTAL_WEIGHT = METRICS.reduce((sum, m) => sum + m.weight, 0);
-
-/** Weighted score on a 0–100 scale, rounded to one decimal place. */
-export function calcScore(ratings: Ratings): number {
-  const weighted = METRICS.reduce(
-    (sum, m) => sum + (ratings[m.id] ?? RATING_DEFAULT) * m.weight,
-    0,
-  );
-  return Math.round((weighted / (TOTAL_WEIGHT * RATING_MAX)) * 1000) / 10;
+/**
+ * Weighted score on a 0–100 scale, rounded to one decimal place.
+ * Only active metrics the entry actually rated count, so adding a metric
+ * later doesn't drag down entries logged before it existed.
+ * Returns null when nothing counts.
+ */
+export function calcScore(ratings: Ratings, config: MetricConfig): number | null {
+  let weighted = 0;
+  let total = 0;
+  for (const m of activeMetrics(config)) {
+    const r = ratings[m.id];
+    if (typeof r !== 'number') continue;
+    weighted += r * m.weight;
+    total += m.weight;
+  }
+  if (!total) return null;
+  return Math.round((weighted / (total * RATING_MAX)) * 1000) / 10;
 }
 
+export type TierId = 'exceptional' | 'strong' | 'decent' | 'mixed' | 'challenging';
+
 export interface ScoreTier {
+  id: TierId;
+  /** CSS custom property holding the tier colour (theme-aware). */
+  cssVar: string;
+  /** Fixed colour for theme-independent output (share cards). */
   color: string;
-  description: string;
-  /** Traffic-light marker used in the Markdown export. */
+  /** Traffic-light marker used in Markdown export. */
   marker: string;
 }
 
 const TIERS: readonly (ScoreTier & { min: number })[] = [
-  { min: 85, color: '#9fb3a0', marker: '🟢', description: 'Exceptional — a serious contender.' },
-  { min: 72, color: '#b8c9a0', marker: '🟢', description: 'Strong — worth keeping an eye on.' },
-  { min: 58, color: '#d4a574', marker: '🟡', description: 'Decent — has its merits.' },
-  { min: 42, color: '#c08050', marker: '🟠', description: 'Mixed — notable drawbacks.' },
-  { min: -Infinity, color: '#f87171', marker: '🔴', description: 'Challenging — may not suit you.' },
+  { min: 85, id: 'exceptional', cssVar: '--tier-exceptional', color: '#9fb3a0', marker: '🟢' },
+  { min: 72, id: 'strong', cssVar: '--tier-strong', color: '#b8c9a0', marker: '🟢' },
+  { min: 58, id: 'decent', cssVar: '--tier-decent', color: '#d4a574', marker: '🟡' },
+  { min: 42, id: 'mixed', cssVar: '--tier-mixed', color: '#c08050', marker: '🟠' },
+  { min: -Infinity, id: 'challenging', cssVar: '--tier-challenging', color: '#f87171', marker: '🔴' },
 ];
 
-/** One shared tiering so the form, the cards and the export always agree. */
+/** One shared tiering so the form, cards, map and exports always agree. */
 export function scoreTier(score: number): ScoreTier {
-  const { color, description, marker } = TIERS.find((t) => score >= t.min)!;
-  return { color, description, marker };
+  const { id, cssVar, color, marker } = TIERS.find((t) => score >= t.min)!;
+  return { id, cssVar, color, marker };
 }
 
-/** Colour for a single 1–10 rating (slider fill, value label). */
-export function ratingColor(value: number): string {
-  if (value <= 3) return '#f87171';
-  if (value >= 8) return '#9fb3a0';
-  return '#d4a574';
+export type RatingLevel = 'low' | 'mid' | 'high';
+
+export function ratingLevel(value: number): RatingLevel {
+  if (value <= 3) return 'low';
+  if (value >= 8) return 'high';
+  return 'mid';
 }

@@ -8,9 +8,10 @@ const config: CapacitorConfig = {
   backgroundColor: '#0f0d0b',
   android: {
     allowMixedContent: false,
-    // Android System WebView updates through the Play Store; 108 (late 2022)
-    // covers 100dvh, crypto.randomUUID and the rest of what the UI uses.
-    minWebViewVersion: 108,
+    // Android System WebView updates through the Play Store; 111 (early 2023)
+    // covers OffscreenCanvas.convertToBlob, 100dvh, crypto.randomUUID and
+    // the rest of what the UI uses.
+    minWebViewVersion: 111,
   },
   plugins: {
     SystemBars: {
@@ -18,10 +19,8 @@ const config: CapacitorConfig = {
       // pads the layout with env(safe-area-inset-*).
       insetsHandling: 'css',
       initialViewportFitValueHint: 'cover',
-      style: 'DARK',
-    },
-    CapacitorSQLite: {
-      androidIsEncryption: false,
+      // Follow the system until src/platform/theme.ts applies the user's theme.
+      style: 'DEFAULT',
     },
   },
 };

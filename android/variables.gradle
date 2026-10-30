@@ -1,10 +1,9 @@
 ext {
     minSdkVersion = 24
-    // Compile against the newest SDK (required by current AndroidX); target the
-    // API level Capacitor 8 is validated on, which also meets Google Play's
-    // target-API requirement. Raise targetSdk after testing on Android 17.
+    // Android 17. CI runs the instrumented tests and a minified release smoke
+    // test on an API 37 emulator (.github/workflows/ci.yml).
     compileSdkVersion = 37
-    targetSdkVersion = 36
+    targetSdkVersion = 37
     androidxActivityVersion = '1.13.0'
     androidxAppCompatVersion = '1.8.0'
     androidxCoordinatorLayoutVersion = '1.3.0'
