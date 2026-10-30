@@ -1,36 +1,46 @@
 # Ledger
 
-A personal ledger of the cities you visit: rate each one on twelve weighted
-metrics, get a 0–100 score, add your impressions, and browse, search and
-export your history. Formerly **Travel Logbook**.
+A personal ledger of the cities you visit: rate each one on weighted
+metrics you define, get a 0–100 score, add notes and photos, see your
+travels on a map, and export or back up everything. Formerly
+**Travel Logbook**.
 
-Ledger is a [Capacitor 8](https://capacitorjs.com/) Android app with a
-TypeScript + Vite web UI. Everything is stored on the device in SQLite; there
-are no accounts and no network calls.
+Ledger is a [Capacitor 8](https://capacitorjs.com/) app for Android and
+iOS with a [Svelte 5](https://svelte.dev/) + TypeScript UI built by Vite.
+Everything stays on the device; there are no accounts and no network
+calls.
 
 ## Features
 
-- Weighted scoring across environment, feel, food, people & safety,
-  workability and overall return-desire, with a live score dial
-- Month-of-visit picker; re-saving the same city and month updates the
-  existing entry instead of duplicating it
-- Searchable, sortable ledger (date, score, alphabetical) with expandable cards
-- **Export** to `Documents/Ledger/ledger-YYYY-MM-DD.md` plus the system share
-  sheet (Drive, email, …) — no storage permissions required
-- **Import** a previous export (including files exported by Travel Logbook);
-  the most recently saved copy of each entry wins
-- Edge-to-edge layout, Android back-button handling, themed (monochrome) icon
+- **Weighted scoring** with a live score dial. Metrics are yours to
+  rename, re-weight, reorder, hide or add (Settings → Metrics); scores
+  update everywhere and only count what an entry actually rated.
+- **City autocomplete** from an offline list of 34,000 cities, which also
+  places the entry on the map.
+- **Map** of visited cities and countries (offline, pinch to zoom).
+  Older or hand-typed entries are placed automatically when the name is
+  unambiguous.
+- **Photos** from the gallery or camera, with a full-screen viewer, and a
+  shareable **city card** image.
+- **Export** as Markdown, CSV, JSON, or a full `.zip` backup with photos;
+  **import** any of them, including Travel Logbook exports. The most
+  recently saved copy of each entry wins.
+- **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or
+  monthly, keeping the last N), plus Android's Google-account backup of
+  the ledger itself.
+- Light, dark and system themes; English, Spanish, French and German.
 
 ## Requirements
 
 | Tool | Version |
 |---|---|
 | Node.js | 22.12+ (`.nvmrc`) |
-| JDK | 21 (Android Studio's bundled JBR works) |
-| Android Studio | Current stable, with SDK Platform **37** installed |
+| Android | JDK 21 and Android Studio with SDK Platform **37** |
+| iOS | macOS with Xcode 16+ (iOS 15+ deployment target) |
 
-The Android toolchain is **AGP 9.5** on **Gradle 9.8** (via the wrapper);
-`compileSdk 37`, `targetSdk 36`, `minSdk 24`.
+Android uses **AGP 9.5** on **Gradle 9.8** (wrapper), `compileSdk` and
+`targetSdk` **37**, `minSdk` 24. iOS uses Swift Package Manager; no
+CocoaPods needed.
 
 ## Getting started
 
@@ -38,88 +48,106 @@ The Android toolchain is **AGP 9.5** on **Gradle 9.8** (via the wrapper);
 npm install
 ```
 
-```bash
-npm run sync
-```
-
-`sync` builds the web app and copies it plus the native plugins into
-`android/`. Run it after every `npm install` and before opening the project
-in Android Studio, since `android/capacitor-cordova-android-plugins/` and the
-copied web assets are generated, not committed.
-
-```bash
-npm run android
-```
-
-That opens Android Studio; press **Run** with a device or emulator attached.
-`npm run android:run` deploys from the terminal, and `npm run android:apk`
-builds a debug APK at `android/app/build/outputs/apk/debug/`.
-
-For UI work you don't need a device:
+For UI work in a desktop browser (data lives in IndexedDB; exports
+download):
 
 ```bash
 npm run dev
 ```
 
-In a desktop browser the data layer falls back to `localStorage` and Export
-downloads the Markdown file.
+Android — builds the web app, syncs it into `android/`, opens Android Studio:
+
+```bash
+npm run android
+```
+
+iOS — the same for Xcode:
+
+```bash
+npm run ios
+```
+
+`npm run android:run` deploys to a connected Android device from the
+terminal, and `npm run android:apk` builds a debug APK at
+`android/app/build/outputs/apk/debug/`. Run `npm run sync` (or
+`sync:ios`) after `npm install` and before opening a native project:
+copied web assets and plugin glue are generated, not committed.
 
 ## Scripts
 
 | Script | What it does |
 |---|---|
-| `dev` | Vite dev server with hot reload (browser) |
+| `dev` | Vite dev server with hot reload |
 | `build` | Typecheck, then build the web bundle to `dist/` |
-| `check` | ESLint + TypeScript + Vitest — run before committing |
+| `check` | ESLint + svelte-check + unit tests — run before committing |
 | `test` / `test:watch` | Unit tests (Vitest) |
-| `sync` | `build` + `cap sync android` |
-| `android` / `android:run` / `android:apk` | Open in Android Studio / run on device / build debug APK |
-| `icons` | Regenerate launcher icons from `assets/icon-source.svg` |
+| `test:e2e` | Build, then Playwright end-to-end tests in Chromium at phone size |
+| `sync` / `sync:ios` | `build` + `cap sync` for Android / iOS |
+| `android`, `android:run`, `android:apk`, `ios` | Open / run / build the native apps |
+| `icons` | Regenerate Android and iOS icons and launch images from `assets/icon-source.svg` |
+| `places` | Rebuild `public/data/places.json` from GeoNames |
 
-CI (`.github/workflows/ci.yml`) runs `check`, the web build, and an Android
-`assembleDebug` + `lintDebug`, and uploads the debug APK as an artifact.
+Locally, Playwright can reuse an installed Chromium with
+`PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:e2e`.
+
+## Testing and CI
+
+`.github/workflows/ci.yml` runs on every push:
+
+| Job | Covers |
+|---|---|
+| Lint, typecheck, unit tests | `npm run check` and a production build |
+| End-to-end | Playwright: entries, photos, share cards, custom metrics, every export format and backup restore, map, theme and language |
+| Android build | Debug, R8-minified release and test APKs, Android lint |
+| Android emulator (API 37) | Espresso-Web tests driving the real WebView and on-device storage, then a launch smoke test of the minified release build |
+| iOS | Simulator build with Xcode |
+
+APKs are uploaded as workflow artifacts.
 
 ## Project layout
 
 ```
-├── index.html               # App shell / markup
+├── index.html, src/main.ts   # Shell and bootstrap (load data, theme, language)
 ├── src/
-│   ├── main.ts              # Entry point: state + wiring
-│   ├── domain/              # Pure logic: metrics, scoring, entries
-│   ├── lib/                 # Dates, Markdown export/import
-│   ├── data/                # EntryStore: SQLite (native) / localStorage (web)
-│   ├── platform/            # Filesystem + share-sheet export
-│   ├── ui/                  # Entry form, month picker, ledger list, toasts
-│   └── styles/app.css
-├── tests/                   # Vitest unit tests
-├── android/                 # Native Android project (committed)
-├── assets/icon-source.svg   # Master app icon
-├── scripts/build-icons.mjs  # Renders launcher icons from the SVG
-├── capacitor.config.ts
-└── vite.config.ts
+│   ├── App.svelte            # Header, tabs, export sheet, toasts
+│   ├── components/           # Entry form, ledger, map, settings, photos, …
+│   ├── state/                # App state (Svelte runes), import/export, sharing
+│   ├── domain/               # Pure logic: metrics config, scoring, entries, document schema
+│   ├── lib/                  # Markdown/CSV/JSON/zip formats, places search, share card, dates
+│   ├── data/                 # On-device files: ledger document and photos
+│   ├── platform/             # Save/share files, image processing, theme
+│   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)
+│   └── styles/app.css        # Theme tokens and shared styles
+├── public/data/places.json   # Offline city list (GeoNames)
+├── tests/unit, tests/e2e     # Vitest and Playwright
+├── android/, ios/            # Native projects (committed)
+├── assets/icon-source.svg    # Master app icon
+└── scripts/                  # Icon and places generators, emulator test scripts
 ```
-
-Metric names, weights and categories live in `src/domain/metrics.ts`; the
-form, cards and export are all generated from it.
 
 ## Data
 
-Entries are stored in a SQLite database named `ledger`. Schema changes go in
-`MIGRATIONS` in `src/data/sqlite-store.ts`: append a new `toVersion` step and
-never edit one that has shipped. The database is included in Android Auto
-Backup.
+The ledger is one JSON document (`ledger.json` in the app's private data
+directory) holding entries, the metric configuration and settings, with
+`photos/` alongside. Saves write a temporary file and rename it into
+place, and changes are applied one at a time, so a crash or a burst of
+edits can't corrupt or lose data. Schema changes go through `migrate` in
+`src/domain/doc.ts`: bump `SCHEMA_VERSION`, add a step, and never edit
+one that has shipped.
 
-Exports are human-readable Markdown with each entry's JSON embedded in an
-HTML comment, so a file can always be imported back losslessly.
+Exports embed each entry's JSON (and the metric configuration), so any
+export can be imported back losslessly.
 
 ### Moving data over from Travel Logbook
 
-Ledger has a new application ID (`io.github.notmehul.ledger`), so it installs
-alongside the old app rather than replacing it. To bring your entries across:
-in Travel Logbook tap **Export**, then in Ledger tap **Import** and choose
-the exported `logbook.md`.
+Ledger has a new application ID (`io.github.notmehul.ledger`), so it
+installs alongside the old app. In Travel Logbook tap **Export**, then in
+Ledger go to **Settings → Data & backups → Import** and choose
+`logbook.md`.
 
 ## Releasing
+
+### Android
 
 1. Create an upload key once and keep it **outside** the repository, backed up:
 
@@ -129,29 +157,39 @@ the exported `logbook.md`.
 
 2. Copy `android/keystore.properties.example` to `android/keystore.properties`
    (gitignored) and fill it in.
-3. Bump `versionCode` and `versionName` in `android/app/build.gradle`.
-4. `npm run sync`, then `cd android && ./gradlew bundleRelease` (AAB for Google
-   Play) or `assembleRelease` (APK). Attach APKs to a GitHub Release rather
-   than committing them.
+3. Bump `version` in `package.json`, `versionCode`/`versionName` in
+   `android/app/build.gradle`, and `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION`
+   in the Xcode project.
+4. `npm run sync`, then `cd android && ./gradlew bundleRelease` (AAB for
+   Google Play) or `assembleRelease` (APK). Release builds are minified
+   with R8.
+
+### iOS
+
+Open the project with `npm run ios`, set your team under *Signing &
+Capabilities*, then *Product → Archive*.
 
 ## App icon
 
-Edit `assets/icon-source.svg` and run `npm run icons`. The script renders the
-legacy icon, the adaptive-icon foreground (scaled so the compass stays inside
-the 66dp safe zone every launcher mask keeps), and the monochrome layer used
-for Android 13+ themed icons. Keep the `#disk` / `#mark` group ids and the
-`data-hub` attributes the script relies on.
+Edit `assets/icon-source.svg` and run `npm run icons`. It renders the
+Android legacy icon, the adaptive-icon foreground (scaled into the 66dp
+safe zone), the monochrome themed icon, and the iOS app icon and launch
+image. Keep the `#disk` / `#mark` group ids and `data-hub` attributes the
+script relies on.
+
+## Credits
+
+City data © [GeoNames](https://www.geonames.org/) (CC BY 4.0). Map shapes
+© [Natural Earth](https://www.naturalearthdata.com/) via `world-atlas`.
 
 ## Troubleshooting
 
 - **Gradle sync fails right after cloning** — run `npm install && npm run sync`
   first; Gradle needs the generated plugin projects.
-- **"Unsupported class file major version" / JDK errors** — set Android
-  Studio's Gradle JDK to 21 (Settings → Build Tools → Gradle).
-- **"Failed to find target android-37"** — install *Android SDK Platform 37*
-  from the SDK Manager.
+- **JDK errors** — set Android Studio's Gradle JDK to 21.
+- **"Failed to find target android-37"** — install *Android SDK Platform 37*.
 - **Export says "ready to share" instead of "Saved to Documents"** — a file
-  with that day's name already exists from an earlier install. The share
-  sheet still works; delete the old file to save locally again.
+  with that name exists from an earlier install. The share sheet still
+  works; delete the old file to save locally again.
 
-See [ROADMAP.md](ROADMAP.md) for planned improvements.
+See [ROADMAP.md](ROADMAP.md) for what's next.
