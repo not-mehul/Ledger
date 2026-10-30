@@ -20,6 +20,8 @@
     "places": "node scripts/build-places.mjs",
     "test:e2e": "vite build && playwright test",
     "sync": "npm run build && cap sync android",
+    "sync:ios": "npm run build && cap sync ios",
+    "ios": "npm run sync:ios && cap open ios",
     "android": "npm run sync && cap open android",
     "android:run": "npm run sync && cap run android",
     "android:apk": "npm run sync && cd android && ./gradlew assembleDebug"
@@ -30,6 +32,7 @@
     "@capacitor/core": "^8.6.0",
     "@capacitor/dialog": "^8.0.1",
     "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.6.0",
     "@capacitor/share": "^8.0.3",
     "d3-geo": "^3.1.1",
     "d3-selection": "^3.0.0",

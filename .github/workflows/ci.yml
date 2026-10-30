@@ -2,8 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,7 +10,7 @@ concurrency:
 
 jobs:
   web:
-    name: Lint, typecheck, test
+    name: Lint, typecheck, unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -23,8 +22,28 @@ jobs:
       - run: npm run check
       - run: npm run build
 
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+
   android:
-    name: Android debug APK
+    name: Android build
     runs-on: ubuntu-latest
     needs: web
     steps:
@@ -40,10 +59,62 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - run: npm ci
       - run: npm run sync
-      - name: Assemble and lint
+      - name: Assemble, lint
         working-directory: android
-        run: ./gradlew assembleDebug lintDebug
+        run: ./gradlew assembleDebug assembleRelease assembleDebugAndroidTest lintDebug
+      - name: Sign the release APK with the debug key for the smoke test
+        run: |
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$BT/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
+            --out android/app/build/outputs/apk/release/app-release-smoke.apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
       - uses: actions/upload-artifact@v7
         with:
-          name: ledger-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: ledger-apks
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/release/app-release-smoke.apk
+            android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+  android-emulator:
+    name: Android emulator tests (API 37)
+    runs-on: ubuntu-latest
+    needs: android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: ledger-apks
+          path: apks
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: '37.0'
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: scripts/android-emulator-tests.sh apks
+
+  ios:
+    name: iOS simulator build
+    runs-on: macos-latest
+    needs: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build && npx cap sync ios
+      - name: Build for the simulator
+        shell: bash # -eo pipefail, so a failed xcodebuild fails the step
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -40

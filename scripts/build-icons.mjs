@@ -6,8 +6,12 @@
 //   mipmap-*/ic_launcher_monochrome.png themed icon (Android 13+)
 //
 // The adaptive background is the solid colour in values/ic_launcher_background.xml.
+//
+// iOS (if ios/ exists):
+//   AppIcon.appiconset/AppIcon-512@2x.png  1024px, opaque (App Store rejects alpha)
+//   Splash.imageset/splash-2732x2732*.png   dark launch screen with the mark
 
-import { mkdir, readFile } from 'node:fs/promises';
+import { access, mkdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
@@ -53,4 +57,36 @@ for (const [name, density] of Object.entries(DENSITIES)) {
   await render(adaptive(content, adaptivePx), new URL('ic_launcher_foreground.png', dir));
   await render(adaptive(monochromeMark, adaptivePx), new URL('ic_launcher_monochrome.png', dir));
   console.log(`mipmap-${name}: ${legacyPx}px legacy, ${adaptivePx}px adaptive`);
+}
+
+// ---------- iOS ----------
+
+const ios = new URL('ios/App/App/Assets.xcassets/', root);
+const hasIos = await access(ios).then(
+  () => true,
+  () => false,
+);
+
+if (hasIos) {
+  const BG = '#0a0807';
+  // Fill the square; iOS applies its own rounded mask.
+  const iconSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 ${SOURCE_SIZE} ${SOURCE_SIZE}">` +
+    `<rect width="${SOURCE_SIZE}" height="${SOURCE_SIZE}" fill="${BG}"/>` +
+    `<g transform="translate(${SOURCE_CENTER} ${SOURCE_CENTER}) scale(1.08) translate(${-SOURCE_CENTER} ${-SOURCE_CENTER})">${content}</g></svg>`;
+  await sharp(Buffer.from(iconSvg))
+    .flatten({ background: BG })
+    .png({ compressionLevel: 9 })
+    .toFile(fileURLToPath(new URL('AppIcon.appiconset/AppIcon-512@2x.png', ios)));
+
+  const SPLASH = 2732;
+  const splashSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${SPLASH}" height="${SPLASH}" viewBox="0 0 ${SPLASH} ${SPLASH}">` +
+    `<rect width="${SPLASH}" height="${SPLASH}" fill="#0f0d0b"/>` +
+    `<g transform="translate(${SPLASH / 2} ${SPLASH / 2}) scale(${300 / SOURCE_SIZE * 2}) translate(${-SOURCE_CENTER} ${-SOURCE_CENTER})">${content}</g></svg>`;
+  const splash = await sharp(Buffer.from(splashSvg)).flatten({ background: '#0f0d0b' }).png({ compressionLevel: 9 }).toBuffer();
+  for (const name of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png']) {
+    await sharp(splash).toFile(fileURLToPath(new URL(`Splash.imageset/${name}`, ios)));
+  }
+  console.log('ios: app icon and launch images');
 }
