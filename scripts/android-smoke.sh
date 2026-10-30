@@ -10,31 +10,31 @@ APK=${1:?usage: android-smoke.sh path/to/app.apk}
 PKG=io.github.notmehul.ledger
 
 for attempt in 1 2 3 4 5; do
-  adb install -r "$APK" && break
+  timeout 180 adb install -r "$APK" && break
   [[ $attempt -eq 5 ]] && exit 1
   echo "Install attempt $attempt failed; retrying…" >&2
   sleep 5
 done
 adb logcat -c
-adb shell am start -W -n "$PKG/.MainActivity"
+timeout 120 adb shell am start -W -n "$PKG/.MainActivity" || true
 
 # The WebView exposes its content to UI Automator once rendered.
 rendered=""
 for _ in $(seq 1 30); do
   sleep 2
-  ui=$(adb exec-out uiautomator dump /dev/tty 2>/dev/null || true)
+  ui=$(timeout 30 adb exec-out uiautomator dump /dev/tty 2>/dev/null || true)
   if grep -qi 'save entry' <<<"$ui"; then
     rendered=1
     break
   fi
 done
 
-PID=$(adb shell pidof "$PKG" | tr -d '\r' || true)
+PID=$(timeout 20 adb shell pidof "$PKG" | tr -d '\r' || true)
 # Only this app's crashes and missing-class errors count, not other processes'.
 # (Output is captured first: with pipefail, `cmd | grep -q` can fail on SIGPIPE.)
-crashes=$(adb logcat -d -b crash || true)
+crashes=$(timeout 30 adb logcat -d -b crash || true)
 app_log=""
-[[ -n "$PID" ]] && app_log=$(adb logcat -d --pid="$PID" || true)
+[[ -n "$PID" ]] && app_log=$(timeout 30 adb logcat -d --pid="$PID" || true)
 if grep -q "$PKG" <<<"$crashes" \
   || grep -E "FATAL EXCEPTION|ClassNotFoundException|NoSuchMethodException|NoClassDefFoundError" <<<"$app_log"; then
   echo "Release build crashed or hit a missing class (check R8 keep rules)." >&2

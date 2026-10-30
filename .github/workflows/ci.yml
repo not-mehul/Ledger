@@ -80,6 +80,7 @@ jobs:
     name: Android emulator tests (API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
     needs: android
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
