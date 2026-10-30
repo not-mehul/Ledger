@@ -86,15 +86,16 @@ jobs:
       matrix:
         # 37 is the target SDK; 36 covers the previous release. Ledger uses no
         # Google APIs, so API 37 runs on the leaner AOSP ("default") image.
-        # The API 37 image's system_server crashes in the emulator's SwiftShader
-        # gralloc path when saving task snapshots, so it uses SwANGLE instead.
+        # On the API 37 image, system_server aborts while saving task snapshots
+        # ("Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma")
+        # unless the emulator's ReadColorBufferDma feature is switched off.
         include:
           - api-level: '37.0'
             target: default
-            gpu: swangle_indirect
+            extra: -feature -ReadColorBufferDma
           - api-level: '36'
             target: google_apis
-            gpu: swiftshader_indirect
+            extra: ''
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
@@ -118,7 +119,7 @@ jobs:
           # Start adb before the emulator; if the emulator comes up first it can
           # stay "offline" for the whole boot timeout.
           pre-emulator-launch-script: adb start-server
-          emulator-options: -no-window -gpu ${{ matrix.gpu }} -noaudio -no-boot-anim -no-snapshot -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none ${{ matrix.extra }}
           script: scripts/android-emulator-tests.sh apks
 
   ios:
