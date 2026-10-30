@@ -9,8 +9,30 @@ set -euo pipefail
 DIR=${1:?usage: android-emulator-tests.sh <apk dir>}
 PKG=io.github.notmehul.ledger
 
-adb install -r "$DIR/debug/app-debug.apk"
-adb install -r "$DIR/androidTest/debug/app-debug-androidTest.apk"
+# sys.boot_completed can flip before the package manager accepts installs.
+wait_for_package_manager() {
+  for _ in $(seq 1 60); do
+    adb shell pm path android >/dev/null 2>&1 && return 0
+    sleep 2
+  done
+  echo "Package manager never became ready." >&2
+  return 1
+}
+
+install() {
+  for attempt in 1 2 3 4 5; do
+    adb install -r "$1" && return 0
+    echo "Install attempt $attempt failed; retrying…" >&2
+    sleep 5
+    wait_for_package_manager
+  done
+  return 1
+}
+
+adb wait-for-device
+wait_for_package_manager
+install "$DIR/debug/app-debug.apk"
+install "$DIR/androidTest/debug/app-debug-androidTest.apk"
 OUT=$(adb shell am instrument -w -r "$PKG.test/androidx.test.runner.AndroidJUnitRunner")
 echo "$OUT"
 # Raw output reports status 0 per passing test, -2 per failure and -1 per error.
@@ -24,4 +46,5 @@ echo "Instrumented tests passed ($passed)."
 
 # The release build has a different signature; replace the debug install.
 adb uninstall "$PKG"
+adb uninstall "$PKG.test" >/dev/null 2>&1 || true
 "$(dirname "$0")/android-smoke.sh" "$DIR/release/app-release-smoke.apk"

@@ -9,7 +9,12 @@ set -euo pipefail
 APK=${1:?usage: android-smoke.sh path/to/app.apk}
 PKG=io.github.notmehul.ledger
 
-adb install -r "$APK"
+for attempt in 1 2 3 4 5; do
+  adb install -r "$APK" && break
+  [[ $attempt -eq 5 ]] && exit 1
+  echo "Install attempt $attempt failed; retrying…" >&2
+  sleep 5
+done
 adb logcat -c
 adb shell am start -W -n "$PKG/.MainActivity"
 
