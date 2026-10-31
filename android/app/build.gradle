@@ -1,0 +1,73 @@
+apply plugin: 'com.android.application'
+
+// Release signing is read from android/keystore.properties (gitignored).
+// See keystore.properties.example. Without it, release builds are unsigned.
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
+android {
+    namespace = "io.github.notmehul.ledger"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId = "io.github.notmehul.ledger"
+        minSdk = rootProject.ext.minSdkVersion
+        targetSdk = rootProject.ext.targetSdkVersion
+        versionCode = 2
+        versionName = "2.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    androidResources {
+        // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+        // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile = rootProject.file(keystoreProperties['storeFile'])
+                storePassword = keystoreProperties['storePassword']
+                keyAlias = keystoreProperties['keyAlias']
+                keyPassword = keystoreProperties['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            // R8: shrinks and optimises code, then drops unused resources.
+            // Capacitor and its plugins ship the keep rules the bridge needs.
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.release
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    def versions = rootProject.ext
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:${versions.androidxAppCompatVersion}"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:${versions.androidxCoordinatorLayoutVersion}"
+    implementation "androidx.core:core-splashscreen:${versions.coreSplashScreenVersion}"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:${versions.junitVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${versions.androidxJunitVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${versions.androidxEspressoCoreVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-web:${versions.androidxEspressoCoreVersion}"
+    androidTestImplementation "androidx.test:core:${versions.androidxTestVersion}"
+    androidTestImplementation "androidx.test:runner:${versions.androidxTestVersion}"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
