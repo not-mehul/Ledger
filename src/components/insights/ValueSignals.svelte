@@ -141,13 +141,13 @@
     gap: 0.5rem;
   }
   .findings li {
-    font-family: var(--serif);
+    font-family: var(--font-serif);
     font-style: italic;
-    color: var(--cream);
+    color: var(--text-heading);
     font-size: 1rem;
     line-height: 1.45;
     padding-left: 0.75rem;
-    border-left: 2px solid rgba(var(--amber-rgb), 0.5);
+    border-left: 2px solid rgba(var(--accent-amber-rgb), 0.5);
   }
   .signals {
     width: 100%;
@@ -158,7 +158,7 @@
   .signals th,
   .signals td {
     padding: 0.5rem 0.25rem;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-soft);
     font-size: 0.75rem;
     vertical-align: middle;
   }
@@ -166,7 +166,7 @@
     font-size: 0.5rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-weight: 400;
     text-align: left;
   }
@@ -179,7 +179,7 @@
   }
   tbody th {
     font-weight: 400;
-    color: var(--text-para);
+    color: var(--text-muted);
     text-align: left;
     /* Long compound names (e.g. German) wrap instead of running into the bars. */
     hyphens: auto;
@@ -194,7 +194,7 @@
     position: relative;
     flex: 1;
     height: 4px;
-    background: rgba(var(--line-rgb), 0.25);
+    background: var(--chart-track);
     border-radius: 2px;
   }
   .diverging::after {
@@ -210,35 +210,35 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    background: var(--sage);
+    background: var(--accent-sage);
     border-radius: 2px;
   }
   .diverging span.neg {
     background: var(--danger);
   }
   .r {
-    font-family: var(--mono);
+    font-family: var(--font-mono);
     font-size: 0.6875rem;
-    color: var(--text-label);
+    color: var(--text-dim);
     min-width: 2.6rem;
     text-align: right;
   }
   .none {
     font-size: 0.625rem;
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-style: italic;
   }
   .w {
-    font-family: var(--mono);
+    font-family: var(--font-mono);
     text-align: right;
-    color: var(--text-label);
+    color: var(--text-dim);
   }
   .w .changed {
-    color: var(--amber);
+    color: var(--accent-amber);
   }
   .caveat {
     font-size: 0.6875rem;
-    color: var(--text-dim);
+    color: var(--text-faint);
     margin-bottom: 1rem;
   }
 </style>

@@ -12,7 +12,7 @@
 
   const level = $derived(ratingLevel(value));
   const pct = $derived((((value - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100).toFixed(2));
-  const fill = $derived(level === 'low' ? 'var(--danger)' : level === 'high' ? 'var(--sage)' : 'var(--amber)');
+  const fill = $derived(level === 'low' ? 'var(--danger)' : level === 'high' ? 'var(--accent-sage)' : 'var(--accent-amber)');
   const ends = $derived(metricEnds(metric));
   const id = $derived(`sl-${metric.id}`);
 </script>
@@ -35,7 +35,7 @@
       max={RATING_MAX}
       step="1"
       bind:value
-      style:background="linear-gradient(to right, {fill} {pct}%, rgba(var(--line-rgb), 0.4) {pct}%)"
+      style:background="linear-gradient(to right, {fill} {pct}%, var(--chart-track) {pct}%)"
     />
   </div>
   <div class="slider-footer" aria-hidden="true">

@@ -99,7 +99,7 @@
     aspect-ratio: 1;
     overflow: hidden;
     border-radius: var(--radius);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-soft);
   }
   figure :global(.thumb) {
     width: 100%;
@@ -126,7 +126,7 @@
     justify-content: center;
     aspect-ratio: 1;
     font-size: 0.625rem;
-    color: var(--text-label);
+    color: var(--text-dim);
     border: 1px dashed var(--border);
     text-align: center;
     padding: 0.25rem;

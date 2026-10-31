@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm test",
+    "check": "node design/build-tokens.mjs --check && npm run lint && npm run typecheck && npm test",
     "icons": "node scripts/build-icons.mjs",
     "places": "node scripts/build-places.mjs",
     "test:e2e": "vite build && playwright test",
@@ -24,7 +24,8 @@
     "ios": "npm run sync:ios && cap open ios",
     "android": "npm run sync && cap open android",
     "android:run": "npm run sync && cap run android",
-    "android:apk": "npm run sync && cd android && ./gradlew assembleDebug"
+    "android:apk": "npm run sync && cd android && ./gradlew assembleDebug",
+    "tokens": "node design/build-tokens.mjs --css src/styles/tokens.css --fonts src/styles/fonts"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",

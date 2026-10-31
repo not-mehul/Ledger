@@ -107,14 +107,14 @@
     padding: 0.625rem 0;
     background: none;
     border: none;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-soft);
     color: inherit;
     text-align: left;
     cursor: pointer;
   }
   .pos {
-    font-family: var(--mono);
-    color: var(--amber);
+    font-family: var(--font-mono);
+    color: var(--accent-amber);
     font-size: 0.875rem;
   }
   .who {
@@ -123,8 +123,8 @@
     min-width: 0;
   }
   .city {
-    font-family: var(--serif);
-    color: var(--cream);
+    font-family: var(--font-serif);
+    color: var(--text-heading);
     font-size: 1.0625rem;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -134,11 +134,11 @@
     font-size: 0.625rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-label);
+    color: var(--text-dim);
   }
   .bar {
     height: 3px;
-    background: rgba(var(--line-rgb), 0.3);
+    background: var(--chart-track);
     border-radius: 2px;
     overflow: hidden;
   }
@@ -147,8 +147,8 @@
     height: 100%;
   }
   .val {
-    font-family: var(--mono);
-    color: var(--text-para);
+    font-family: var(--font-mono);
+    color: var(--text-muted);
     font-size: 0.8125rem;
     text-align: right;
   }

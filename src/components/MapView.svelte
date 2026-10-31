@@ -93,7 +93,7 @@
 
   function dotColor(e: Entry): string {
     const s = ledger.scoreOf(e);
-    return s === null ? 'var(--amber)' : `var(${scoreTier(s).cssVar})`;
+    return s === null ? 'var(--accent-amber)' : `var(${scoreTier(s).cssVar})`;
   }
 </script>
 
@@ -177,21 +177,21 @@
     cursor: grab;
   }
   .sphere {
-    fill: rgba(var(--deep-rgb), 0.35);
+    fill: var(--map-water);
   }
   .country {
     fill: var(--map-land);
-    stroke: var(--map-border);
+    stroke: var(--bg-grad-mid);
   }
   .country.visited {
     fill: var(--map-visited);
   }
   .dot {
-    stroke: var(--surface);
+    stroke: var(--bg-grad-mid);
     cursor: pointer;
   }
   .dot.selected {
-    stroke: var(--text-high);
+    stroke: var(--text-strong);
   }
   .map-controls {
     position: absolute;
@@ -202,14 +202,14 @@
     gap: 0.25rem;
   }
   .map-controls button {
-    background: rgba(var(--ink-rgb), 0.85);
+    background: var(--modal-bg);
     font-size: 1rem;
   }
   .map-loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-dim);
+    color: var(--text-faint);
     font-size: 0.75rem;
   }
   .map-selected {
@@ -226,7 +226,7 @@
   }
   .map-note {
     font-size: 0.75rem;
-    color: var(--text-label);
+    color: var(--text-dim);
     line-height: 1.6;
     margin-top: 0.5rem;
   }

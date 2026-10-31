@@ -73,7 +73,7 @@
               <div
                 class="mini-bar-fill"
                 style:width="{(val / RATING_MAX) * 100}%"
-                style:background={m.weight >= HEAVY_WEIGHT ? 'var(--amber)' : 'var(--sage)'}
+                style:background={m.weight >= HEAVY_WEIGHT ? 'var(--accent-amber)' : 'var(--accent-sage)'}
               ></div>
             </div>
             <span class="mini-val">{val}/{RATING_MAX}</span>
