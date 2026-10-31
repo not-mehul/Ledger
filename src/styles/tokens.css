@@ -97,6 +97,7 @@
   --map-route: #d4a574;
   --scanner-bg: #000000;
   --scanner-fg: #ffffff;
+  --scanner-scrim: rgba(0,0,0,0.45);
   --accent-amber-rgb: 212, 165, 116;
   --accent-bright-rgb: 252, 211, 77;
   --accent-sage-rgb: 159, 179, 160;
@@ -162,6 +163,7 @@
   --map-route: #815c2d;
   --scanner-bg: #000000;
   --scanner-fg: #ffffff;
+  --scanner-scrim: rgba(0,0,0,0.45);
   --accent-amber-rgb: 176, 125, 62;
   --accent-bright-rgb: 224, 169, 42;
   --accent-sage-rgb: 111, 135, 112;
