@@ -41,7 +41,7 @@ describe('scoreTier / ratingLevel', () => {
     expect(scoreTier(58).id).toBe('decent');
     expect(scoreTier(42).id).toBe('mixed');
     expect(scoreTier(0).id).toBe('challenging');
-    expect(scoreTier(90).cssVar).toBe('--tier-exceptional');
+    expect(scoreTier(90).cssVar).toBe('--scale-1');
   });
 
   it('classifies individual ratings', () => {

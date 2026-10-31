@@ -125,12 +125,12 @@
     background: none;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    color: var(--text-para);
+    color: var(--text-muted);
     cursor: pointer;
   }
   .settings-btn.active {
-    background: var(--text-high);
+    background: var(--text-strong);
     color: var(--on-invert);
-    border-color: var(--text-high);
+    border-color: var(--text-strong);
   }
 </style>

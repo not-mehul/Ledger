@@ -71,7 +71,7 @@
     align-items: center;
     margin-top: 1rem;
     color: #e8e1d5;
-    font-family: var(--mono);
+    font-family: var(--font-mono);
     font-size: 0.75rem;
   }
   .bar .btn {

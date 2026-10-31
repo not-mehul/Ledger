@@ -34,11 +34,11 @@ export interface ScoreTier {
 }
 
 const TIERS: readonly (ScoreTier & { min: number })[] = [
-  { min: 85, id: 'exceptional', cssVar: '--tier-exceptional', color: '#9fb3a0', marker: '🟢' },
-  { min: 72, id: 'strong', cssVar: '--tier-strong', color: '#b8c9a0', marker: '🟢' },
-  { min: 58, id: 'decent', cssVar: '--tier-decent', color: '#d4a574', marker: '🟡' },
-  { min: 42, id: 'mixed', cssVar: '--tier-mixed', color: '#c08050', marker: '🟠' },
-  { min: -Infinity, id: 'challenging', cssVar: '--tier-challenging', color: '#f87171', marker: '🔴' },
+  { min: 85, id: 'exceptional', cssVar: '--scale-1', color: '#9fb3a0', marker: '🟢' },
+  { min: 72, id: 'strong', cssVar: '--scale-2', color: '#b8c9a0', marker: '🟢' },
+  { min: 58, id: 'decent', cssVar: '--scale-3', color: '#d4a574', marker: '🟡' },
+  { min: 42, id: 'mixed', cssVar: '--scale-4', color: '#c08050', marker: '🟠' },
+  { min: -Infinity, id: 'challenging', cssVar: '--scale-5', color: '#f87171', marker: '🔴' },
 ];
 
 /** One shared tiering so the form, cards, map and exports always agree. */

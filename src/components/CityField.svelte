@@ -106,8 +106,8 @@
     right: 0;
     z-index: 120;
     list-style: none;
-    background: rgba(var(--ink-rgb), 0.97);
-    border: 1px solid var(--border-subtle);
+    background: var(--modal-bg);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
     overflow: hidden;
@@ -120,18 +120,18 @@
     cursor: pointer;
   }
   li + li {
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--border-soft);
   }
   li.active,
   li:hover {
-    background: rgba(var(--amber-rgb), 0.12);
+    background: rgba(var(--accent-amber-rgb), 0.12);
   }
   .name {
-    color: var(--text-high);
+    color: var(--text-strong);
     font-size: 0.9375rem;
   }
   .where {
-    color: var(--text-label);
+    color: var(--text-dim);
     font-size: 0.6875rem;
     letter-spacing: 0.06em;
   }

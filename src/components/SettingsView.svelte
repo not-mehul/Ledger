@@ -157,8 +157,8 @@
     font-size: 0.625rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--amber);
-    font-family: var(--mono);
+    color: var(--accent-amber);
+    font-family: var(--font-mono);
     font-weight: 400;
     margin: 1.5rem 0 0.75rem;
   }
@@ -182,7 +182,7 @@
   }
   :global(.settings-hint) {
     font-size: 0.75rem;
-    color: var(--text-label);
+    color: var(--text-dim);
     line-height: 1.6;
     margin-bottom: 0.75rem;
   }

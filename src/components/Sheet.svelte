@@ -41,9 +41,9 @@
     margin: auto auto 0;
     width: min(100%, 560px);
     max-height: 85dvh;
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-soft);
     border-bottom: none;
-    background: var(--surface);
+    background: var(--bg-grad-mid);
     color: var(--text-body);
     padding: 0;
   }
@@ -60,10 +60,10 @@
     margin-bottom: 1rem;
   }
   h2 {
-    font-family: var(--serif);
+    font-family: var(--font-serif);
     font-style: italic;
     font-weight: 400;
     font-size: 1.5rem;
-    color: var(--cream);
+    color: var(--text-heading);
   }
 </style>

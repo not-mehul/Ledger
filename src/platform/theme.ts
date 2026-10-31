@@ -13,7 +13,7 @@ function resolved(setting: ThemeSetting): 'light' | 'dark' {
 function paint(): void {
   const theme = resolved(current);
   document.documentElement.dataset.theme = theme;
-  const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+  const surface = getComputedStyle(document.documentElement).getPropertyValue('--bg-grad-mid').trim();
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', surface || '#0f0d0b');
   if (isNative) {
     // DARK = light icons for dark backgrounds.

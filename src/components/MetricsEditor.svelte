@@ -164,12 +164,12 @@
     display: none;
   }
   .metrics-details[open] > summary {
-    background: var(--text-high);
+    background: var(--text-strong);
     color: var(--on-invert);
   }
   .cat-edit {
     border: none;
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--border-soft);
     padding: 1rem 0 0.5rem;
   }
   .cat-edit.archived {
@@ -182,17 +182,17 @@
     margin-bottom: 0.75rem;
   }
   .cat-title {
-    font-family: var(--serif);
+    font-family: var(--font-serif);
     font-style: italic;
     font-size: 1.125rem;
-    color: var(--cream);
+    color: var(--text-heading);
   }
   .metric-edit {
     padding: 0.75rem;
     margin-bottom: 0.5rem;
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius);
-    background: rgba(var(--deep-rgb), 0.3);
+    background: var(--panel-bg-faint);
   }
   .metric-edit.archived {
     opacity: 0.55;
@@ -204,7 +204,7 @@
   .weight {
     width: 5.5rem;
     flex-shrink: 0;
-    font-family: var(--mono);
+    font-family: var(--font-mono);
   }
   details {
     margin: 0.5rem 0;
@@ -213,7 +213,7 @@
     font-size: 0.625rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--text-dim);
+    color: var(--text-faint);
     cursor: pointer;
   }
   .metric-more {
@@ -238,7 +238,7 @@
     background: none;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    color: var(--text-para);
+    color: var(--text-muted);
     cursor: pointer;
   }
   .icon-btn:disabled {
@@ -254,8 +254,8 @@
     font-size: 0.5625rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text-dim);
-    font-family: var(--mono);
+    color: var(--text-faint);
+    font-family: var(--font-mono);
   }
   .add {
     margin: 0.25rem 0 0.75rem;
@@ -266,6 +266,6 @@
     gap: 0.5rem;
     justify-content: space-between;
     padding-top: 1rem;
-    border-top: 1px solid var(--border-subtle);
+    border-top: 1px solid var(--border-soft);
   }
 </style>

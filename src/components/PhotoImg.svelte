@@ -31,6 +31,6 @@
 <style>
   .photo-placeholder {
     display: block;
-    background: rgba(var(--line-rgb), 0.25);
+    background: var(--panel-bg-faint);
   }
 </style>

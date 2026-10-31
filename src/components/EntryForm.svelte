@@ -236,7 +236,7 @@
     font-size: 0.625rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--sage);
-    font-family: var(--mono);
+    color: var(--accent-sage);
+    font-family: var(--font-mono);
   }
 </style>

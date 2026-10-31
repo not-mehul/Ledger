@@ -115,20 +115,20 @@
     gap: 0.25rem;
   }
   dd {
-    font-family: var(--mono);
+    font-family: var(--font-mono);
     font-size: 1.75rem;
-    color: var(--cream);
+    color: var(--text-heading);
     line-height: 1;
   }
   dt {
     font-size: 0.5625rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--text-label);
+    color: var(--text-dim);
   }
   .countries {
     font-size: 0.75rem;
-    color: var(--text-label);
+    color: var(--text-dim);
     line-height: 1.6;
     margin-bottom: 1.25rem;
   }
@@ -143,8 +143,8 @@
     align-items: center;
     width: 100%;
     padding: 0.625rem 0.75rem;
-    background: rgba(var(--deep-rgb), 0.35);
-    border: 1px solid var(--border-subtle);
+    background: var(--panel-bg-faint);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius);
     color: inherit;
     text-align: left;
@@ -174,25 +174,25 @@
     padding: 0.5rem 0;
     background: none;
     border: none;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-soft);
     color: inherit;
     text-align: left;
     cursor: pointer;
   }
   .w-cat {
     font-size: 0.6875rem;
-    color: var(--text-label);
+    color: var(--text-dim);
   }
   .w-city {
-    font-family: var(--serif);
-    color: var(--cream);
+    font-family: var(--font-serif);
+    color: var(--text-heading);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   .span-note {
     font-size: 0.6875rem;
-    color: var(--text-dim);
+    color: var(--text-faint);
     line-height: 1.6;
     margin-bottom: 1rem;
   }
