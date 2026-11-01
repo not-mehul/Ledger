@@ -57,7 +57,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: var(--inset-top) var(--inset-right) var(--inset-bottom) var(--inset-left);
     touch-action: pan-y;
   }
   .lightbox :global(.full) {

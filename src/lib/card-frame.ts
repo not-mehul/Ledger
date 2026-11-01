@@ -7,14 +7,15 @@ export type CardTheme = 'dark' | 'light';
 
 export const CARD_FORMATS = {
   post: { width: 1080, height: 1350 },
-  story: { width: 1080, height: 1920 },
+  story: { width: 1080, height: 1920 }
 } as const;
 
 /** The frame sits this far in from the edge; content starts further in. */
 export const FRAME_INSET = 48;
 export const CONTENT_INSET = 112;
 
-export const SERIF = 'Fraunces, "Iowan Old Style", "Apple Garamond", Baskerville, Georgia, "Noto Serif", serif';
+export const SERIF =
+  'Fraunces, "Iowan Old Style", "Apple Garamond", Baskerville, Georgia, "Noto Serif", serif';
 export const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 export const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono", "Liberation Mono", monospace';
 
@@ -42,7 +43,7 @@ const TOKENS = [
   'scale-3',
   'scale-4',
   'scale-5',
-  'series-1',
+  'series-1'
 ] as const;
 
 export type CardToken = (typeof TOKENS)[number];
@@ -56,7 +57,7 @@ export function readPalette(theme: CardTheme): Palette {
   document.body.appendChild(probe);
   const style = getComputedStyle(probe);
   const palette = Object.fromEntries(
-    TOKENS.map((name) => [name, style.getPropertyValue(`--${name}`).trim()]),
+    TOKENS.map((name) => [name, style.getPropertyValue(`--${name}`).trim()])
   ) as Palette;
   probe.remove();
   return palette;
@@ -70,7 +71,10 @@ export function currentCardTheme(): CardTheme {
 /** Waits for Fraunces, so the first card isn't drawn in a fallback serif. */
 export async function cardFontsReady(): Promise<void> {
   try {
-    await Promise.all([document.fonts.load(`400 40px ${SERIF}`), document.fonts.load(`italic 400 40px ${SERIF}`)]);
+    await Promise.all([
+      document.fonts.load(`400 40px ${SERIF}`),
+      document.fonts.load(`italic 400 40px ${SERIF}`)
+    ]);
   } catch {
     // Draw with whatever is available.
   }
@@ -78,7 +82,7 @@ export async function cardFontsReady(): Promise<void> {
 
 export function createCard(
   width: number,
-  height: number,
+  height: number
 ): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -88,7 +92,14 @@ export function createCard(
   return { canvas, ctx };
 }
 
-function glow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, rgb: string, stops: [number, number][]) {
+function glow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  rgb: string,
+  stops: [number, number][]
+) {
   const g = ctx.createRadialGradient(x, y, 0, x, y, r);
   for (const [at, alpha] of stops) g.addColorStop(at, `rgba(${rgb}, ${alpha})`);
   g.addColorStop(1, `rgba(${rgb}, 0)`);
@@ -109,11 +120,11 @@ export function drawFrame(ctx: CanvasRenderingContext2D, p: Palette): void {
   // The page's three glows (§4), at twice their opacity.
   glow(ctx, W * 0.95, H * 0.05, W * 0.75, p['accent-amber-rgb'], [
     [0, 0.2],
-    [0.3, 0.06],
+    [0.3, 0.06]
   ]);
   glow(ctx, W * 0.05, H * 0.98, W * 0.85, p['accent-sage-rgb'], [
     [0, 0.16],
-    [0.35, 0.04],
+    [0.35, 0.04]
   ]);
   glow(ctx, W * 0.55, H * 0.55, W * 0.5, p['cream-rgb'], [[0, 0.06]]);
 
@@ -142,7 +153,7 @@ export function drawTracked(
   y: number,
   size: number,
   tracking: number,
-  align: CanvasTextAlign = 'left',
+  align: CanvasTextAlign = 'left'
 ): void {
   ctx.font = `400 ${size}px ${MONO}`;
   ctx.letterSpacing = `${size * tracking}px`;
@@ -179,7 +190,7 @@ export function fitSerif(
   maxWidth: number,
   start: number,
   min: number,
-  italic = false,
+  italic = false
 ): number {
   let size = start;
   for (;;) {
@@ -199,6 +210,9 @@ export function clipText(ctx: CanvasRenderingContext2D, text: string, maxWidth: 
 
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not render the image.'))), 'image/png'),
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Could not render the image.'))),
+      'image/png'
+    )
   );
 }

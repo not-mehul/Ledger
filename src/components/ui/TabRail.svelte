@@ -58,7 +58,10 @@
   });
 
   function onkeydown(event: KeyboardEvent) {
-    const i = Math.max(0, tabs.findIndex((t) => t.id === value));
+    const i = Math.max(
+      0,
+      tabs.findIndex((t) => t.id === value)
+    );
     const next = event.key === 'ArrowRight' ? i + 1 : event.key === 'ArrowLeft' ? i - 1 : -2;
     if (next === -2) return;
     event.preventDefault();

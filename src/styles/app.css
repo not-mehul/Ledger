@@ -6,9 +6,9 @@ html {
 }
 
 body {
-  /* Edge-to-edge: Capacitor's SystemBars plugin populates these insets
+  /* Edge-to-edge: the --inset-* variables (components.css) hold the system bar insets,
      because index.html declares viewport-fit=cover. */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: var(--inset-top) var(--inset-right) var(--inset-bottom) var(--inset-left);
 }
 
 ul,

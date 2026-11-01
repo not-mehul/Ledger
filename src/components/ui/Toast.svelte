@@ -3,7 +3,13 @@
   // One toast at a time, at the bottom centre. It pauses while touched, and a
   // failure is announced as an alert.
   interface Props {
-    toast: { key: number; message: string; kind: string; action?: { label: string }; leaving?: boolean } | null;
+    toast: {
+      key: number;
+      message: string;
+      kind: string;
+      action?: { label: string };
+      leaving?: boolean;
+    } | null;
     onpause: () => void;
     onresume: () => void;
     onaction: () => void;
