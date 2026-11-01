@@ -1,7 +1,8 @@
 import type { Messages } from './index.svelte';
 
 const fr: Messages = {
-  'app.tagline': 'Un registre des villes · leur caractère · et ma place en elles',
+  'app.tagline': 'Un registre des villes, leur caractère et ma place en elles',
+  'share.tagline': 'Un registre des villes',
   'app.designedBy': 'Conçu par Mehul',
 
   'status.entries': { one: '{count} entrée', other: '{count} entrées' },
@@ -13,11 +14,13 @@ const fr: Messages = {
   'tabs.ledger': 'Registre',
   'tabs.map': 'Carte',
   'tabs.insights': 'Analyses',
+  'tabs.sections': 'Sections',
   'tabs.settings': 'Réglages',
 
   'action.export': 'Exporter',
   'action.import': 'Importer',
   'action.cancel': 'Annuler',
+  'action.undo': 'Annuler',
   'action.delete': 'Supprimer',
   'action.close': 'Fermer',
   'action.clear': 'Effacer',
@@ -34,6 +37,7 @@ const fr: Messages = {
   'form.chooseMonth': 'Choisir le mois de la visite',
   'form.prevYear': 'Année précédente',
   'form.nextYear': 'Année suivante',
+  'form.choose': 'Choisir',
   'form.score': 'Note pondérée',
   'form.scoreHint': 'Évaluez les critères ci-dessous pour calculer votre note.',
   'form.impressions': 'Impressions',
@@ -73,15 +77,14 @@ const fr: Messages = {
   'ledger.sortCity': 'Alphabétique',
   'ledger.emptyTitle': 'Aucune ville pour le moment.',
   'ledger.emptyHint': "Évaluez une ville dans l'onglet Saisie pour commencer.",
-  'ledger.noMatchTitle': 'Aucun résultat.',
   'ledger.noMatchHint': 'Essayez une autre recherche.',
+  'ledger.addFirst': 'Noter une ville',
+  'ledger.clearSearch': 'Effacer la recherche',
   'ledger.notes': 'Notes',
   'ledger.photo': 'Photo {n} sur {total}',
   'ledger.scoreLabel': 'Note {score} sur 100',
   'ledger.unrated': 'Non évaluée',
 
-  'delete.title': "Supprimer l'entrée ?",
-  'delete.message': '{place} sera définitivement retirée de votre registre.',
 
   'map.title': 'Votre carte',
   'map.cities': { one: '{count} ville', other: '{count} villes' },
@@ -100,6 +103,7 @@ const fr: Messages = {
   'insights.allTime': 'Depuis le début',
   'insights.period': 'Période',
   'insights.empty': 'Enregistrez quelques villes pour voir des analyses ici.',
+  'insights.emptyTitle': 'Pas encore d’analyses',
   'insights.review': 'Bilan de l’année',
   'insights.reviewTitle': '{year} dans Ledger',
   'insights.reviewTitleAll': 'Mon Ledger jusqu’ici',
@@ -143,8 +147,9 @@ const fr: Messages = {
   'settings.appearance': 'Apparence',
   'settings.theme': 'Thème',
   'settings.themeSystem': 'Système',
-  'settings.themeLight': 'Clair',
-  'settings.themeDark': 'Sombre',
+  'settings.themeDusk': 'Crépuscule',
+  'settings.themeDawn': 'Aube',
+  'settings.dawnSwitch': 'Thème Aube',
   'settings.language': 'Langue',
   'settings.languageSystem': 'Langue du système',
 

@@ -153,7 +153,7 @@
       <ScoreDial {score} size={56} stroke={6} labelled />
       <div class="info">
         <div class="entry-city-name">{selected.city}<span class="entry-region">, {selected.state}</span></div>
-        <button type="button" class="btn btn-ghost" onclick={() => ui.showInLedger(selected.id)}>{t('map.open')}</button>
+        <button type="button" class="btn btn-secondary" onclick={() => ui.showInLedger(selected.id)}>{t('map.open')}</button>
       </div>
     </div>
   {/if}

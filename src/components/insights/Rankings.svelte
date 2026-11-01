@@ -43,8 +43,8 @@
   </div>
 
   <label class="rank-by">
-    <span class="field-label">{t('rank.by')}</span>
-    <select class="field-input" id="rankBy" bind:value={by} onchange={() => (showAll = false)}>
+    <span class="t-field-label">{t('rank.by')}</span>
+    <select class="select" id="rankBy" bind:value={by} onchange={() => (showAll = false)}>
       <option value="score">{t('rank.overall')}</option>
       <optgroup label={t('rank.categories')}>
         {#each activeCategories(ledger.config) as c (c.id)}
@@ -60,7 +60,7 @@
   </label>
 
   {#if !ranked.length}
-    <p class="settings-hint">{t('rank.empty')}</p>
+    <p class="t-hint">{t('rank.empty')}</p>
   {:else}
     <ol class="ranking" id="rankingList">
       {#each shown as r, i (r.entry.id)}
@@ -80,7 +80,7 @@
       {/each}
     </ol>
     {#if ranked.length > TOP}
-      <button type="button" class="btn btn-ghost" onclick={() => (showAll = !showAll)}>
+      <button type="button" class="btn btn-secondary" onclick={() => (showAll = !showAll)}>
         {showAll ? t('rank.showLess') : t('rank.showAll', { count: ranked.length })}
       </button>
     {/if}

@@ -28,7 +28,7 @@
 
 <div class="export-options">
   {#each FORMATS as f (f.format)}
-    <button type="button" class="btn btn-ghost" data-format={f.format} disabled={busy !== null} onclick={() => run(f.format)}>
+    <button type="button" class="btn btn-secondary" data-format={f.format} disabled={busy !== null} onclick={() => run(f.format)}>
       {t(f.key)}{busy === f.format ? ' …' : ''}
     </button>
   {/each}

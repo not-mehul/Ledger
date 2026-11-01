@@ -43,7 +43,7 @@
   {/key}
   <div class="bar">
     <span>{index + 1} / {photos.length}</span>
-    <button type="button" class="btn btn-ghost" onclick={onclose}>{t('action.close')}</button>
+    <button type="button" class="btn btn-secondary" onclick={onclose}>{t('action.close')}</button>
   </div>
 </div>
 
@@ -52,7 +52,7 @@
     position: fixed;
     inset: 0;
     z-index: 300;
-    background: rgba(0, 0, 0, 0.94);
+    background: var(--scanner-bg);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -70,12 +70,17 @@
     gap: 1rem;
     align-items: center;
     margin-top: 1rem;
-    color: #e8e1d5;
+    color: var(--scanner-fg);
     font-family: var(--font-mono);
     font-size: 0.75rem;
   }
+  /* Over a photo, the button keeps the viewer's colours in both themes. */
   .bar .btn {
-    color: #f5f5f4;
-    border-color: #f5f5f4;
+    color: var(--scanner-fg);
+    border-color: var(--scanner-fg);
+  }
+  .bar .btn:hover {
+    background: var(--scanner-fg);
+    color: var(--scanner-bg);
   }
 </style>

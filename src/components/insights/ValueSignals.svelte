@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Dialog } from '@capacitor/dialog';
   import { MIN_SAMPLES, applySuggestedWeights, defaultTarget, valueSignals } from '../../domain/insights';
   import { activeMetrics, type MetricConfig } from '../../domain/metrics';
   import { metricName, t } from '../../i18n/index.svelte';
@@ -34,13 +33,12 @@
       ui.notify(t('value.noChange'));
       return;
     }
-    const { value } = await Dialog.confirm({
+    const ok = await ui.confirm({
       title: t('value.applyTitle'),
       message: t('value.applyMessage', { count: changes }),
-      okButtonTitle: t('value.apply'),
-      cancelButtonTitle: t('action.cancel'),
+      action: t('value.apply'),
     });
-    if (!value) return;
+    if (!ok) return;
     try {
       // Recompute against the latest config at commit time.
       await ledger.updateConfig((c: MetricConfig) => applySuggestedWeights(c, valueSignals(ledger.entries, c, targetId)));
@@ -58,8 +56,8 @@
   </div>
 
   <label class="target">
-    <span class="field-label">{t('value.target')}</span>
-    <select class="field-input" id="valueTarget" bind:value={targetId}>
+    <span class="t-field-label">{t('value.target')}</span>
+    <select class="select" id="valueTarget" bind:value={targetId}>
       {#each activeMetrics(ledger.config) as m (m.id)}
         <option value={m.id}>{metricName(m)}</option>
       {/each}
@@ -67,9 +65,9 @@
   </label>
 
   {#if !ready}
-    <p class="settings-hint" id="valueNeed">{t('value.need', { min: MIN_SAMPLES, count: rated })}</p>
+    <p class="t-hint" id="valueNeed">{t('value.need', { min: MIN_SAMPLES, count: rated })}</p>
   {:else}
-    <p class="settings-hint">{t('value.hint', { target: targetName, count: rated })}</p>
+    <p class="t-hint">{t('value.hint', { target: targetName, count: rated })}</p>
 
     <ul class="findings">
       {#if strongest}
@@ -123,7 +121,7 @@
     </table>
 
     <p class="caveat">{t('value.caveat')}</p>
-    <button type="button" class="btn btn-ghost" id="applyWeights" onclick={apply}>{t('value.apply')}</button>
+    <button type="button" class="btn btn-secondary" id="applyWeights" onclick={apply}>{t('value.apply')}</button>
   {/if}
 </section>
 

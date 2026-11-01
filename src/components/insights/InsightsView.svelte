@@ -2,6 +2,8 @@
   import { yearsOf } from '../../domain/insights';
   import { t } from '../../i18n/index.svelte';
   import { ledger } from '../../state/ledger.svelte';
+  import { ui } from '../../state/ui.svelte';
+  import EmptyState from '../ui/EmptyState.svelte';
   import Rankings from './Rankings.svelte';
   import ValueSignals from './ValueSignals.svelte';
   import YearReview from './YearReview.svelte';
@@ -18,17 +20,15 @@
 
 <div id="viewInsights" role="tabpanel" aria-labelledby="tabInsights">
   {#if !ledger.entries.length}
-    <div class="empty-state">
-      <p class="empty-title">{t('insights.empty')}</p>
-    </div>
+    <EmptyState icon="chart" title={t('insights.emptyTitle')} text={t('insights.empty')} action={t('ledger.addFirst')} onaction={() => ui.go('entry')} />
   {:else}
-    <div class="sort-row period" role="radiogroup" aria-label={t('insights.period')}>
+    <div class="chip-row period" role="radiogroup" aria-label={t('insights.period')}>
       {#each years as y (y)}
-        <button type="button" role="radio" class="sort-btn" class:active={year === y} aria-checked={year === y} data-year={y} onclick={() => (year = y)}>
+        <button type="button" role="radio" class="chip" aria-checked={year === y} data-year={y} onclick={() => (year = y)}>
           {y}
         </button>
       {/each}
-      <button type="button" role="radio" class="sort-btn" class:active={year === null} aria-checked={year === null} data-year="all" onclick={() => (year = null)}>
+      <button type="button" role="radio" class="chip" aria-checked={year === null} data-year="all" onclick={() => (year = null)}>
         {t('insights.allTime')}
       </button>
     </div>
@@ -41,7 +41,6 @@
 
 <style>
   .period {
-    flex-wrap: wrap;
     margin-bottom: 1.25rem;
   }
 </style>

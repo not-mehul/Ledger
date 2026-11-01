@@ -56,7 +56,7 @@
 </div>
 
 <div class="photo-actions">
-  <label class="btn btn-ghost">
+  <label class="btn btn-secondary">
     {t('form.addPhotos')}
     <input
       type="file"
@@ -70,7 +70,7 @@
       }}
     />
   </label>
-  <label class="btn btn-ghost">
+  <label class="btn btn-secondary">
     {t('form.takePhoto')}
     <input
       type="file"
@@ -110,12 +110,12 @@
     position: absolute;
     top: 4px;
     right: 4px;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius);
     border: none;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
+    background: var(--scanner-scrim);
+    color: var(--scanner-fg);
     font-size: 1rem;
     line-height: 1;
     cursor: pointer;
@@ -125,7 +125,7 @@
     align-items: center;
     justify-content: center;
     aspect-ratio: 1;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     color: var(--text-dim);
     border: 1px dashed var(--border);
     text-align: center;

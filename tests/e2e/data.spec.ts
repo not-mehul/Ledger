@@ -35,7 +35,7 @@ test('exports every format and restores a full backup', async ({ page }, info) =
     await page.locator('.entry-card-header').first().click();
     await page.click('[data-action="delete"]');
   }
-  await expect(page.locator('#entryBadge')).toHaveText('0');
+  await expect(page.locator('#tabLogbook .badge')).toHaveText('0');
 
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', zipPath);

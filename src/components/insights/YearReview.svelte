@@ -97,7 +97,7 @@
     </p>
   {/if}
 
-  <button type="button" class="btn btn-ghost" id="shareReview" disabled={sharing || !review.cities} onclick={share}>
+  <button type="button" class="btn btn-secondary" id="shareReview" disabled={sharing || !review.cities} onclick={share}>
     {t('insights.share')}{sharing ? ' …' : ''}
   </button>
 </section>

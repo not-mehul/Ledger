@@ -8,7 +8,7 @@ import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
 import { isNative } from './platform/output';
-import { applyTheme } from './platform/theme';
+import { applyTheme } from './platform/theme.svelte';
 import { ledger } from './state/ledger.svelte';
 import { autoBackupIfDue } from './state/transfer';
 import { ui } from './state/ui.svelte';

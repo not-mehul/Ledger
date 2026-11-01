@@ -12,14 +12,13 @@
 
   const level = $derived(ratingLevel(value));
   const pct = $derived((((value - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100).toFixed(2));
-  const fill = $derived(level === 'low' ? 'var(--danger)' : level === 'high' ? 'var(--accent-sage)' : 'var(--accent-amber)');
   const ends = $derived(metricEnds(metric));
   const id = $derived(`sl-${metric.id}`);
 </script>
 
 <div class="metric-item">
   <div class="metric-header">
-    <label class="metric-name" for={id}>{metricName(metric)}</label>
+    <label class="t-field-label metric-name" for={id}>{metricName(metric)}</label>
     <span class="metric-val" class:low-val={level === 'low'} class:high-val={level === 'high'} id="disp-{metric.id}"
       >{value}<span class="denom">/{RATING_MAX}</span></span
     >
@@ -28,14 +27,12 @@
     <input
       type="range"
       class="metric-slider"
-      class:is-low={level === 'low'}
-      class:is-high={level === 'high'}
       {id}
       min={RATING_MIN}
       max={RATING_MAX}
       step="1"
       bind:value
-      style:background="linear-gradient(to right, {fill} {pct}%, var(--chart-track) {pct}%)"
+      style:background="linear-gradient(to right, var(--accent-amber) {pct}%, var(--chart-track) {pct}%)"
     />
   </div>
   <div class="slider-footer" aria-hidden="true">

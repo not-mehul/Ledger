@@ -33,7 +33,9 @@ calls.
 - **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or
   monthly, keeping the last N), plus Android's Google-account backup of
   the ledger itself.
-- Light, dark and system themes; English, Spanish, French and German.
+- **Undo** after deleting an entry, instead of a confirmation.
+- Dusk and Dawn themes (or follow the system), in the Editorial Dusk & Dawn
+  design shared with Waymark and BookShelf; English, Spanish, French and German.
 
 ## Requirements
 
@@ -116,13 +118,14 @@ APKs are uploaded as workflow artifacts.
 ├── src/
 │   ├── App.svelte            # Header, tabs, export sheet, toasts
 │   ├── components/           # Entry form, ledger, map, settings, photos, …
+│   │   └── ui/               # Tab rail, toast, modal, theme toggle, empty state (shared design)
 │   ├── state/                # App state (Svelte runes), import/export, sharing
 │   ├── domain/               # Pure logic: metrics config, scoring, entries, document schema
-│   ├── lib/                  # Markdown/CSV/JSON/zip formats, places search, share card, dates
+│   ├── lib/                  # Markdown/CSV/JSON/zip formats, places search, share cards, dates
 │   ├── data/                 # On-device files: ledger document and photos
 │   ├── platform/             # Save/share files, image processing, theme
 │   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)
-│   └── styles/app.css        # Theme tokens and shared styles
+│   └── styles/               # tokens.css (generated), components.css (shared by all three apps), app.css
 ├── public/data/places.json   # Offline city list (GeoNames)
 ├── tests/unit, tests/e2e     # Vitest and Playwright
 ├── android/, ios/            # Native projects (committed)

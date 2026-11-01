@@ -12,8 +12,10 @@
 
   let { score, size = 88, stroke = 5.5, labelled = false, label }: Props = $props();
 
+  // A 270° arc, open at the bottom (style.md §8.15).
   const CIRC = 2 * Math.PI * 40;
-  const offset = $derived(score === null ? CIRC : CIRC - (score / 100) * CIRC);
+  const ARC = CIRC * 0.75;
+  const offset = $derived(score === null ? ARC : ARC - (score / 100) * ARC);
   const color = $derived(score === null ? 'var(--accent-amber)' : `var(${scoreTier(score).cssVar})`);
 </script>
 
@@ -27,21 +29,30 @@
   aria-label={label}
   aria-hidden={label ? undefined : 'true'}
 >
-  <circle cx="50" cy="50" r="40" style="stroke: var(--chart-track)" stroke-width={stroke} />
+  <circle
+    cx="50"
+    cy="50"
+    r="40"
+    style="stroke: var(--chart-track)"
+    stroke-width={stroke}
+    stroke-dasharray="{ARC} {CIRC}"
+    stroke-linecap="round"
+    transform="rotate(135 50 50)"
+  />
   <circle
     cx="50"
     cy="50"
     r="40"
     style:stroke={color}
     stroke-width={stroke}
-    stroke-dasharray={CIRC}
+    stroke-dasharray="{ARC} {CIRC}"
     stroke-dashoffset={offset}
     stroke-linecap="round"
-    transform="rotate(-90 50 50)"
+    transform="rotate(135 50 50)"
     class="arc"
   />
   {#if labelled && score !== null}
-    <text x="50" y="57" text-anchor="middle" font-size="22" style:font-family="var(--font-mono)" style:fill={color}
+    <text x="50" y="58" text-anchor="middle" font-size="26" style:font-family="var(--font-serif)" style:fill="var(--text-heading)" class="tabular"
       >{Math.round(score)}</text
     >
   {/if}
@@ -53,7 +64,7 @@
   }
   .arc {
     transition:
-      stroke-dashoffset 0.5s ease,
-      stroke 0.5s ease;
+      stroke-dashoffset var(--dur-settle) var(--ease-settle),
+      stroke var(--dur-settle);
   }
 </style>

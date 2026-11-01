@@ -51,7 +51,7 @@
 <div class="city-field">
   <input
     type="text"
-    class="field-input"
+    class="input"
     id="inputCity"
     placeholder={t('form.cityPlaceholder')}
     autocomplete="off"
@@ -109,14 +109,16 @@
     background: var(--modal-bg);
     border: 1px solid var(--border-soft);
     border-radius: var(--radius);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 10px 40px rgba(var(--shadow-rgb), calc(0.35 * var(--shadow-strength)));
     overflow: hidden;
   }
   li {
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
-    padding: 0.6rem 0.875rem;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 0.875rem;
     cursor: pointer;
   }
   li + li {
@@ -124,15 +126,15 @@
   }
   li.active,
   li:hover {
-    background: rgba(var(--accent-amber-rgb), 0.12);
+    background: var(--hover-bg);
   }
   .name {
     color: var(--text-strong);
     font-size: 0.9375rem;
   }
   .where {
-    color: var(--text-dim);
-    font-size: 0.6875rem;
-    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
   }
 </style>
