@@ -1,35 +1,51 @@
 // ============================================================
-// Renders 1080×1350 PNG cards for sharing: a single city, or a year in review.
-// Always uses the dark brand palette, whatever the app theme.
+// Ledger's share cards (style.md §8.16): a single city, or a year in review.
+// Drawn at 1080×1350 in the app's current theme, inside the shared frame.
 // ============================================================
 
 import { scoreTier } from '../domain/score';
+import {
+  CARD_FORMATS,
+  CONTENT_INSET,
+  MONO,
+  SERIF,
+  canvasToBlob,
+  cardFontsReady,
+  clipText,
+  createCard,
+  currentCardTheme,
+  drawEyebrow,
+  drawFooter,
+  drawFrame,
+  drawTracked,
+  fitSerif,
+  readPalette,
+  type CardToken,
+  type Palette,
+} from './card-frame';
 
 export interface CardData {
   city: string;
   region: string;
+  /** The visit, e.g. "March 2025". */
   month: string;
   score: number | null;
+  /** The score's tier name, e.g. "Strong". */
+  tier: string | null;
   /** Category name and the entry's average rating (1–10) in it. */
   categories: { label: string; average: number }[];
   /** Cover photo URL, same-origin so the canvas isn't tainted. */
   photoUrl?: string;
   brand: string;
+  tagline: string;
 }
 
-const W = 1080;
-const H = 1350;
-const PAD = 72;
-const SERIF = '"Iowan Old Style", "Apple Garamond", Baskerville, Georgia, "Times New Roman", serif';
-const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-const C = {
-  surface: '#0f0d0b',
-  cream: '#f5ecd9',
-  label: '#a8a29e',
-  track: 'rgba(68, 64, 60, 0.55)',
-  amber: '#d4a574',
-};
+const { width: W, height: H } = CARD_FORMATS.post;
+const INNER = W - CONTENT_INSET * 2;
+
+function tierColor(p: Palette, score: number): string {
+  return p[scoreTier(score).cssVar.slice(2) as CardToken];
+}
 
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -40,133 +56,111 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, w: number, h: number) {
+function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
   const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
   const sw = w / scale;
   const sh = h / scale;
-  ctx.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 0, 0, w, h);
+  ctx.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, x, y, w, h);
 }
 
-/** Shrinks the font until `text` fits `maxWidth`. */
-function fitFont(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, start: number, min: number, family: string) {
-  let size = start;
-  do {
-    ctx.font = `400 ${size}px ${family}`;
-    if (ctx.measureText(text).width <= maxWidth) break;
-    size -= 4;
-  } while (size > min);
-  return size;
-}
-
-function spaced(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, spacing: number, align: 'left' | 'right' = 'left') {
-  ctx.letterSpacing = `${spacing}px`;
-  ctx.textAlign = align;
-  ctx.fillText(text, x, y);
-  ctx.letterSpacing = '0px';
+/** The 270° score dial (§8.15), with the number in serif at its centre. */
+function drawDial(ctx: CanvasRenderingContext2D, p: Palette, cx: number, cy: number, r: number, score: number | null) {
+  const start = Math.PI * 0.75;
+  const sweep = Math.PI * 1.5;
+  ctx.lineWidth = r * 0.12;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = p['chart-track'];
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, start, start + sweep);
+  ctx.stroke();
+  if (score !== null) {
+    ctx.strokeStyle = tierColor(p, score);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, start, start + (sweep * score) / 100);
+    ctx.stroke();
+  }
+  ctx.fillStyle = p['text-heading'];
+  ctx.textAlign = 'center';
+  ctx.font = `400 ${Math.round(r * 0.78)}px ${SERIF}`;
+  ctx.fillText(score === null ? '—' : String(Math.round(score)), cx, cy + r * 0.26);
   ctx.textAlign = 'left';
 }
 
+/** A bar list row (§8.15): label, a 4px bar and a mono value. */
+function drawBar(
+  ctx: CanvasRenderingContext2D,
+  p: Palette,
+  x: number,
+  y: number,
+  w: number,
+  label: string,
+  average: number,
+) {
+  ctx.fillStyle = p['text-muted'];
+  ctx.font = `400 28px ${SERIF}`;
+  ctx.fillText(clipText(ctx, label, w - 90), x, y);
+  ctx.fillStyle = p['text-heading'];
+  ctx.font = `400 26px ${MONO}`;
+  ctx.textAlign = 'right';
+  ctx.fillText(average.toFixed(1), x + w, y);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = p['chart-track'];
+  ctx.fillRect(x, y + 16, w, 4);
+  ctx.fillStyle = tierColor(p, average * 10);
+  ctx.fillRect(x, y + 16, (w * average) / 10, 4);
+}
+
 export async function renderCard(data: CardData): Promise<Blob> {
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('2D canvas unavailable');
+  const p = readPalette(currentCardTheme());
+  await cardFontsReady();
+  const { canvas, ctx } = createCard(W, H);
+  drawFrame(ctx, p);
+  let y = drawEyebrow(ctx, p, `${data.brand} · ${data.month}`) + 48;
 
-  // Solid background so the photo can fade into it without a seam.
-  ctx.fillStyle = C.surface;
-  ctx.fillRect(0, 0, W, H);
-  if (!data.photoUrl) {
-    // Without a photo, a warm glow fills the top of the card.
-    const glow = ctx.createRadialGradient(W * 0.85, H * 0.1, 0, W * 0.85, H * 0.1, W * 0.8);
-    glow.addColorStop(0, 'rgba(212, 165, 116, 0.16)');
-    glow.addColorStop(1, 'rgba(212, 165, 116, 0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  // Cover photo fading into the background.
-  const photoH = 640;
   if (data.photoUrl) {
     try {
-      drawCover(ctx, await loadImage(data.photoUrl), W, photoH);
-      const fade = ctx.createLinearGradient(0, photoH * 0.45, 0, photoH);
-      fade.addColorStop(0, 'rgba(15, 13, 11, 0)');
-      fade.addColorStop(1, 'rgba(15, 13, 11, 1)');
-      ctx.fillStyle = fade;
-      ctx.fillRect(0, 0, W, photoH);
+      const img = await loadImage(data.photoUrl);
+      drawCover(ctx, img, CONTENT_INSET, y, INNER, 420);
+      ctx.strokeStyle = p['border-faint'];
+      ctx.lineWidth = 2;
+      ctx.strokeRect(CONTENT_INSET, y, INNER, 420);
+      y += 420;
     } catch {
       // Render without the photo.
     }
   }
 
-  // Score ring.
-  const cx = W - PAD - 110;
-  const cy = data.photoUrl ? photoH - 40 : 260;
-  const color = data.score === null ? C.amber : scoreTier(data.score).color;
-  ctx.lineWidth = 16;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = C.track;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 110, 0, Math.PI * 2);
-  ctx.stroke();
-  if (data.score !== null) {
-    ctx.strokeStyle = color;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 110, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * data.score) / 100);
-    ctx.stroke();
-  }
-  ctx.fillStyle = 'rgba(15, 13, 11, 0.55)';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 100, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.font = `500 72px ${MONO}`;
-  ctx.fillText(data.score === null ? '—' : String(Math.round(data.score)), cx, cy + 22);
-  ctx.fillStyle = C.label;
-  ctx.font = `400 22px ${MONO}`;
-  ctx.fillText('/ 100', cx, cy + 62);
-  ctx.textAlign = 'left';
-
-  // City, region and month.
-  let y = data.photoUrl ? photoH + 130 : 560;
-  ctx.fillStyle = C.cream;
-  fitFont(ctx, data.city, W - PAD * 2, 112, 48, SERIF);
-  ctx.fillText(data.city, PAD, y);
-  y += 64;
-  ctx.fillStyle = C.label;
-  ctx.font = `500 26px ${SANS}`;
-  spaced(ctx, `${data.region} · ${data.month}`.toUpperCase(), PAD, y, 6);
-
-  // Category bars.
-  y += 70;
-  const barX = 470;
-  const barW = W - PAD - barX - 70;
-  for (const { label, average } of data.categories.slice(0, 6)) {
-    ctx.fillStyle = C.label;
-    ctx.font = `500 22px ${SANS}`;
-    spaced(ctx, label.toUpperCase().slice(0, 26), PAD, y + 8, 3);
-    ctx.fillStyle = C.track;
-    ctx.fillRect(barX, y, barW, 6);
-    ctx.fillStyle = scoreTier(average * 10).color;
-    ctx.fillRect(barX, y, (barW * average) / 10, 6);
-    ctx.fillStyle = C.cream;
-    ctx.font = `400 24px ${MONO}`;
-    ctx.textAlign = 'right';
-    ctx.fillText(average.toFixed(1), W - PAD, y + 10);
-    ctx.textAlign = 'left';
-    y += 46;
-  }
-
-  // Footer.
-  ctx.fillStyle = C.amber;
+  // Title: the city, and the region in italic under it.
+  y += 130;
+  ctx.fillStyle = p['text-heading'];
+  fitSerif(ctx, data.city, INNER, 112, 56);
+  ctx.fillText(data.city, CONTENT_INSET, y);
+  y += 62;
+  ctx.fillStyle = p['text-dim'];
   ctx.font = `italic 400 40px ${SERIF}`;
-  ctx.fillText(data.brand, PAD, H - 56);
+  ctx.fillText(clipText(ctx, data.region, INNER), CONTENT_INSET, y);
 
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Canvas export failed'))), 'image/png'),
-  );
+  // The hero figure: the dial, with the tier name under it.
+  y += 80;
+  const r = 104;
+  const cx = CONTENT_INSET + r + 8;
+  drawDial(ctx, p, cx, y + r + 8, r, data.score);
+  if (data.tier) {
+    ctx.fillStyle = data.score === null ? p['text-dim'] : tierColor(p, data.score);
+    drawTracked(ctx, data.tier, cx, y + r * 2 + 64, 22, 0.2, 'center');
+  }
+
+  // Category averages beside it.
+  const barX = cx + r + 72;
+  const barW = W - CONTENT_INSET - barX;
+  const footerTop = H - CONTENT_INSET - 52;
+  const rows = Math.max(0, Math.min(data.categories.length, Math.floor((footerTop - 40 - y) / 72)));
+  data.categories.slice(0, rows).forEach(({ label, average }, i) => {
+    drawBar(ctx, p, barX, y + 34 + i * 72, barW, label, average);
+  });
+
+  drawFooter(ctx, p, data.brand, data.tagline);
+  return canvasToBlob(canvas);
 }
 
 // ---------- year in review ----------
@@ -182,91 +176,75 @@ export interface ReviewCardData {
   /** Category winners: "Food Scene" → "Kyoto", 9.0 */
   winners: { label: string; city: string; average: number }[];
   brand: string;
+  tagline: string;
 }
 
 export async function renderReviewCard(data: ReviewCardData): Promise<Blob> {
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('2D canvas unavailable');
+  const p = readPalette(currentCardTheme());
+  await cardFontsReady();
+  const { canvas, ctx } = createCard(W, H);
+  drawFrame(ctx, p);
+  let y = drawEyebrow(ctx, p, `${data.brand} · ${data.kicker}`);
 
-  ctx.fillStyle = C.surface;
-  ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W * 0.9, 0, 0, W * 0.9, 0, W);
-  glow.addColorStop(0, 'rgba(212, 165, 116, 0.2)');
-  glow.addColorStop(1, 'rgba(212, 165, 116, 0)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
+  y += 130;
+  ctx.fillStyle = p['text-heading'];
+  fitSerif(ctx, data.title, INNER, 96, 48, true);
+  ctx.fillText(data.title, CONTENT_INSET, y);
 
-  let y = PAD + 30;
-  ctx.fillStyle = C.amber;
-  ctx.font = `500 24px ${MONO}`;
-  spaced(ctx, data.kicker.toUpperCase(), PAD, y, 8);
-  y += 100;
-  ctx.fillStyle = C.cream;
-  const titleSize = fitFont(ctx, data.title, W - PAD * 2, 96, 48, SERIF);
-  ctx.font = `italic 400 ${titleSize}px ${SERIF}`;
-  ctx.fillText(data.title, PAD, y);
-
-  // Stats grid: three columns, two rows.
-  y += 110;
-  const colW = (W - PAD * 2) / 3;
-  data.stats.slice(0, 6).forEach((stat, i) => {
-    const x = PAD + (i % 3) * colW;
-    const rowY = y + Math.floor(i / 3) * 170;
-    ctx.fillStyle = C.cream;
-    fitFont(ctx, stat.value, colW - 24, 80, 36, MONO);
-    ctx.fillText(stat.value, x, rowY + 70);
-    ctx.fillStyle = C.label;
-    ctx.font = `500 20px ${SANS}`;
-    spaced(ctx, stat.label.toUpperCase(), x, rowY + 110, 3);
+  // Stat tiles on a hairline grid, three to a row.
+  y += 64;
+  const stats = data.stats.slice(0, 6);
+  const cols = 3;
+  const tileW = INNER / cols;
+  const tileH = 170;
+  const rowsOfStats = Math.ceil(stats.length / cols);
+  ctx.fillStyle = p['border-faint'];
+  for (let i = 1; i < cols; i++) ctx.fillRect(CONTENT_INSET + tileW * i, y, 1, tileH * rowsOfStats);
+  for (let i = 0; i <= rowsOfStats; i++) ctx.fillRect(CONTENT_INSET, y + tileH * i, INNER, 1);
+  stats.forEach((stat, i) => {
+    const cx = CONTENT_INSET + (i % cols) * tileW + tileW / 2;
+    const top = y + Math.floor(i / cols) * tileH;
+    ctx.fillStyle = p['text-heading'];
+    ctx.textAlign = 'center';
+    const size = fitSerif(ctx, stat.value, tileW - 32, 72, 36);
+    ctx.font = `400 ${size}px ${SERIF}`;
+    ctx.fillText(stat.value, cx, top + 92);
+    ctx.fillStyle = p['text-dim'];
+    drawTracked(ctx, stat.label, cx, top + 136, 20, 0.2, 'center');
   });
-  y += 340 + 30;
-
-  // Divider.
-  ctx.fillStyle = C.track;
-  ctx.fillRect(PAD, y, W - PAD * 2, 2);
-  y += 70;
+  y += tileH * rowsOfStats + 90;
 
   if (data.best) {
-    const color = scoreTier(data.best.score).color;
-    ctx.fillStyle = C.label;
-    ctx.font = `500 22px ${SANS}`;
-    spaced(ctx, data.best.label.toUpperCase(), PAD, y, 4);
-    y += 66;
-    ctx.fillStyle = C.cream;
-    fitFont(ctx, data.best.city, W - PAD * 2 - 200, 64, 36, SERIF);
-    ctx.fillText(data.best.city, PAD, y);
-    ctx.fillStyle = color;
-    ctx.font = `500 60px ${MONO}`;
+    ctx.fillStyle = p['text-dim'];
+    drawTracked(ctx, data.best.label, CONTENT_INSET, y, 22, 0.25);
+    y += 72;
+    ctx.fillStyle = p['text-heading'];
+    fitSerif(ctx, data.best.city, INNER - 200, 64, 36);
+    ctx.fillText(data.best.city, CONTENT_INSET, y);
+    ctx.fillStyle = tierColor(p, data.best.score);
+    ctx.font = `400 72px ${SERIF}`;
     ctx.textAlign = 'right';
-    ctx.fillText(String(Math.round(data.best.score)), W - PAD, y);
+    ctx.fillText(String(Math.round(data.best.score)), W - CONTENT_INSET, y);
     ctx.textAlign = 'left';
-    y += 70;
+    y += 76;
   }
 
+  const footerTop = H - CONTENT_INSET - 52;
   for (const w of data.winners.slice(0, 5)) {
-    ctx.fillStyle = C.label;
-    ctx.font = `500 21px ${SANS}`;
-    spaced(ctx, w.label.toUpperCase().slice(0, 24), PAD, y, 3);
-    ctx.fillStyle = C.cream;
-    ctx.font = `400 30px ${SERIF}`;
-    const city = w.city.length > 22 ? `${w.city.slice(0, 21)}…` : w.city;
-    ctx.fillText(city, PAD + 470, y);
-    ctx.fillStyle = scoreTier(w.average * 10).color;
-    ctx.font = `400 26px ${MONO}`;
+    if (y > footerTop - 30) break;
+    ctx.fillStyle = p['text-dim'];
+    drawTracked(ctx, clipText(ctx, w.label, 360), CONTENT_INSET, y, 20, 0.2);
+    ctx.fillStyle = p['text-heading'];
+    ctx.font = `400 32px ${SERIF}`;
+    ctx.fillText(clipText(ctx, w.city, INNER - 470 - 100), CONTENT_INSET + 430, y);
+    ctx.fillStyle = tierColor(p, w.average * 10);
+    ctx.font = `400 28px ${MONO}`;
     ctx.textAlign = 'right';
-    ctx.fillText(w.average.toFixed(1), W - PAD, y);
+    ctx.fillText(w.average.toFixed(1), W - CONTENT_INSET, y);
     ctx.textAlign = 'left';
-    y += 50;
+    y += 56;
   }
 
-  ctx.fillStyle = C.amber;
-  ctx.font = `italic 400 40px ${SERIF}`;
-  ctx.fillText(data.brand, PAD, H - 56);
-
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Canvas export failed'))), 'image/png'),
-  );
+  drawFooter(ctx, p, data.brand, data.tagline);
+  return canvasToBlob(canvas);
 }

@@ -1,7 +1,8 @@
 import type { Messages } from './index.svelte';
 
 const de: Messages = {
-  'app.tagline': 'Ein Verzeichnis von Städten · ihrem Charakter · und meinem Platz darin',
+  'app.tagline': 'Ein Verzeichnis von Städten, ihrem Charakter und meinem Platz darin',
+  'share.tagline': 'Ein Verzeichnis von Städten',
   'app.designedBy': 'Gestaltet von Mehul',
 
   'status.entries': { one: '{count} Eintrag', other: '{count} Einträge' },
@@ -13,11 +14,13 @@ const de: Messages = {
   'tabs.ledger': 'Verzeichnis',
   'tabs.map': 'Karte',
   'tabs.insights': 'Auswertung',
+  'tabs.sections': 'Bereiche',
   'tabs.settings': 'Einstellungen',
 
   'action.export': 'Exportieren',
   'action.import': 'Importieren',
   'action.cancel': 'Abbrechen',
+  'action.undo': 'Rückgängig',
   'action.delete': 'Löschen',
   'action.close': 'Schließen',
   'action.clear': 'Leeren',
@@ -34,6 +37,7 @@ const de: Messages = {
   'form.chooseMonth': 'Monat des Besuchs wählen',
   'form.prevYear': 'Vorheriges Jahr',
   'form.nextYear': 'Nächstes Jahr',
+  'form.choose': 'Auswählen',
   'form.score': 'Gewichtete Wertung',
   'form.scoreHint': 'Bewerte die Kriterien unten, um deine Wertung zu berechnen.',
   'form.impressions': 'Eindrücke',
@@ -73,15 +77,14 @@ const de: Messages = {
   'ledger.sortCity': 'Alphabetisch',
   'ledger.emptyTitle': 'Noch keine Städte erfasst.',
   'ledger.emptyHint': 'Bewerte im Tab „Eintrag“ eine Stadt, um zu beginnen.',
-  'ledger.noMatchTitle': 'Keine Treffer.',
   'ledger.noMatchHint': 'Versuche eine andere Suche.',
+  'ledger.addFirst': 'Stadt bewerten',
+  'ledger.clearSearch': 'Suche löschen',
   'ledger.notes': 'Notizen',
   'ledger.photo': 'Foto {n} von {total}',
   'ledger.scoreLabel': 'Wertung {score} von 100',
   'ledger.unrated': 'Nicht bewertet',
 
-  'delete.title': 'Eintrag löschen?',
-  'delete.message': '{place} wird dauerhaft aus deinem Verzeichnis entfernt.',
 
   'map.title': 'Deine Karte',
   'map.cities': { one: '{count} Stadt', other: '{count} Städte' },
@@ -100,6 +103,7 @@ const de: Messages = {
   'insights.allTime': 'Gesamt',
   'insights.period': 'Zeitraum',
   'insights.empty': 'Erfasse ein paar Städte, um hier Auswertungen zu sehen.',
+  'insights.emptyTitle': 'Noch keine Auswertung',
   'insights.review': 'Jahresrückblick',
   'insights.reviewTitle': '{year} in Ledger',
   'insights.reviewTitleAll': 'Mein Ledger bisher',
@@ -143,8 +147,9 @@ const de: Messages = {
   'settings.appearance': 'Darstellung',
   'settings.theme': 'Design',
   'settings.themeSystem': 'System',
-  'settings.themeLight': 'Hell',
-  'settings.themeDark': 'Dunkel',
+  'settings.themeDusk': 'Abend',
+  'settings.themeDawn': 'Morgen',
+  'settings.dawnSwitch': 'Morgen-Design',
   'settings.language': 'Sprache',
   'settings.languageSystem': 'Systemsprache',
 

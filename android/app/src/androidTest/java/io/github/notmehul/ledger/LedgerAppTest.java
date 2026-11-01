@@ -29,6 +29,8 @@ import org.junit.runner.RunWith;
 public class LedgerAppTest {
 
     private static final long TIMEOUT_MS = 30_000;
+    /** The entry count on the Logbook tab. */
+    private static final String ENTRY_BADGE = "#tabLogbook .badge";
 
     @Before
     public void clearData() {
@@ -40,16 +42,16 @@ public class LedgerAppTest {
     @Test
     public void savesAnEntryAndKeepsItAcrossRestarts() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            waitForText("fileStatus", "0");
+            waitForText(Locator.ID, "fileStatus", "0");
 
             onWebView().withElement(findElement(Locator.ID, "inputCity")).perform(webKeys("Lisbon"));
             onWebView().withElement(findElement(Locator.ID, "inputState")).perform(webKeys("Portugal"));
             onWebView().withElement(findElement(Locator.ID, "btnSave")).perform(webClick());
-            waitForText("entryBadge", "1");
+            waitForText(Locator.CSS_SELECTOR, ENTRY_BADGE, "1");
 
             scenario.recreate();
 
-            waitForText("entryBadge", "1");
+            waitForText(Locator.CSS_SELECTOR, ENTRY_BADGE, "1");
             onWebView().withElement(findElement(Locator.ID, "tabLogbook")).perform(webClick());
             onWebView()
                 .withElement(findElement(Locator.CSS_SELECTOR, ".entry-city-name"))
@@ -60,7 +62,7 @@ public class LedgerAppTest {
     @Test
     public void opensEveryTab() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            waitForText("fileStatus", "0");
+            waitForText(Locator.ID, "fileStatus", "0");
             for (String tab : new String[] { "tabMap", "tabSettings", "tabLogbook", "tabNew" }) {
                 onWebView().withElement(findElement(Locator.ID, tab)).perform(webClick());
             }
@@ -71,12 +73,12 @@ public class LedgerAppTest {
     }
 
     /** Polls until the element exists and its text contains `expected`. */
-    private static void waitForText(String id, String expected) {
+    private static void waitForText(Locator by, String selector, String expected) {
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
         AssertionError last = null;
         while (System.currentTimeMillis() < deadline) {
             try {
-                onWebView().withElement(findElement(Locator.ID, id)).check(webMatches(getText(), containsString(expected)));
+                onWebView().withElement(findElement(by, selector)).check(webMatches(getText(), containsString(expected)));
                 return;
             } catch (RuntimeException | AssertionError e) {
                 last = e instanceof AssertionError ? (AssertionError) e : new AssertionError(e);
@@ -88,7 +90,7 @@ public class LedgerAppTest {
                 }
             }
         }
-        throw last != null ? last : new AssertionError("Timed out waiting for #" + id);
+        throw last != null ? last : new AssertionError("Timed out waiting for " + selector);
     }
 
     private static void deleteRecursively(File file) {

@@ -27,24 +27,22 @@ export interface ScoreTier {
   id: TierId;
   /** CSS custom property holding the tier colour (theme-aware). */
   cssVar: string;
-  /** Fixed colour for theme-independent output (share cards). */
-  color: string;
   /** Traffic-light marker used in Markdown export. */
   marker: string;
 }
 
 const TIERS: readonly (ScoreTier & { min: number })[] = [
-  { min: 85, id: 'exceptional', cssVar: '--scale-1', color: '#9fb3a0', marker: '🟢' },
-  { min: 72, id: 'strong', cssVar: '--scale-2', color: '#b8c9a0', marker: '🟢' },
-  { min: 58, id: 'decent', cssVar: '--scale-3', color: '#d4a574', marker: '🟡' },
-  { min: 42, id: 'mixed', cssVar: '--scale-4', color: '#c08050', marker: '🟠' },
-  { min: -Infinity, id: 'challenging', cssVar: '--scale-5', color: '#f87171', marker: '🔴' },
+  { min: 85, id: 'exceptional', cssVar: '--scale-1', marker: '🟢' },
+  { min: 72, id: 'strong', cssVar: '--scale-2', marker: '🟢' },
+  { min: 58, id: 'decent', cssVar: '--scale-3', marker: '🟡' },
+  { min: 42, id: 'mixed', cssVar: '--scale-4', marker: '🟠' },
+  { min: -Infinity, id: 'challenging', cssVar: '--scale-5', marker: '🔴' },
 ];
 
 /** One shared tiering so the form, cards, map and exports always agree. */
 export function scoreTier(score: number): ScoreTier {
-  const { id, cssVar, color, marker } = TIERS.find((t) => score >= t.min)!;
-  return { id, cssVar, color, marker };
+  const { id, cssVar, marker } = TIERS.find((t) => score >= t.min)!;
+  return { id, cssVar, marker };
 }
 
 export type RatingLevel = 'low' | 'mid' | 'high';

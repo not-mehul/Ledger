@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Dialog } from '@capacitor/dialog';
   import {
     WEIGHT_MAX,
     WEIGHT_MIN,
@@ -51,36 +50,36 @@
   const builtinEnds = (m: Metric) => metricEnds({ ...m, lo: undefined, hi: undefined });
 
   async function restore() {
-    const { value } = await Dialog.confirm({
+    const ok = await ui.confirm({
       title: t('metrics.restoreTitle'),
       message: t('metrics.restoreMessage'),
-      okButtonTitle: t('metrics.restore'),
-      cancelButtonTitle: t('action.cancel'),
+      action: t('metrics.restore'),
+      danger: true,
     });
-    if (value) await apply((c) => restoreDefaults(c));
+    if (ok) await apply((c) => restoreDefaults(c));
   }
 </script>
 
-<p class="settings-hint">{t('metrics.hint')}</p>
+<p class="t-hint">{t('metrics.hint')}</p>
 
 <details class="metrics-details" id="metricsEditor">
-<summary class="btn btn-ghost">{t('metrics.edit')}</summary>
+<summary class="btn btn-secondary">{t('metrics.edit')}</summary>
 
 {#each config.categories as cat, ci (cat.id)}
   <fieldset class="cat-edit" class:archived={cat.archived}>
     <legend class="visually-hidden">{categoryName(cat)}</legend>
     <div class="cat-head">
       <input
-        class="field-input cat-title"
+        class="input cat-title"
         aria-label={t('metrics.categoryName')}
         value={cat.title ?? ''}
         placeholder={cat.builtin ? categoryName({ ...cat, title: undefined }) : ''}
         onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateCategory(c, cat.id, { title: v })); }}
       />
       <div class="icon-actions">
-        <button type="button" class="icon-btn" aria-label={t('metrics.moveUp')} disabled={ci === 0} onclick={() => apply((c) => moveCategory(c, cat.id, -1))}>↑</button>
-        <button type="button" class="icon-btn" aria-label={t('metrics.moveDown')} disabled={ci === config.categories.length - 1} onclick={() => apply((c) => moveCategory(c, cat.id, 1))}>↓</button>
-        <button type="button" class="btn btn-ghost small" onclick={() => apply((c) => updateCategory(c, cat.id, { archived: !c.categories.find((x) => x.id === cat.id)?.archived }))}>
+        <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={ci === 0} onclick={() => apply((c) => moveCategory(c, cat.id, -1))}>↑</button>
+        <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={ci === config.categories.length - 1} onclick={() => apply((c) => moveCategory(c, cat.id, 1))}>↓</button>
+        <button type="button" class="btn btn-secondary small" onclick={() => apply((c) => updateCategory(c, cat.id, { archived: !c.categories.find((x) => x.id === cat.id)?.archived }))}>
           {cat.archived ? t('metrics.show') : t('metrics.hide')}
         </button>
       </div>
@@ -92,14 +91,14 @@
         <div class="metric-edit" class:archived={m.archived} data-metric={m.id}>
           <div class="metric-main">
             <input
-              class="field-input"
+              class="input"
               aria-label={t('metrics.name')}
               value={m.label ?? ''}
               placeholder={builtinName(m)}
               onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { label: v })); }}
             />
             <select
-              class="field-input weight"
+              class="select weight"
               aria-label={t('metrics.weight')}
               value={m.weight}
               onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { weight: Number(v) })); }}
@@ -113,16 +112,16 @@
             <summary>{t('metrics.low')} / {t('metrics.high')} · {t('metrics.category')}</summary>
             <div class="metric-more">
               <label class="field-group">
-                <span class="field-label">{t('metrics.low')}</span>
-                <input class="field-input" value={m.lo ?? ''} placeholder={ends[0]} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { lo: v })); }} />
+                <span class="t-field-label">{t('metrics.low')}</span>
+                <input class="input" value={m.lo ?? ''} placeholder={ends[0]} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { lo: v })); }} />
               </label>
               <label class="field-group">
-                <span class="field-label">{t('metrics.high')}</span>
-                <input class="field-input" value={m.hi ?? ''} placeholder={ends[1]} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { hi: v })); }} />
+                <span class="t-field-label">{t('metrics.high')}</span>
+                <input class="input" value={m.hi ?? ''} placeholder={ends[1]} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { hi: v })); }} />
               </label>
               <label class="field-group">
-                <span class="field-label">{t('metrics.category')}</span>
-                <select class="field-input" value={m.cat} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { cat: v })); }}>
+                <span class="t-field-label">{t('metrics.category')}</span>
+                <select class="select" value={m.cat} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { cat: v })); }}>
                   {#each config.categories as c (c.id)}
                     <option value={c.id}>{categoryName(c)}</option>
                   {/each}
@@ -132,9 +131,9 @@
           </details>
           <div class="icon-actions">
             {#if m.archived}<span class="tag">{t('metrics.hidden')}</span>{/if}
-            <button type="button" class="icon-btn" aria-label={t('metrics.moveUp')} disabled={mi === 0} onclick={() => apply((c) => moveMetric(c, m.id, -1))}>↑</button>
-            <button type="button" class="icon-btn" aria-label={t('metrics.moveDown')} disabled={mi === metricsOf(cat).length - 1} onclick={() => apply((c) => moveMetric(c, m.id, 1))}>↓</button>
-            <button type="button" class="btn btn-ghost small" onclick={() => apply((c) => updateMetric(c, m.id, { archived: !c.metrics.find((x) => x.id === m.id)?.archived }))}>
+            <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={mi === 0} onclick={() => apply((c) => moveMetric(c, m.id, -1))}>↑</button>
+            <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={mi === metricsOf(cat).length - 1} onclick={() => apply((c) => moveMetric(c, m.id, 1))}>↓</button>
+            <button type="button" class="btn btn-secondary small" onclick={() => apply((c) => updateMetric(c, m.id, { archived: !c.metrics.find((x) => x.id === m.id)?.archived }))}>
               {m.archived ? t('metrics.show') : t('metrics.hide')}
             </button>
             {#if canRemoveMetric(m, (id) => rated.has(id))}
@@ -143,13 +142,13 @@
           </div>
         </div>
       {/each}
-      <button type="button" class="btn btn-ghost add" onclick={() => apply((c) => addMetric(c, cat.id, t('metrics.newMetric')))}>+ {t('metrics.addMetric')}</button>
+      <button type="button" class="btn btn-secondary add" onclick={() => apply((c) => addMetric(c, cat.id, t('metrics.newMetric')))}>+ {t('metrics.addMetric')}</button>
     {/if}
   </fieldset>
 {/each}
 
 <div class="editor-footer">
-  <button type="button" class="btn btn-ghost" onclick={() => apply((c) => addCategory(c, t('metrics.newCategory')))}>+ {t('metrics.addCategory')}</button>
+  <button type="button" class="btn btn-secondary" onclick={() => apply((c) => addCategory(c, t('metrics.newCategory')))}>+ {t('metrics.addCategory')}</button>
   <button type="button" class="btn btn-danger" onclick={restore}>{t('metrics.restore')}</button>
 </div>
 </details>
@@ -164,8 +163,7 @@
     display: none;
   }
   .metrics-details[open] > summary {
-    background: var(--text-strong);
-    color: var(--on-invert);
+    border-color: var(--accent-amber);
   }
   .cat-edit {
     border: none;
@@ -209,11 +207,15 @@
   details {
     margin: 0.5rem 0;
   }
-  summary {
+  details:not(.metrics-details) > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-mono);
     font-size: 0.625rem;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text-faint);
+    color: var(--text-dim);
     cursor: pointer;
   }
   .metric-more {
@@ -232,29 +234,19 @@
     justify-content: flex-end;
     flex-wrap: wrap;
   }
-  .icon-btn {
-    width: 32px;
-    height: 32px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-  .icon-btn:disabled {
-    opacity: 0.3;
+  .btn-icon:disabled {
+    color: var(--text-faint);
     cursor: default;
   }
   .small {
-    padding: 0.4rem 0.7rem;
-    font-size: 0.5625rem;
+    padding: 0 0.875rem;
   }
   .tag {
     margin-right: auto;
-    font-size: 0.5625rem;
+    font-size: 0.625rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text-faint);
+    color: var(--text-dim);
     font-family: var(--font-mono);
   }
   .add {

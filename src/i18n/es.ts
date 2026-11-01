@@ -1,7 +1,8 @@
 import type { Messages } from './index.svelte';
 
 const es: Messages = {
-  'app.tagline': 'Un registro de ciudades · su carácter · y mi lugar en ellas',
+  'app.tagline': 'Un registro de ciudades, su carácter y mi lugar en ellas',
+  'share.tagline': 'Un registro de ciudades',
   'app.designedBy': 'Diseñado por Mehul',
 
   'status.entries': { one: '{count} entrada', other: '{count} entradas' },
@@ -13,11 +14,13 @@ const es: Messages = {
   'tabs.ledger': 'Registro',
   'tabs.map': 'Mapa',
   'tabs.insights': 'Análisis',
+  'tabs.sections': 'Secciones',
   'tabs.settings': 'Ajustes',
 
   'action.export': 'Exportar',
   'action.import': 'Importar',
   'action.cancel': 'Cancelar',
+  'action.undo': 'Deshacer',
   'action.delete': 'Eliminar',
   'action.close': 'Cerrar',
   'action.clear': 'Limpiar',
@@ -34,6 +37,7 @@ const es: Messages = {
   'form.chooseMonth': 'Elige el mes de la visita',
   'form.prevYear': 'Año anterior',
   'form.nextYear': 'Año siguiente',
+  'form.choose': 'Elegir',
   'form.score': 'Puntuación ponderada',
   'form.scoreHint': 'Valora las métricas de abajo para calcular tu puntuación.',
   'form.impressions': 'Impresiones',
@@ -73,15 +77,14 @@ const es: Messages = {
   'ledger.sortCity': 'Alfabético',
   'ledger.emptyTitle': 'Aún no hay ciudades.',
   'ledger.emptyHint': 'Valora una ciudad en la pestaña Entrada para empezar.',
-  'ledger.noMatchTitle': 'Sin resultados.',
   'ledger.noMatchHint': 'Prueba con otra búsqueda.',
+  'ledger.addFirst': 'Valorar una ciudad',
+  'ledger.clearSearch': 'Borrar búsqueda',
   'ledger.notes': 'Notas',
   'ledger.photo': 'Foto {n} de {total}',
   'ledger.scoreLabel': 'Puntuación {score} de 100',
   'ledger.unrated': 'Sin valorar',
 
-  'delete.title': '¿Eliminar entrada?',
-  'delete.message': '{place} se eliminará de tu registro de forma permanente.',
 
   'map.title': 'Tu mapa',
   'map.cities': { one: '{count} ciudad', other: '{count} ciudades' },
@@ -100,6 +103,7 @@ const es: Messages = {
   'insights.allTime': 'Siempre',
   'insights.period': 'Periodo',
   'insights.empty': 'Registra algunas ciudades para ver análisis aquí.',
+  'insights.emptyTitle': 'Aún no hay análisis',
   'insights.review': 'Resumen del año',
   'insights.reviewTitle': '{year} en Ledger',
   'insights.reviewTitleAll': 'Mi Ledger hasta ahora',
@@ -143,8 +147,9 @@ const es: Messages = {
   'settings.appearance': 'Apariencia',
   'settings.theme': 'Tema',
   'settings.themeSystem': 'Sistema',
-  'settings.themeLight': 'Claro',
-  'settings.themeDark': 'Oscuro',
+  'settings.themeDusk': 'Anochecer',
+  'settings.themeDawn': 'Amanecer',
+  'settings.dawnSwitch': 'Tema Amanecer',
   'settings.language': 'Idioma',
   'settings.languageSystem': 'Predeterminado del sistema',
 

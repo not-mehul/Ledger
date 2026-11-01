@@ -34,7 +34,8 @@ test.beforeEach(async ({ page }) => openApp(page));
 
 test('shows an empty state with no entries', async ({ page }) => {
   await page.click('#tabInsights');
-  await expect(page.locator('#viewInsights .empty-title')).toHaveText('Log a few cities to see insights here.');
+  await expect(page.locator('#viewInsights .empty-title')).toHaveText('No insights yet');
+  await expect(page.locator('#viewInsights .empty-text')).toHaveText('Log a few cities to see insights here.');
 });
 
 test('summarises each year and all time', async ({ page }, info) => {
@@ -83,6 +84,8 @@ test('explains what drives a verdict and applies suggested weights', async ({ pa
   await expect(page.locator('#valueMismatch')).toContainText('Internet Speed ×2');
 
   await page.click('#applyWeights');
+  await expect(page.locator('#modal-title')).toBeVisible();
+  await page.click('#confirmAction');
   await expect(page.locator('#toast')).toHaveText('Weights updated.');
   await expect(page.locator('#valueSignals tr[data-metric="foodQuality"] .w')).toHaveText('×5');
 

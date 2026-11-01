@@ -1,6 +1,6 @@
 <script lang="ts">
   import { detectLocale, locale, relativeTime, setLocale, t, type MessageKey } from './i18n/index.svelte';
-  import { applyTheme } from './platform/theme';
+  import { applyTheme, shown, toggledTheme } from './platform/theme.svelte';
   import { ledger } from './state/ledger.svelte';
   import { ui, type Tab } from './state/ui.svelte';
   import EntryForm from './components/EntryForm.svelte';
@@ -8,13 +8,37 @@
   import LedgerView from './components/LedgerView.svelte';
   import SettingsView from './components/SettingsView.svelte';
   import Sheet from './components/Sheet.svelte';
+  import Modal from './components/ui/Modal.svelte';
+  import TabRail from './components/ui/TabRail.svelte';
+  import ThemeToggle from './components/ui/ThemeToggle.svelte';
+  import Toast from './components/ui/Toast.svelte';
 
-  const TABS: { id: Tab; dom: string; key: MessageKey }[] = [
-    { id: 'entry', dom: 'tabNew', key: 'tabs.entry' },
-    { id: 'ledger', dom: 'tabLogbook', key: 'tabs.ledger' },
-    { id: 'map', dom: 'tabMap', key: 'tabs.map' },
-    { id: 'insights', dom: 'tabInsights', key: 'tabs.insights' },
+  type MainTab = Exclude<Tab, 'settings'>;
+  const TABS: { id: MainTab; dom: string; panel: string; key: MessageKey }[] = [
+    { id: 'entry', dom: 'tabNew', panel: 'viewNew', key: 'tabs.entry' },
+    { id: 'ledger', dom: 'tabLogbook', panel: 'viewLogbook', key: 'tabs.ledger' },
+    { id: 'map', dom: 'tabMap', panel: 'viewMap', key: 'tabs.map' },
+    { id: 'insights', dom: 'tabInsights', panel: 'viewInsights', key: 'tabs.insights' },
   ];
+  const tabs = $derived(
+    TABS.map((tab) => ({
+      id: tab.id,
+      domId: tab.dom,
+      controls: tab.panel,
+      label: t(tab.key),
+      badge: tab.id === 'ledger' ? ledger.entries.length : undefined,
+    })),
+  );
+  const today = $derived(new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
+
+  async function toggleTheme() {
+    try {
+      await ledger.updateSettings({ theme: toggledTheme() });
+    } catch (err) {
+      console.error('Saving settings failed:', err);
+      ui.notify(t('toast.saveFailed'), 'error');
+    }
+  }
 
   $effect(() => applyTheme(ledger.settings.theme));
   $effect(() => {
@@ -40,46 +64,37 @@
 
 <div class="container">
   <header class="site-header">
-    <h1><em>Ledger</em></h1>
-    <p>{t('app.tagline')}</p>
+    <div class="site-title">
+      <p class="eyebrow">{today}</p>
+      <h1 class="t-page-title"><em>Ledger</em></h1>
+      <p class="t-tagline">{t('app.tagline')}</p>
+    </div>
+    <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => void toggleTheme()} />
   </header>
 
   <div class="file-bar">
     <div class="file-dot" class:connected={ledger.status === 'ready'} id="fileDot" aria-hidden="true"></div>
     <span class="file-status" class:connected={ledger.status === 'ready'} id="fileStatus" role="status">{status}</span>
-    <button type="button" class="btn btn-ghost" id="btnExport" onclick={() => (ui.exportOpen = true)}>{t('action.export')}</button>
+    <button type="button" class="btn btn-secondary" id="btnExport" onclick={() => (ui.exportOpen = true)}>{t('action.export')}</button>
     <button
       type="button"
-      class="icon-btn settings-btn"
+      class="btn-icon"
       class:active={ui.tab === 'settings'}
       id="tabSettings"
       aria-label={t('tabs.settings')}
       aria-pressed={ui.tab === 'settings'}
       onclick={() => ui.go(ui.tab === 'settings' ? 'entry' : 'settings')}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
         <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
     </button>
   </div>
 
-  <div class="tab-nav" role="tablist" aria-label="Sections">
-    {#each TABS as tab (tab.id)}
-      <button
-        type="button"
-        class="tab-btn"
-        class:active={ui.tab === tab.id}
-        id={tab.dom}
-        role="tab"
-        aria-selected={ui.tab === tab.id}
-        onclick={() => ui.go(tab.id)}
-      >
-        {t(tab.key)}
-        {#if tab.id === 'ledger'}<span class="tab-badge" id="entryBadge">{ledger.entries.length}</span>{/if}
-      </button>
-    {/each}
-  </div>
+  <nav class="app-tabs">
+    <TabRail {tabs} value={ui.tab === 'settings' ? ('' as MainTab) : ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
+  </nav>
 
   <!-- The form stays mounted so a half-filled entry survives tab switches. -->
   <div hidden={ui.tab !== 'entry'}><EntryForm /></div>
@@ -105,32 +120,28 @@
   </Sheet>
 {/if}
 
-{#if ui.toast}
-  {#key ui.toast.key}
-    <div class="toast show {ui.toast.kind === 'info' ? '' : ui.toast.kind}" id="toast" role="status" aria-live="polite">
-      {ui.toast.message}
+{#if ui.confirmRequest}
+  {@const request = ui.confirmRequest}
+  <Modal title={request.title} closeLabel={t('action.close')} onclose={() => request.resolve(false)}>
+    <p class="t-body-small">{request.message}</p>
+    <div class="btn-row">
+      <button type="button" class="btn btn-muted" onclick={() => request.resolve(false)}>{t('action.cancel')}</button>
+      <button type="button" class="btn {request.danger ? 'btn-danger' : 'btn-primary'}" id="confirmAction" onclick={() => request.resolve(true)}>
+        {request.action}
+      </button>
     </div>
-  {/key}
-{:else}
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </Modal>
 {/if}
 
+<Toast
+  toast={ui.toast}
+  onpause={() => ui.pauseToast()}
+  onresume={() => ui.resumeToast()}
+  onaction={() => ui.actOnToast()}
+/>
+
 <style>
-  .settings-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-  .settings-btn.active {
-    background: var(--text-strong);
-    color: var(--on-invert);
-    border-color: var(--text-strong);
+  .btn-icon.active {
+    color: var(--accent-amber);
   }
 </style>

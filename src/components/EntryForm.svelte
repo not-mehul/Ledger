@@ -145,14 +145,14 @@
     </div>
     <div class="city-row">
       <div class="field-group">
-        <label class="field-label" for="inputCity">{t('form.city')}</label>
+        <label class="t-field-label" for="inputCity">{t('form.city')}</label>
         <CityField bind:city onpick={pickPlace} ontype={() => (located = {})} />
       </div>
       <div class="field-group">
-        <label class="field-label" for="inputState">{t('form.region')}</label>
+        <label class="t-field-label" for="inputState">{t('form.region')}</label>
         <input
           type="text"
-          class="field-input"
+          class="input"
           id="inputState"
           placeholder={t('form.regionPlaceholder')}
           autocomplete="off"
@@ -162,7 +162,7 @@
         />
       </div>
       <div class="field-group">
-        <label class="field-label" for="inputDate">{t('form.month')}</label>
+        <label class="t-field-label" for="inputDate">{t('form.month')}</label>
         <MonthPicker bind:value={month} />
       </div>
     </div>
@@ -176,7 +176,7 @@
       <ScoreDial {score} />
     </div>
     <div class="score-info" aria-live="polite">
-      <div class="score-label">{t('form.score')}</div>
+      <div class="t-field-label score-label">{t('form.score')}</div>
       <div class="score-number">
         <span id="scoreDisplay">{score === null ? '—' : score.toFixed(1)}</span><span> / 100</span>
       </div>
@@ -211,7 +211,7 @@
     <div class="section-head section-head--compact">
       <h2><label for="inputNotes">{t('form.impressions')}</label></h2>
     </div>
-    <textarea class="notes-area" id="inputNotes" placeholder={t('form.notesPlaceholder')} bind:value={notes}></textarea>
+    <textarea class="textarea" id="inputNotes" placeholder={t('form.notesPlaceholder')} bind:value={notes}></textarea>
   </div>
 
   <div class="panel">
@@ -222,8 +222,8 @@
   </div>
 
   <div class="save-row">
-    <span class="save-hint">{t('app.designedBy')}</span>
-    <button type="button" class="btn btn-ghost" id="btnClear" onclick={clear}>{t('action.clear')}</button>
+    <span class="t-hint save-hint">{t('app.designedBy')}</span>
+    <button type="button" class="btn btn-muted" id="btnClear" onclick={clear}>{t('action.clear')}</button>
     <button type="button" class="btn btn-primary" id="btnSave" disabled={saving} onclick={save}>
       {editingId ? t('form.update') : t('form.save')}
     </button>

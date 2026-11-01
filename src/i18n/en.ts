@@ -3,7 +3,8 @@
 // `{name}` placeholders are interpolated; objects are plural forms.
 
 const en = {
-  'app.tagline': 'A record of cities · their character · and my place in them',
+  'app.tagline': 'A record of cities, their character, and my place in them',
+  'share.tagline': 'A record of cities',
   'app.designedBy': 'Designed by Mehul',
 
   'status.entries': { one: '{count} entry', other: '{count} entries' },
@@ -16,10 +17,12 @@ const en = {
   'tabs.map': 'Map',
   'tabs.settings': 'Settings',
   'tabs.insights': 'Insights',
+  'tabs.sections': 'Sections',
 
   'action.export': 'Export',
   'action.import': 'Import',
   'action.cancel': 'Cancel',
+  'action.undo': 'Undo',
   'action.delete': 'Delete',
   'action.close': 'Close',
   'action.clear': 'Clear',
@@ -36,6 +39,7 @@ const en = {
   'form.chooseMonth': 'Choose month of visit',
   'form.prevYear': 'Previous year',
   'form.nextYear': 'Next year',
+  'form.choose': 'Choose',
   'form.score': 'Weighted Score',
   'form.scoreHint': 'Rate the metrics below to calculate your score.',
   'form.impressions': 'Impressions',
@@ -73,17 +77,16 @@ const en = {
   'ledger.sortDate': 'Date',
   'ledger.sortScore': 'Score',
   'ledger.sortCity': 'Alphabetical',
-  'ledger.emptyTitle': 'No cities logged yet.',
+  'ledger.emptyTitle': 'No cities yet',
   'ledger.emptyHint': 'Rate a city in the Entry tab to begin.',
-  'ledger.noMatchTitle': 'No matches found.',
-  'ledger.noMatchHint': 'Try adjusting your search.',
+  'ledger.noMatchHint': 'Nothing in your ledger matches that search.',
+  'ledger.addFirst': 'Rate a city',
+  'ledger.clearSearch': 'Clear search',
   'ledger.notes': 'Notes',
   'ledger.photo': 'Photo {n} of {total}',
   'ledger.scoreLabel': 'Score {score} out of 100',
   'ledger.unrated': 'Not rated',
 
-  'delete.title': 'Delete entry?',
-  'delete.message': '{place} will be permanently removed from your ledger.',
 
   'map.title': 'Your Map',
   'map.cities': { one: '{count} city', other: '{count} cities' },
@@ -99,6 +102,7 @@ const en = {
   'insights.allTime': 'All time',
   'insights.period': 'Period',
   'insights.empty': 'Log a few cities to see insights here.',
+  'insights.emptyTitle': 'No insights yet',
   'insights.review': 'Year in review',
   'insights.reviewTitle': '{year} in Ledger',
   'insights.reviewTitleAll': 'My Ledger so far',
@@ -144,8 +148,9 @@ const en = {
   'settings.appearance': 'Appearance',
   'settings.theme': 'Theme',
   'settings.themeSystem': 'System',
-  'settings.themeLight': 'Light',
-  'settings.themeDark': 'Dark',
+  'settings.themeDusk': 'Dusk',
+  'settings.themeDawn': 'Dawn',
+  'settings.dawnSwitch': 'Dawn theme',
   'settings.language': 'Language',
   'settings.languageSystem': 'System default',
 

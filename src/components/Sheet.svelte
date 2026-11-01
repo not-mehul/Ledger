@@ -1,4 +1,5 @@
 <script lang="ts">
+  // style.md §8.11: rises from the bottom on phones, a modal from 900px up.
   import type { Snippet } from 'svelte';
   import { t } from '../i18n/index.svelte';
   import { ui } from '../state/ui.svelte';
@@ -11,59 +12,55 @@
 
   let { title, onclose, children }: Props = $props();
   let dialog: HTMLDialogElement;
+  let dragFrom: number | null = null;
+  let drag = $state(0);
 
   $effect(() => {
     dialog.showModal();
     return ui.pushOverlay(onclose);
   });
+
+  // Swipe down on the handle or the header to dismiss.
+  function start(e: PointerEvent) {
+    if (e.button !== 0 || (e.target as Element).closest('button')) return;
+    dragFrom = e.clientY;
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+  }
+  function move(e: PointerEvent) {
+    if (dragFrom !== null) drag = Math.max(0, e.clientY - dragFrom);
+  }
+  function end() {
+    if (dragFrom === null) return;
+    dragFrom = null;
+    if (drag > 80) onclose();
+    drag = 0;
+  }
 </script>
 
 <dialog
   bind:this={dialog}
   class="sheet"
-  aria-label={title}
+  aria-labelledby="sheet-title"
+  style:transform={drag ? `translateY(${drag}px)` : undefined}
   onclose={onclose}
   onclick={(e) => {
     if (e.target === dialog) onclose();
   }}
 >
-  <div class="sheet-body">
+  <div class="sheet-grip" onpointerdown={start} onpointermove={move} onpointerup={end} onpointercancel={end} role="presentation">
+    <div class="sheet-handle" aria-hidden="true"></div>
     <div class="sheet-head">
-      <h2>{title}</h2>
-      <button type="button" class="btn btn-ghost" onclick={onclose}>{t('action.close')}</button>
+      <h2 class="sheet-title" id="sheet-title">{title}</h2>
+      <button type="button" class="btn btn-muted" onclick={onclose}>{t('action.close')}</button>
     </div>
+  </div>
+  <div class="sheet-body">
     {@render children()}
   </div>
 </dialog>
 
 <style>
-  .sheet {
-    margin: auto auto 0;
-    width: min(100%, 560px);
-    max-height: 85dvh;
-    border: 1px solid var(--border-soft);
-    border-bottom: none;
-    background: var(--bg-grad-mid);
-    color: var(--text-body);
-    padding: 0;
-  }
-  .sheet::backdrop {
-    background: rgba(0, 0, 0, 0.55);
-  }
-  .sheet-body {
-    padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
-  }
-  .sheet-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  h2 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 1.5rem;
-    color: var(--text-heading);
+  .sheet-grip {
+    touch-action: none;
   }
 </style>

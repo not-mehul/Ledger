@@ -82,12 +82,26 @@ class LedgerState {
     return this.mutate((doc) => [{ ...doc, entries: applyUpserts(doc.entries, entries) }, undefined]);
   }
 
-  async deleteEntry(id: string): Promise<void> {
-    const removed = await this.mutate((doc) => [
+  /**
+   * Removes an entry and returns it, so it can be put back. Its photos stay on
+   * disk until `forgetPhotos`, or until garbage collection finds them unused.
+   */
+  deleteEntry(id: string): Promise<Entry | undefined> {
+    return this.mutate((doc) => [
       { ...doc, entries: doc.entries.filter((e) => e.id !== id) },
       doc.entries.find((e) => e.id === id),
     ]);
-    for (const p of removed?.photos ?? []) void deletePhoto(p.id);
+  }
+
+  /** Undoes `deleteEntry`. */
+  restoreEntry(entry: Entry): Promise<void> {
+    return this.mutate((doc) => [{ ...doc, entries: applyUpserts(doc.entries, [entry]) }, undefined]);
+  }
+
+  /** Deletes a removed entry's photos, unless the entry has come back. */
+  forgetPhotos(entry: Entry): void {
+    if (this.find(entry.id)) return;
+    for (const p of entry.photos) void deletePhoto(p.id);
   }
 
   /** `update` receives the current config; throw from it to cancel. */

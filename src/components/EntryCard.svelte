@@ -89,8 +89,8 @@
       {/if}
 
       <div class="entry-card-actions">
-        <button type="button" class="btn btn-ghost" data-action="edit" onclick={onedit}>{t('action.edit')}</button>
-        <button type="button" class="btn btn-ghost" data-action="share" onclick={onshare}>{t('action.share')}</button>
+        <button type="button" class="btn btn-secondary" data-action="edit" onclick={onedit}>{t('action.edit')}</button>
+        <button type="button" class="btn btn-secondary" data-action="share" onclick={onshare}>{t('action.share')}</button>
         <button type="button" class="btn btn-danger" data-action="delete" onclick={ondelete}>{t('action.delete')}</button>
       </div>
     </div>

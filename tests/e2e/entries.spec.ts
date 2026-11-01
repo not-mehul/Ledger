@@ -15,13 +15,13 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
   await page.fill('#inputNotes', 'Tacos <b>everywhere</b>');
   await saveEntry(page);
   await expect(page.locator('#toast')).toHaveText('Saved: Austin, Texas — 46.6/100');
-  await expect(page.locator('#entryBadge')).toHaveText('1');
+  await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
 
   // Same city and month again updates rather than duplicates.
   await page.fill('#inputCity', 'austin');
   await page.fill('#inputState', 'TEXAS');
   await saveEntry(page);
-  await expect(page.locator('#entryBadge')).toHaveText('1');
+  await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
 
   await page.click('#tabLogbook');
   await page.click('.entry-card-header');
@@ -35,8 +35,18 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
   await page.click('#tabLogbook');
   await page.click('.entry-card-header');
   await expect(page.locator('.entry-notes-text')).toHaveText('Edited');
+  // Deleting offers an undo instead of asking first.
   await page.click('[data-action="delete"]');
-  await expect(page.locator('.empty-title')).toHaveText('No cities logged yet.');
+  await expect(page.locator('.empty-title')).toHaveText('No cities yet');
+  await expect(page.locator('#toast')).toContainText('Entry deleted.');
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.locator('.entry-city-name')).toHaveText('austin, TEXAS');
+  await page.reload();
+  await page.click('#tabLogbook');
+  await expect(page.locator('.entry-city-name')).toHaveText('austin, TEXAS');
+  await page.click('.entry-card-header');
+  await page.click('[data-action="delete"]');
+  await expect(page.locator('.empty-title')).toHaveText('No cities yet');
 });
 
 test('searches and sorts the ledger', async ({ page }) => {
@@ -51,5 +61,7 @@ test('searches and sorts the ledger', async ({ page }) => {
   await page.fill('#searchLogbook', 'portugal');
   await expect(names).toHaveCount(1);
   await page.fill('#searchLogbook', 'zzz');
-  await expect(page.locator('.empty-title')).toHaveText('No matches found.');
+  await expect(page.locator('#noMatch')).toHaveText('Nothing in your ledger matches that search.');
+  await page.getByRole('button', { name: 'Clear search' }).click();
+  await expect(names).toHaveCount(2);
 });
