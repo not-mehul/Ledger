@@ -5,7 +5,7 @@
   import { calcScore, scoreTier } from '../domain/score';
   import { categoryName, t } from '../i18n/index.svelte';
   import { currentMonthString } from '../lib/dates';
-  import { regionFor, type Place } from '../lib/places';
+  import { loadPlaces, matchPlace, regionFor, type Place } from '../lib/places';
   import { ledger } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
   import CityField from './CityField.svelte';
@@ -82,6 +82,29 @@
     load(entry);
     ui.editing = null;
     ui.notify(t('toast.loaded', { place: `${entry.city}, ${entry.state}` }));
+  });
+
+  // A new entry started by another app's ledger:// link: the place and month
+  // are filled in, the person rates it and saves.
+  $effect(() => {
+    const prefill = ui.prefill;
+    if (!prefill) return;
+    ui.prefill = null;
+    clear();
+    city = prefill.city;
+    region = prefill.region;
+    if (prefill.month) month = prefill.month;
+    if (prefill.country) located = { country: prefill.country };
+    ui.notify(t('toast.started', { place: prefill.city }));
+    // Place it from the offline list, as picking the suggestion would.
+    loadPlaces()
+      .then((index) => {
+        const place = matchPlace(index, prefill.city, prefill.region || prefill.country || '');
+        if (place && city === prefill.city && (!prefill.country || place.country === prefill.country)) {
+          if (!prefill.region || region === prefill.region) pickPlace(place);
+        }
+      })
+      .catch((err) => console.warn('Places unavailable:', err));
   });
 
   function pickPlace(place: Place) {

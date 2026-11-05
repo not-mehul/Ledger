@@ -64,6 +64,7 @@ const en = {
   'toast.saved': 'Saved: {place} — {score}/100',
   'toast.updated': 'Updated: {place}.',
   'toast.loaded': 'Loaded {place} for editing.',
+  'toast.started': 'Started an entry for {place}. Rate it and save.',
   'toast.deleted': 'Entry deleted.',
   'toast.saveFailed': 'Save failed — your entry is still in the form.',
   'toast.deleteFailed': 'Delete failed.',
