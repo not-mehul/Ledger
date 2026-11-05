@@ -119,6 +119,9 @@
           {#each located as e (e.id)}
             {@const pt = projection!([e.lon!, e.lat!])}
             {#if pt}
+              {#if selectedId === e.id}
+                <circle cx={pt[0]} cy={pt[1]} r={14 / transform.k} class="halo" style:stroke-width={0.75 / transform.k} aria-hidden="true" />
+              {/if}
               <circle
                 cx={pt[0]}
                 cy={pt[1]}
@@ -138,9 +141,9 @@
         </g>
       </svg>
       <div class="map-controls">
-        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomIn')} onclick={() => zoomBy(1.6)}>+</button>
-        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomOut')} onclick={() => zoomBy(1 / 1.6)}>−</button>
-        <button type="button" class="dp-nav-btn" aria-label={t('map.reset')} onclick={reset}>⟲</button>
+        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomIn')} onclick={() => zoomBy(1.6)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg></button>
+        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomOut')} onclick={() => zoomBy(1 / 1.6)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /></svg></button>
+        <button type="button" class="dp-nav-btn" aria-label={t('map.reset')} onclick={reset}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg></button>
       </div>
     {:else}
       <div class="map-loading" style:height="{height || 200}px">{t('map.loading')}</div>
@@ -202,8 +205,35 @@
     gap: 0.25rem;
   }
   .map-controls button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    cursor: pointer;
     background: var(--modal-bg);
-    font-size: 1rem;
+    color: var(--text-dim);
+    transition: color var(--dur-hover);
+  }
+  .map-controls button:hover {
+    color: var(--text-heading);
+  }
+  .map-controls svg {
+    width: 16px;
+    height: 16px;
+  }
+  /* A soft ring around the chosen city. */
+  .halo {
+    fill: rgba(var(--accent-amber-rgb), 0.18);
+    stroke: rgba(var(--accent-amber-rgb), 0.5);
+    pointer-events: none;
+    animation: fade-in var(--dur-settle) var(--ease-settle);
+  }
+  .map-selected {
+    animation: settle-in var(--dur-settle) var(--ease-settle);
   }
   .map-loading {
     display: flex;

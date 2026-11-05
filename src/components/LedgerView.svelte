@@ -73,7 +73,13 @@
     ui.focusEntryId = null;
     query = '';
     openIds.add(id);
-    void tick().then(() => document.getElementById(`card-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    void tick().then(() => {
+      const card = document.getElementById(`card-${id}`);
+      card?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      // Light the card's frame for a moment so the eye finds it.
+      card?.classList.add('arrived');
+      setTimeout(() => card?.classList.remove('arrived'), 700);
+    });
   });
 
   // Deleting is undoable for a few seconds instead of confirmed (style.md §8.12).

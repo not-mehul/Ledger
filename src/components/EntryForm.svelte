@@ -244,12 +244,12 @@
 
   <div class="score-panel">
     <div class="score-arc-wrap">
-      <ScoreDial {score} />
+      <ScoreDial {score} ticks />
     </div>
     <div class="score-info" aria-live="polite">
       <div class="t-field-label score-label">{t('form.score')}</div>
       <div class="score-number">
-        <span id="scoreDisplay">{score === null ? '—' : score.toFixed(1)}</span><span> / 100</span>
+        <span id="scoreDisplay">{score === null ? '—' : score.toFixed(1)}</span><span class="denom"> / 100</span>
       </div>
       <div class="score-desc" id="scoreDesc" style:color={tier ? `var(${tier.cssVar})` : undefined}>
         {tier ? t(`tier.${tier.id}`) : t('form.scoreHint')}

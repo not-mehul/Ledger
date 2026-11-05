@@ -90,7 +90,7 @@
 
   {#if rated}
     <div class="mini-cat-label">{t('patterns.spread')}</div>
-    <div class="spread-bar" aria-hidden="true">
+    <div class="spread-bar grow-x" aria-hidden="true">
       {#each spread as s (s.id)}
         {#if s.count}
           <span style:flex-grow={s.count} style:background="var(--scale-{spread.indexOf(s) + 1})"></span>

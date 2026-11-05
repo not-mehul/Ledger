@@ -64,7 +64,7 @@
           <span class="cmp-cells">
             {#each r.values as v, i (i)}
               <span class="cmp-cell" class:lead={r.leaders.includes(i)}>
-                <span class="cmp-bar" aria-hidden="true"><span style:width="{v === null ? 0 : (v / RATING_MAX) * 100}%"></span></span>
+                <span class="cmp-bar" aria-hidden="true"><span class="grow-x" style:width="{v === null ? 0 : (v / RATING_MAX) * 100}%"></span></span>
                 <span class="cmp-num" aria-label="{entries[i]!.city}: {v === null ? t('compare.notRated') : v}">{fmt(v)}</span>
               </span>
             {/each}
