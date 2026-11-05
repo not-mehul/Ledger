@@ -9,9 +9,7 @@
   import SettingsView from './components/SettingsView.svelte';
   import Sheet from './components/Sheet.svelte';
   import Modal from './components/ui/Modal.svelte';
-  import TabRail from './components/ui/TabRail.svelte';
-  import ThemeToggle from './components/ui/ThemeToggle.svelte';
-  import Toast from './components/ui/Toast.svelte';
+  import { TabRail, ThemeToggle, Toast } from 'dusk-dawn';
 
   type MainTab = Exclude<Tab, 'settings'>;
   const TABS: { id: MainTab; dom: string; panel: string; key: MessageKey }[] = [

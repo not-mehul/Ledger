@@ -36,7 +36,9 @@ calls.
 - **Undo** after deleting an entry, instead of a confirmation.
 - **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in, ready to rate and save; `ledger://open` just opens Ledger. The scheme is the one all five apps share (`src/platform/links.ts`, style.md §14.1).
 - Dusk and Dawn themes (or follow the system), in the Editorial Dusk & Dawn
-  design shared with Waymark and BookShelf; English, Spanish, French and German.
+  design shared with Waymark, BookShelf, Colophon and Rosetta through the
+  [`dusk-dawn`](https://github.com/not-mehul/dusk-dawn) package; English,
+  Spanish, French and German.
 
 ## Requirements
 
@@ -119,14 +121,14 @@ APKs are uploaded as workflow artifacts.
 ├── src/
 │   ├── App.svelte            # Header, tabs, export sheet, toasts
 │   ├── components/           # Entry form, ledger, map, settings, photos, …
-│   │   └── ui/               # Tab rail, toast, modal, theme toggle, empty state (shared design)
+│   │   └── ui/               # Modal and empty state (tab rail, toast and theme toggle come from dusk-dawn)
 │   ├── state/                # App state (Svelte runes), import/export, sharing
 │   ├── domain/               # Pure logic: metrics config, scoring, entries, document schema
 │   ├── lib/                  # Markdown/CSV/JSON/zip formats, places search, share cards, dates
 │   ├── data/                 # On-device files: ledger document and photos
 │   ├── platform/             # Save/share files, image processing, theme
 │   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)
-│   └── styles/               # tokens.css (generated), components.css (shared by all three apps), app.css
+│   └── styles/               # app.css (imports dusk-dawn's tokens.css and components.css first)
 ├── public/data/places.json   # Offline city list (GeoNames)
 ├── tests/unit, tests/e2e     # Vitest and Playwright
 ├── android/, ios/            # Native projects (committed)

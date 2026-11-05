@@ -12,10 +12,10 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
-    "lint": "eslint .",
+    "lint": "eslint . && dusk-dawn colours",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "node design/build-tokens.mjs --check && npm run lint && npm run typecheck && npm test",
+    "check": "dusk-dawn check && npm run lint && npm run typecheck && npm test",
     "icons": "node scripts/build-icons.mjs",
     "places": "node scripts/build-places.mjs",
     "test:e2e": "vite build && playwright test",
@@ -24,8 +24,7 @@
     "ios": "npm run sync:ios && cap open ios",
     "android": "npm run sync && cap open android",
     "android:run": "npm run sync && cap run android",
-    "android:apk": "npm run sync && cd android && ./gradlew assembleDebug",
-    "tokens": "node design/build-tokens.mjs --css src/styles/tokens.css --fonts src/styles/fonts"
+    "android:apk": "npm run sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",
@@ -53,6 +52,7 @@
     "@types/geojson": "^7946.0.16",
     "@types/node": "^26.6.6",
     "@types/topojson-client": "^3.1.5",
+    "dusk-dawn": "github:not-mehul/dusk-dawn#v1.0.0",
     "eslint": "^10.13.0",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^17.13.0",
