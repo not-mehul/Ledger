@@ -16,7 +16,7 @@ import {
   type Metric,
   type MetricConfig,
 } from './metrics';
-import { calcScore } from './score';
+import { calcScore, scoreTier, type TierId } from './score';
 
 // ---------- shared helpers ----------
 
@@ -225,4 +225,64 @@ export function applySuggestedWeights(config: MetricConfig, signals: readonly Me
     ...config,
     metrics: config.metrics.map((m) => (next.has(m.id) ? { ...m, weight: next.get(m.id)! } : m)),
   };
+}
+
+// ---------- patterns ----------
+
+export const TIER_ORDER: readonly TierId[] = ['exceptional', 'strong', 'decent', 'mixed', 'challenging'];
+
+/** How many rated entries fall in each score tier, best tier first. */
+export function tierSpread(entries: readonly Entry[], config: MetricConfig): { id: TierId; count: number }[] {
+  const counts = new Map<TierId, number>(TIER_ORDER.map((id) => [id, 0]));
+  for (const e of entries) {
+    const s = calcScore(e.ratings, config);
+    if (s !== null) counts.set(scoreTier(s).id, counts.get(scoreTier(s).id)! + 1);
+  }
+  return TIER_ORDER.map((id) => ({ id, count: counts.get(id)! }));
+}
+
+/** Fewest rated entries before rating habits are reported. */
+export const MIN_HABIT_ENTRIES = 3;
+
+export interface Habit {
+  metric: Metric;
+  average: number;
+}
+
+/**
+ * The metric you rate most generously and the one you rate most harshly,
+ * on average. Null with too few entries or when every average is equal.
+ */
+export function ratingHabits(entries: readonly Entry[], config: MetricConfig): { generous: Habit; harsh: Habit } | null {
+  const habits: Habit[] = [];
+  for (const metric of activeMetrics(config)) {
+    const values = entries.map((e) => e.ratings[metric.id]).filter((v): v is number => typeof v === 'number');
+    if (values.length >= MIN_HABIT_ENTRIES) habits.push({ metric, average: values.reduce((a, b) => a + b, 0) / values.length });
+  }
+  if (habits.length < 2) return null;
+  habits.sort((a, b) => b.average - a.average);
+  const generous = habits[0]!;
+  const harsh = habits[habits.length - 1]!;
+  return generous.average === harsh.average ? null : { generous, harsh };
+}
+
+export interface TimelinePoint {
+  entry: Entry;
+  score: number;
+  /** Average of this and every earlier score. */
+  running: number;
+}
+
+/** Rated entries in visit order, with a running average. */
+export function scoreTimeline(entries: readonly Entry[], config: MetricConfig): TimelinePoint[] {
+  const chronological = [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.savedAt.localeCompare(b.savedAt));
+  const points: TimelinePoint[] = [];
+  let sum = 0;
+  for (const entry of chronological) {
+    const score = calcScore(entry.ratings, config);
+    if (score === null) continue;
+    sum += score;
+    points.push({ entry, score, running: Math.round((sum / (points.length + 1)) * 10) / 10 });
+  }
+  return points;
 }

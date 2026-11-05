@@ -2,9 +2,10 @@
   import { deletePhoto } from '../data/photo-store';
   import { isSameVisit, newEntryId, type Entry, type Photo } from '../domain/entry';
   import { RATING_DEFAULT, activeCategories, activeMetrics, metricsIn } from '../domain/metrics';
+  import { placing, samePlace, visitsTo } from '../domain/context';
   import { calcScore, scoreTier } from '../domain/score';
-  import { categoryName, t } from '../i18n/index.svelte';
-  import { currentMonthString } from '../lib/dates';
+  import { categoryName, locale, t } from '../i18n/index.svelte';
+  import { currentMonthString, formatMonth } from '../lib/dates';
   import { loadPlaces, matchPlace, regionFor, type Place } from '../lib/places';
   import { ledger } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
@@ -38,6 +39,34 @@
   });
   const score = $derived(pristine ? null : calcScore(formRatings, ledger.config));
   const tier = $derived(score === null ? null : scoreTier(score));
+  /** Where this score would sit among everything else in the ledger. */
+  const placed = $derived(score === null || !ledger.entries.length ? null : placing(score, ledger.scores, editingId));
+
+  function categoryAverage(catId: string): number {
+    const values = metricsIn(ledger.config, catId).map((m) => formRatings[m.id]!);
+    return values.reduce((a, b) => a + b, 0) / values.length;
+  }
+
+  /**
+   * A new entry for a city already in the ledger (another month): offer to
+   * start from the most recent visit's ratings rather than from scratch.
+   */
+  const returning = $derived.by(() => {
+    if (editingId || !pristine) return null;
+    const draft = { city: city.trim(), state: region.trim() };
+    if (!draft.city || !draft.state) return null;
+    const visits = visitsTo(ledger.entries, draft).filter((e) => e.date !== month);
+    return visits[visits.length - 1] ?? null;
+  });
+
+  function startFrom(previous: Entry) {
+    ratings = { ...previous.ratings };
+    pristine = false;
+    if (located.lat === undefined && previous.lat !== undefined && samePlace(previous, { city, state: region })) {
+      located = { country: previous.country, lat: previous.lat, lon: previous.lon };
+    }
+    ui.notify(t('form.returningApplied', { month: formatMonth(previous.date, locale()) }));
+  }
 
   function rating(id: string): number {
     return ratings[id] ?? RATING_DEFAULT;
@@ -192,6 +221,25 @@
     {#if located.lat !== undefined}
       <p class="located">◉ {t('form.located')}</p>
     {/if}
+    {#if returning}
+      {@const prevScore = ledger.scoreOf(returning)}
+      <button type="button" class="notice returning" id="returningNotice" onclick={() => startFrom(returning)}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" />
+        </svg>
+        <span class="notice-text">
+          <span class="notice-title">{t('form.returningTitle', { city: returning.city })}</span>
+          <span class="notice-detail">
+            {t('form.returningDetail', {
+              when: `${formatMonth(returning.date, locale())}${prevScore === null ? '' : ` · ${prevScore.toFixed(1)}/100`}`,
+            })}
+          </span>
+        </span>
+        <svg class="notice-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+    {/if}
   </div>
 
   <div class="score-panel">
@@ -206,6 +254,9 @@
       <div class="score-desc" id="scoreDesc" style:color={tier ? `var(${tier.cssVar})` : undefined}>
         {tier ? t(`tier.${tier.id}`) : t('form.scoreHint')}
       </div>
+      {#if placed}
+        <div class="placing" id="scorePlacing">{t('form.placing', { position: placed.position, of: placed.of })}</div>
+      {/if}
     </div>
   </div>
 
@@ -213,7 +264,13 @@
     {@const metrics = metricsIn(ledger.config, cat.id)}
     {#if metrics.length}
       <div class="panel">
-        <div class="section-head"><h2>{categoryName(cat)}</h2></div>
+        <div class="section-head">
+          <h2>{categoryName(cat)}</h2>
+          {#if !pristine}
+            {@const avg = categoryAverage(cat.id)}
+            <span class="cat-avg" data-cat={cat.id} aria-label={t('form.categoryAverage', { value: avg.toFixed(1) })}>{avg.toFixed(1)}</span>
+          {/if}
+        </div>
         {#each metrics as metric (metric.id)}
           <MetricSlider
             {metric}
@@ -254,6 +311,25 @@
 </div>
 
 <style>
+  .returning {
+    margin-top: 1rem;
+  }
+  .placing {
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .cat-avg {
+    margin-left: auto;
+    font-family: var(--font-serif);
+    font-size: 1.375rem;
+    line-height: 1;
+    color: var(--accent-amber);
+    font-variant-numeric: tabular-nums;
+  }
   .located {
     margin-top: 0.75rem;
     font-size: 0.625rem;

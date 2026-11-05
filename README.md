@@ -26,7 +26,21 @@ calls.
   road, distance, best and worst city, category winners) with a shareable
   card; **rankings** by overall score, any category or any single metric;
   and **what you actually value**, which compares each metric with how
-  much you'd return to a city and suggests weights that match.
+  much you'd return to a city and suggests weights that match; and
+  **patterns**: your scores over time with a running average, how they
+  spread across the tiers, and the metrics you rate most generously and
+  most harshly.
+- **Context on every entry.** An open card shows where the city ranks, the
+  metric where it most beats (and falls short of) your usual rating, a tick
+  on each bar marking your usual rating elsewhere, and every visit to that
+  city with how its score moved between them.
+- **Compare** two or three cities side by side, metric by metric, with the
+  leader of each row marked and a one-line verdict.
+- **A form that knows your ledger.** The score panel shows where the city
+  would rank as you rate, each category shows its live average, and a city
+  you've visited before offers to start from your last ratings.
+- **Small memories.** The ledger groups cities by year with a count and
+  average, and reminds you where you were this month in earlier years.
 - **Export** as Markdown, CSV, JSON, or a full `.zip` backup with photos;
   **import** any of them, including Travel Logbook exports. The most
   recently saved copy of each entry wins.

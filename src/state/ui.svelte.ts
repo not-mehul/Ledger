@@ -48,6 +48,9 @@ class UiState {
   toast = $state.raw<Toast | null>(null);
   exportOpen = $state(false);
   confirmRequest = $state.raw<ConfirmRequest | null>(null);
+  /** Entries picked for the side-by-side comparison, in the order picked. */
+  compareIds = $state<string[]>([]);
+  compareOpen = $state(false);
   /** Overlays (dialogs, popups) register here so the Android back button can close them. */
   private closers: (() => void)[] = [];
 
@@ -105,6 +108,17 @@ class UiState {
         },
       };
     });
+  }
+
+  /** Adds or removes an entry from the comparison. False when it is already full. */
+  toggleCompare(id: string, max: number): boolean {
+    if (this.compareIds.includes(id)) {
+      this.compareIds = this.compareIds.filter((x) => x !== id);
+      return true;
+    }
+    if (this.compareIds.length >= max) return false;
+    this.compareIds = [...this.compareIds, id];
+    return true;
   }
 
   go(tab: Tab): void {

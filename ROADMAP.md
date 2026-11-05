@@ -21,6 +21,12 @@
 - Insights tab: year in review with a share card, rankings per category
   or metric, and value signals that suggest metric weights from how each
   metric correlates with "would return". Settings moved to a gear button.
+- Side-by-side comparison of two or three cities; scores over time, tier
+  spread and rating habits in Insights.
+- Entry context: rank, standout metrics against your usual ratings, and a
+  history of repeat visits with score changes. The form previews the rank,
+  averages each category, and offers a past visit's ratings.
+- Year groups in the ledger and a "this month in earlier years" reminder.
 
 ## Still to do
 
@@ -35,10 +41,8 @@
   remove them with `git filter-repo`.
 - **Ship through a store track.** Google Play internal testing and
   TestFlight, with signing secrets in CI.
-- **Richer visits.** Exact dates or ranges, repeat visits to a city, and a
-  timeline of how a rating changed.
-- **Compare.** Side-by-side comparison of two or three cities, and
-  charts of scores over time (rankings are done).
+- **Richer visits.** Exact dates or ranges (repeat visits and their score
+  changes are done).
 - **Background backups.** Today automatic backups run when the app opens;
   a WorkManager / BGTaskScheduler job could run them without opening it.
 - **Cloud sync.** Optional sync through the user's own storage (Google
