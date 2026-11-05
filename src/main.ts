@@ -7,6 +7,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, setLocale } from './i18n/index.svelte';
+import { listenForLinks } from './platform/incoming';
 import { isNative } from './platform/output';
 import { applyTheme } from './platform/theme.svelte';
 import { ledger } from './state/ledger.svelte';
@@ -30,6 +31,8 @@ async function start(): Promise<void> {
       if (!ui.back()) void CapacitorApp.exitApp();
     });
     void CapacitorApp.addListener('resume', () => void autoBackupIfDue());
+    // ledger:// links from Waymark and the other apps (style.md §14.1).
+    void listenForLinks((prefill) => ui.startEntry(prefill));
   }
   void autoBackupIfDue();
 }

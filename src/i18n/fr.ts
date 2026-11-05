@@ -62,6 +62,7 @@ const fr: Messages = {
   'toast.saved': 'Enregistrée : {place} — {score}/100',
   'toast.updated': 'Mise à jour : {place}.',
   'toast.loaded': '{place} chargée pour modification.',
+  'toast.started': 'Entrée pour {place} commencée. Notez-la et enregistrez.',
   'toast.deleted': 'Entrée supprimée.',
   'toast.saveFailed': "Échec de l'enregistrement — votre saisie est toujours dans le formulaire.",
   'toast.deleteFailed': 'Échec de la suppression.',

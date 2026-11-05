@@ -1,6 +1,7 @@
 // Navigation and transient UI state shared between components.
 
 import type { Entry } from '../domain/entry';
+import type { EntryPrefill } from '../platform/incoming';
 
 export type Tab = 'entry' | 'ledger' | 'map' | 'insights' | 'settings';
 export type ToastKind = 'success' | 'error' | 'info';
@@ -40,6 +41,8 @@ class UiState {
   tab = $state<Tab>('entry');
   /** Entry loaded into the form for editing. */
   editing = $state.raw<Entry | null>(null);
+  /** A new entry another app started with a ledger:// link (style.md §14.1). */
+  prefill = $state.raw<EntryPrefill | null>(null);
   /** Card to expand and scroll to when the ledger tab opens. */
   focusEntryId = $state<string | null>(null);
   toast = $state.raw<Toast | null>(null);
@@ -111,6 +114,12 @@ class UiState {
 
   edit(entry: Entry): void {
     this.editing = entry;
+    this.go('entry');
+  }
+
+  /** Opens the Entry tab on a new entry filled in from a link. */
+  startEntry(prefill: EntryPrefill): void {
+    this.prefill = prefill;
     this.go('entry');
   }
 

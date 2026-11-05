@@ -62,6 +62,7 @@ const de: Messages = {
   'toast.saved': 'Gespeichert: {place} — {score}/100',
   'toast.updated': 'Aktualisiert: {place}.',
   'toast.loaded': '{place} zum Bearbeiten geladen.',
+  'toast.started': 'Eintrag für {place} begonnen. Bewerten und speichern.',
   'toast.deleted': 'Eintrag gelöscht.',
   'toast.saveFailed': 'Speichern fehlgeschlagen — dein Eintrag ist noch im Formular.',
   'toast.deleteFailed': 'Löschen fehlgeschlagen.',
