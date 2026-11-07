@@ -218,7 +218,7 @@ fieldset {
     font-size: 3rem;
   }
 }
-.score-number span {
+.score-number .denom {
   font-size: 1.25rem;
   color: var(--text-faint);
 }
@@ -562,4 +562,82 @@ input[type='range'].metric-slider::-moz-range-thumb {
   .search-bar {
     width: 100%;
   }
+}
+
+/* ─── Arrival motion (style.md §11) ─────────────────────────────
+   Things that appear settle in once and never on scrolling back:
+   detail panels rise 8px into place, and meters grow to their value
+   the first time they are drawn (§8.15). Durations come from the
+   motion tokens, so reduced motion turns them off. */
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+.settle-in {
+  animation: settle-in var(--dur-settle) var(--ease-settle) both;
+}
+.grow-x {
+  transform-origin: left center;
+  animation: grow-x var(--dur-settle) var(--ease-settle) both;
+}
+
+/* A card you arrive at from the map or insights lights its frame,
+   then lets it fade back. */
+.entry-card {
+  transition:
+    border-color 1200ms var(--ease-standard),
+    box-shadow 1200ms var(--ease-standard);
+}
+.entry-card.arrived {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 1px rgba(var(--accent-amber-rgb), 0.25);
+  transition: none;
+}
+
+/* The slider thumb answers the finger with a soft amber ring. */
+input[type='range'].metric-slider::-webkit-slider-thumb {
+  transition: box-shadow var(--dur-hover);
+}
+input[type='range'].metric-slider:active::-webkit-slider-thumb,
+input[type='range'].metric-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 1px var(--on-accent),
+    0 0 0 6px rgba(var(--accent-bright-rgb), 0.22);
+}
+input[type='range'].metric-slider:active::-moz-range-thumb,
+input[type='range'].metric-slider:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 1px var(--on-accent),
+    0 0 0 6px rgba(var(--accent-bright-rgb), 0.22);
+}
+input[type='range'].metric-slider:focus-visible {
+  outline: none;
+}
+
+/* Notes read as a quotation: one amber serif mark, nothing more. */
+.entry-notes-text::before {
+  content: '“';
+  float: left;
+  margin: -0.2rem 0.35rem 0 -0.1rem;
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  line-height: 1;
+  font-style: normal;
+  color: rgba(var(--accent-amber-rgb), 0.7);
+}
+
+/* An icon sitting inline with mono metadata. */
+.inline-icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  vertical-align: -1px;
+  margin-right: 0.2rem;
 }

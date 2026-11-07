@@ -4,6 +4,7 @@
   import { ledger } from '../../state/ledger.svelte';
   import { ui } from '../../state/ui.svelte';
   import EmptyState from '../ui/EmptyState.svelte';
+  import Patterns from './Patterns.svelte';
   import Rankings from './Rankings.svelte';
   import ValueSignals from './ValueSignals.svelte';
   import YearReview from './YearReview.svelte';
@@ -34,6 +35,7 @@
     </div>
 
     <YearReview {year} />
+    <Patterns {year} />
     <Rankings {year} />
     <ValueSignals />
   {/if}

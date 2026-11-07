@@ -11,7 +11,9 @@
   }
 
   let { photos, index = $bindable(), onclose }: Props = $props();
-  let startX = 0;
+  let startX: number | null = null;
+  /** The photo follows the finger while swiping. */
+  let dx = $state(0);
 
   const step = (d: number) => (index = (index + d + photos.length) % photos.length);
 
@@ -33,13 +35,24 @@
   aria-label={t('ledger.photo', { n: index + 1, total: photos.length })}
   tabindex="-1"
   onpointerdown={(e) => (startX = e.clientX)}
+  onpointermove={(e) => {
+    if (startX !== null && photos.length > 1) dx = e.clientX - startX;
+  }}
   onpointerup={(e) => {
-    const dx = e.clientX - startX;
-    if (Math.abs(dx) > 50 && photos.length > 1) step(dx < 0 ? 1 : -1);
+    const moved = startX === null ? 0 : e.clientX - startX;
+    startX = null;
+    dx = 0;
+    if (Math.abs(moved) > 50 && photos.length > 1) step(moved < 0 ? 1 : -1);
+  }}
+  onpointercancel={() => {
+    startX = null;
+    dx = 0;
   }}
 >
   {#key photos[index]?.id}
-    <PhotoImg id={photos[index]!.id} variant="full" alt={t('ledger.photo', { n: index + 1, total: photos.length })} class="full" />
+    <div class="frame" class:moving={dx !== 0} style:transform={dx ? `translateX(${dx * 0.6}px)` : undefined}>
+      <PhotoImg id={photos[index]!.id} variant="full" alt={t('ledger.photo', { n: index + 1, total: photos.length })} class="full" />
+    </div>
   {/key}
   <div class="bar">
     <span>{index + 1} / {photos.length}</span>
@@ -60,9 +73,21 @@
     padding: var(--inset-top) var(--inset-right) var(--inset-bottom) var(--inset-left);
     touch-action: pan-y;
   }
-  .lightbox :global(.full) {
+  .frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     max-width: 100%;
     max-height: calc(100% - 4rem);
+    animation: fade-in var(--dur-settle) var(--ease-settle);
+    transition: transform var(--dur-settle) var(--ease-settle);
+  }
+  .frame.moving {
+    transition: none;
+  }
+  .lightbox :global(.full) {
+    max-width: 100%;
+    max-height: calc(100dvh - 4rem - var(--inset-top) - var(--inset-bottom));
     object-fit: contain;
   }
   .bar {

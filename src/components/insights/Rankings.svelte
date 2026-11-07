@@ -66,13 +66,13 @@
       {#each shown as r, i (r.entry.id)}
         <li>
           <button type="button" onclick={() => ui.showInLedger(r.entry.id)}>
-            <span class="pos">{i + 1}</span>
+            <span class="pos" class:podium={i < 3}>{i + 1}</span>
             <span class="who">
               <span class="city">{r.entry.city}</span>
               <span class="region">{r.entry.state}</span>
             </span>
             <span class="bar" aria-hidden="true">
-              <span style:width="{(r.value / max) * 100}%" style:background="var({scoreTier((r.value / max) * 100).cssVar})"></span>
+              <span class="grow-x" style:width="{(r.value / max) * 100}%" style:background="var({scoreTier((r.value / max) * 100).cssVar})"></span>
             </span>
             <span class="val">{format(r.value)}</span>
           </button>
@@ -112,10 +112,21 @@
     text-align: left;
     cursor: pointer;
   }
+  .ranking button {
+    transition: background-color var(--dur-hover);
+  }
+  .ranking button:hover,
+  .ranking button:active {
+    background: var(--hover-bg);
+  }
   .pos {
     font-family: var(--font-mono);
-    color: var(--accent-amber);
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
     font-size: 0.875rem;
+  }
+  .pos.podium {
+    color: var(--accent-amber);
   }
   .who {
     display: flex;

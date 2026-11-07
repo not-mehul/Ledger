@@ -112,17 +112,23 @@
   .stat {
     display: flex;
     flex-direction: column-reverse;
+    /* Numbers share a top line even when a label wraps. */
+    justify-content: flex-end;
     gap: 0.25rem;
   }
+  /* Stat style (style.md §5.2): serif numbers over a field label. */
   dd {
-    font-family: var(--font-mono);
-    font-size: 1.75rem;
+    font-family: var(--font-serif);
+    font-size: 1.875rem;
     color: var(--text-heading);
-    line-height: 1;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
   }
   dt {
-    font-size: 0.5625rem;
-    letter-spacing: 0.18em;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-dim);
   }
@@ -134,10 +140,12 @@
   }
   .highlights {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
     margin-bottom: 1.25rem;
   }
   .highlight {
+    min-width: 0;
     display: flex;
     gap: 0.875rem;
     align-items: center;
@@ -149,6 +157,16 @@
     color: inherit;
     text-align: left;
     cursor: pointer;
+  }
+  .highlight,
+  .winners button {
+    transition: background-color var(--dur-hover);
+  }
+  .highlight:hover,
+  .highlight:active,
+  .winners button:hover,
+  .winners button:active {
+    background: var(--hover-bg);
   }
   .highlight > span {
     display: flex;
