@@ -34,7 +34,7 @@ calls.
   monthly, keeping the last N), plus Android's Google-account backup of
   the ledger itself.
 - **Undo** after deleting an entry, instead of a confirmation.
-- **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in, ready to rate and save; `ledger://open` just opens Ledger. The scheme is the one all five apps share (`src/platform/links.ts`, style.md §14.1).
+- **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in, ready to rate and save; `ledger://open` just opens Ledger. The scheme is the one all six apps share (`src/platform/links.ts`, style.md §14.1).
 - Dusk and Dawn themes (or follow the system), in the Editorial Dusk & Dawn
   design shared with Waymark, BookShelf, Colophon and Rosetta through the
   [`dusk-dawn`](https://github.com/not-mehul/dusk-dawn) package; English,
