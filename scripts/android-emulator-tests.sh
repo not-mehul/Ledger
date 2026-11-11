@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Runs on a booted emulator (see .github/workflows/ci.yml):
+# Runs on a booted emulator (see .github/workflows/full-checks.yml):
 #   1. the Espresso-Web instrumented tests against the debug build, and
 #   2. a launch smoke test of the minified release build.
 #
-#   scripts/android-emulator-tests.sh <dir with the ledger-apks artifact>
+#   scripts/android-emulator-tests.sh android/app/build/outputs/apk
 set -euo pipefail
 
 DIR=${1:?usage: android-emulator-tests.sh <apk dir>}
