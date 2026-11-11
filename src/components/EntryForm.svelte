@@ -223,7 +223,7 @@
       </div>
     </div>
     {#if located.lat !== undefined}
-      <p class="located">◉ {t('form.located')}</p>
+      <p class="located"><svg class="located-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg> {t('form.located')}</p>
     {/if}
     {#if returning}
       {@const prevScore = ledger.scoreOf(returning)}
@@ -341,5 +341,8 @@
     text-transform: uppercase;
     color: var(--accent-sage);
     font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
   }
 </style>

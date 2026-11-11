@@ -81,7 +81,7 @@
       {#each review.winners as w (w.category.id)}
         <li>
           <button type="button" onclick={() => ui.showInLedger(w.entry.id)}>
-            <span class="w-cat">{w.category.icon ? `${w.category.icon} ` : ''}{categoryName(w.category)}</span>
+            <span class="w-cat">{categoryName(w.category)}</span>
             <span class="w-city">{w.entry.city}</span>
             <span class="mini-val">{w.average.toFixed(1)}</span>
           </button>

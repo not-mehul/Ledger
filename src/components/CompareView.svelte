@@ -51,7 +51,7 @@
   {#each result.groups as g (g.category.id)}
     <section class="cmp-group" aria-label={categoryName(g.category)}>
       <div class="cmp-cat">
-        <span class="cmp-cat-name">{g.category.icon ? `${g.category.icon} ` : ''}{categoryName(g.category)}</span>
+        <span class="cmp-cat-name">{categoryName(g.category)}</span>
         <span class="cmp-cells">
           {#each g.averages as v, i (i)}
             <span class="cmp-cell cmp-avg" class:lead={g.leaders.includes(i)}>{fmt(v, 1)}</span>

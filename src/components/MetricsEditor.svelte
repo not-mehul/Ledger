@@ -77,8 +77,8 @@
         onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateCategory(c, cat.id, { title: v })); }}
       />
       <div class="icon-actions">
-        <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={ci === 0} onclick={() => apply((c) => moveCategory(c, cat.id, -1))}>↑</button>
-        <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={ci === config.categories.length - 1} onclick={() => apply((c) => moveCategory(c, cat.id, 1))}>↓</button>
+        <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={ci === 0} onclick={() => apply((c) => moveCategory(c, cat.id, -1))}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 7-7 7 7" /><path d="M12 19V5" /></svg></button>
+        <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={ci === config.categories.length - 1} onclick={() => apply((c) => moveCategory(c, cat.id, 1))}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg></button>
         <button type="button" class="btn btn-secondary small" onclick={() => apply((c) => updateCategory(c, cat.id, { archived: !c.categories.find((x) => x.id === cat.id)?.archived }))}>
           {cat.archived ? t('metrics.show') : t('metrics.hide')}
         </button>
@@ -131,8 +131,8 @@
           </details>
           <div class="icon-actions">
             {#if m.archived}<span class="tag">{t('metrics.hidden')}</span>{/if}
-            <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={mi === 0} onclick={() => apply((c) => moveMetric(c, m.id, -1))}>↑</button>
-            <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={mi === metricsOf(cat).length - 1} onclick={() => apply((c) => moveMetric(c, m.id, 1))}>↓</button>
+            <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={mi === 0} onclick={() => apply((c) => moveMetric(c, m.id, -1))}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 7-7 7 7" /><path d="M12 19V5" /></svg></button>
+            <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={mi === metricsOf(cat).length - 1} onclick={() => apply((c) => moveMetric(c, m.id, 1))}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg></button>
             <button type="button" class="btn btn-secondary small" onclick={() => apply((c) => updateMetric(c, m.id, { archived: !c.metrics.find((x) => x.id === m.id)?.archived }))}>
               {m.archived ? t('metrics.show') : t('metrics.hide')}
             </button>
@@ -175,11 +175,13 @@
   }
   .cat-head {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
     margin-bottom: 0.75rem;
   }
   .cat-title {
+    flex: 1 1 100%;
     font-family: var(--font-serif);
     font-style: italic;
     font-size: 1.125rem;
@@ -233,6 +235,9 @@
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
+  }
+  .cat-head .icon-actions {
+    margin-left: auto;
   }
   .btn-icon:disabled {
     color: var(--text-faint);

@@ -65,7 +65,7 @@
     <span class="entry-city-block">
       <span class="entry-city-name">{entry.city}<span class="entry-region">, {entry.state}</span></span>
       <span class="entry-meta"
-        >{formatMonth(entry.date, locale())}{#if entry.photos.length} · <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>{entry.photos.length}{/if}{visits.length > 1
+        >{formatMonth(entry.date, locale())}{#if entry.photos.length}&#32;· <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>{entry.photos.length}{/if}{visits.length > 1
           ? ` · ${t('ledger.visitN', { n: visitNumber })}`
           : ''}</span
       >
@@ -117,7 +117,7 @@
       {/if}
 
       {#each categories as { cat, metrics } (cat.id)}
-        <div class="mini-cat-label">{cat.icon ? `${cat.icon} ` : ''}{categoryName(cat)}</div>
+        <div class="mini-cat-label">{categoryName(cat)}</div>
         {#each metrics as m (m.id)}
           {@const val = entry.ratings[m.id] ?? 0}
           {@const avg = usual.get(m.id)}

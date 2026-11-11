@@ -48,7 +48,7 @@
       <option value="score">{t('rank.overall')}</option>
       <optgroup label={t('rank.categories')}>
         {#each activeCategories(ledger.config) as c (c.id)}
-          <option value="category:{c.id}">{c.icon ? `${c.icon} ` : ''}{categoryName(c)}</option>
+          <option value="category:{c.id}">{categoryName(c)}</option>
         {/each}
       </optgroup>
       <optgroup label={t('rank.metrics')}>
