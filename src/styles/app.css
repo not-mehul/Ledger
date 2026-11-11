@@ -334,6 +334,14 @@ input[type='range'].metric-slider::-moz-range-thumb {
 .save-hint {
   flex: 1;
 }
+/* Paired buttons (Clear and Save, Clear and Compare) share one width,
+   the wider label's; colour carries the emphasis (style.md §8.1). */
+.btn-pair {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.75rem;
+}
 
 .logbook-header {
   display: flex;
@@ -552,8 +560,11 @@ input[type='range'].metric-slider::-moz-range-thumb {
     flex-wrap: wrap;
   }
   .save-hint {
-    width: 100%;
+    flex-basis: 100%;
     order: -1;
+  }
+  .save-row .btn-pair {
+    flex: 1;
   }
   .logbook-controls {
     flex-direction: column;

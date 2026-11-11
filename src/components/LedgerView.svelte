@@ -228,7 +228,7 @@
       {#if compared.length < 2}
         <p class="t-hint tray-hint">{t('compare.pickAnother')}</p>
       {/if}
-      <div class="tray-actions">
+      <div class="tray-actions btn-pair">
         <button type="button" class="btn btn-muted" onclick={() => (ui.compareIds = [])}>{t('compare.clear')}</button>
         <button type="button" class="btn btn-primary" id="btnCompare" disabled={compared.length < 2} onclick={() => (ui.compareOpen = true)}>
           {t('action.compare')}
@@ -327,7 +327,6 @@
     order: 3;
   }
   .tray-actions {
-    display: flex;
     gap: 0.5rem;
   }
 </style>

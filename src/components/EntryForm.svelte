@@ -25,7 +25,7 @@
   let photos = $state<Photo[]>([]);
   let ratings = $state<Record<string, number>>({});
   let located = $state<Located>({});
-  /** True until the user moves a slider, so a fresh form shows "—". */
+  /** True until the user moves a slider; a fresh form scores the defaults and says so. */
   let pristine = $state(true);
   let editingId = $state<string | null>(null);
   let savedPhotoIds = $state.raw<ReadonlySet<string>>(new Set());
@@ -38,10 +38,10 @@
     for (const m of activeMetrics(ledger.config)) all[m.id] = ratings[m.id] ?? RATING_DEFAULT;
     return all;
   });
-  const score = $derived(pristine ? null : calcScore(formRatings, ledger.config));
+  const score = $derived(calcScore(formRatings, ledger.config));
   const tier = $derived(score === null ? null : scoreTier(score));
   /** Where this score would sit among everything else in the ledger. */
-  const placed = $derived(score === null || !ledger.entries.length ? null : placing(score, ledger.scores, editingId));
+  const placed = $derived(score === null || pristine || !ledger.entries.length ? null : placing(score, ledger.scores, editingId));
 
   function categoryAverage(catId: string): number {
     const values = metricsIn(ledger.config, catId).map((m) => formRatings[m.id]!);
@@ -258,7 +258,9 @@
       <div class="score-desc" id="scoreDesc" style:color={tier ? `var(${tier.cssVar})` : undefined}>
         {tier ? t(`tier.${tier.id}`) : t('form.scoreHint')}
       </div>
-      {#if placed}
+      {#if pristine}
+        <div class="placing" id="scorePlacing">{t('form.scoreHint')}</div>
+      {:else if placed}
         <div class="placing" id="scorePlacing">{t('form.placing', { position: placed.position, of: placed.of })}</div>
       {/if}
     </div>
@@ -270,10 +272,7 @@
       <div class="panel">
         <div class="section-head">
           <h2>{categoryName(cat)}</h2>
-          {#if !pristine}
-            {@const avg = categoryAverage(cat.id)}
-            <span class="cat-avg" data-cat={cat.id} aria-label={t('form.categoryAverage', { value: avg.toFixed(1) })}>{avg.toFixed(1)}</span>
-          {/if}
+          <span class="cat-avg" data-cat={cat.id} aria-label={t('form.categoryAverage', { value: categoryAverage(cat.id).toFixed(1) })}>{categoryAverage(cat.id).toFixed(1)}</span>
         </div>
         {#each metrics as metric (metric.id)}
           <MetricSlider
@@ -307,10 +306,12 @@
 
   <div class="save-row">
     <span class="t-hint save-hint">{t('app.designedBy')}</span>
-    <button type="button" class="btn btn-muted" id="btnClear" onclick={clear}>{t('action.clear')}</button>
-    <button type="button" class="btn btn-primary" id="btnSave" disabled={saving} onclick={save}>
-      {editingId ? t('form.update') : t('form.save')}
-    </button>
+    <div class="btn-pair">
+      <button type="button" class="btn btn-muted" id="btnClear" onclick={clear}>{t('action.clear')}</button>
+      <button type="button" class="btn btn-primary" id="btnSave" disabled={saving} onclick={save}>
+        {editingId ? t('form.update') : t('form.save')}
+      </button>
+    </div>
   </div>
 </div>
 

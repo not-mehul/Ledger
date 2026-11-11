@@ -178,7 +178,7 @@
         <button type="button" class="btn btn-secondary" data-action="edit" onclick={onedit}>{t('action.edit')}</button>
         <button type="button" class="btn btn-secondary" data-action="share" onclick={onshare}>{t('action.share')}</button>
         {#if oncompare}
-          <button type="button" class="btn btn-muted compare-toggle" data-action="compare" aria-pressed={comparing} onclick={oncompare}>
+          <button type="button" class="btn btn-secondary compare-toggle" data-action="compare" aria-pressed={comparing} onclick={oncompare}>
             {t('action.compare')}
           </button>
         {/if}

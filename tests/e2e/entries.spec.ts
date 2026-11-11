@@ -9,7 +9,9 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
 
   await pickCity(page, 'Aust', 'Texas');
   await expect(page.locator('#inputState')).toHaveValue('Texas');
-  await expect(page.locator('#scoreDisplay')).toHaveText('—');
+  await expect(page.locator('#scorePlacing')).toHaveText('Every metric starts at 5. Move the sliders to rate this city.');
+  const untouched = await page.locator('#scoreDisplay').textContent();
+  expect(untouched).toMatch(/^\d+\.\d$/);
   await page.locator('#sl-safety').fill('2');
   await expect(page.locator('#scoreDisplay')).toHaveText('46.6');
   await page.fill('#inputNotes', 'Tacos <b>everywhere</b>');
