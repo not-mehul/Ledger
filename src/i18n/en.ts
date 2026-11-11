@@ -338,6 +338,12 @@ const en = {
   'metric.returnDesire.hi': 'Must return',
   'metric.defaultLo': 'Poor',
   'metric.defaultHi': 'Excellent',
+
+  'egg.found': 'Easter egg found: {found} of {total}.',
+  'egg.konami': 'Passport stamped. Wherever next?',
+  'egg.title': 'Wanderlust: confirmed.',
+  'egg.perfect': 'A perfect hundred for {place}. Every traveller deserves one perfect city.',
+  'about.eggs': 'Easter eggs: {found} of {total} found',
 } as const;
 
 export default en;

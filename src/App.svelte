@@ -9,7 +9,8 @@
   import SettingsView from './components/SettingsView.svelte';
   import Sheet from './components/Sheet.svelte';
   import Modal from './components/ui/Modal.svelte';
-  import { TabRail, ThemeToggle, Toast } from 'dusk-dawn';
+  import { TabRail, ThemeToggle, Toast, konami, play, secretTaps } from 'dusk-dawn';
+  import { cheer, hatch } from './lib/delight';
 
   type MainTab = Exclude<Tab, 'settings'>;
   const TABS: { id: MainTab; dom: string; panel: string; key: MessageKey }[] = [
@@ -52,6 +53,22 @@
     const last = ledger.settings.lastBackupAt;
     return last ? `${count} · ${t('status.backedUp', { when: relativeTime(last) })}` : count;
   });
+
+  // Easter eggs (style.md §11.3). The Konami code stamps the passport; seven
+  // taps on the title set every dial on the page spinning.
+  let titleWord = $state<HTMLElement>();
+  $effect(() =>
+    konami(() => {
+      play(titleWord, 'tada');
+      cheer(null, { count: 80, spread: 1.3 });
+      hatch('konami', t('egg.konami'));
+    }),
+  );
+  function wanderlust() {
+    play(titleWord, 'jelly');
+    for (const [i, dial] of [...document.querySelectorAll('.score-dial')].slice(0, 24).entries()) setTimeout(() => play(dial, 'spin-once'), 40 * i);
+    hatch('title', t('egg.title'));
+  }
 </script>
 
 <div class="glow-layer" aria-hidden="true">
@@ -64,7 +81,7 @@
   <header class="site-header">
     <div class="site-title">
       <p class="eyebrow">{today}</p>
-      <h1 class="t-page-title"><em>Ledger</em></h1>
+      <h1 class="t-page-title" use:secretTaps={{ count: 7, onunlock: wanderlust }}><em class="title-word" bind:this={titleWord}>Ledger</em></h1>
       <p class="t-tagline">{t('app.tagline')}</p>
     </div>
     <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => void toggleTheme()} />

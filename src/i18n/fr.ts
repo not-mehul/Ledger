@@ -334,6 +334,12 @@ const fr: Messages = {
   'metric.returnDesire.hi': 'À revoir absolument',
   'metric.defaultLo': 'Médiocre',
   'metric.defaultHi': 'Excellent',
+
+  'egg.found': 'Œuf de Pâques trouvé : {found} sur {total}.',
+  'egg.konami': 'Passeport tamponné. Et maintenant, où ?',
+  'egg.title': 'Envie d’ailleurs : confirmée.',
+  'egg.perfect': 'Un cent sur cent pour {place}. Chaque voyageur mérite une ville parfaite.',
+  'about.eggs': 'Œufs de Pâques : {found} sur {total} trouvés',
 };
 
 export default fr;

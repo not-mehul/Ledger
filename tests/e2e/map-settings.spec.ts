@@ -32,3 +32,17 @@ test('switches theme and language, and remembers them', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
   await expect(page.locator('#tabNew')).toHaveText('Eintrag');
 });
+
+test('hides easter eggs, counts them once, and lists the count in Settings', async ({ page }) => {
+  await openApp(page);
+  for (const key of ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']) {
+    await page.keyboard.press(key);
+  }
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Passport stamped. Wherever next? Easter egg found: 1 of 3.');
+
+  for (let i = 0; i < 7; i++) await page.locator('.t-page-title').click();
+  await expect(page.locator('.toast[data-kind="celebrate"]')).toHaveText('Wanderlust: confirmed. Easter egg found: 2 of 3.');
+
+  await page.click('#tabSettings');
+  await expect(page.locator('#eggCount')).toHaveText('Easter eggs: 2 of 3 found');
+});

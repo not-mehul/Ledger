@@ -334,6 +334,12 @@ const es: Messages = {
   'metric.returnDesire.hi': 'Volveré seguro',
   'metric.defaultLo': 'Malo',
   'metric.defaultHi': 'Excelente',
+
+  'egg.found': 'Huevo de Pascua encontrado: {found} de {total}.',
+  'egg.konami': 'Pasaporte sellado. ¿Adónde ahora?',
+  'egg.title': 'Ganas de viajar: confirmadas.',
+  'egg.perfect': 'Un cien redondo para {place}. Todo viajero merece una ciudad perfecta.',
+  'about.eggs': 'Huevos de Pascua: {found} de {total} encontrados',
 };
 
 export default es;

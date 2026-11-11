@@ -150,7 +150,7 @@
   .bar {
     height: 3px;
     background: var(--chart-track);
-    border-radius: 2px;
+    border-radius: var(--corner-full);
     overflow: hidden;
   }
   .bar span {

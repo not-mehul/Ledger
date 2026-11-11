@@ -334,6 +334,12 @@ const de: Messages = {
   'metric.returnDesire.hi': 'Unbedingt wieder',
   'metric.defaultLo': 'Schlecht',
   'metric.defaultHi': 'Hervorragend',
+
+  'egg.found': 'Osterei gefunden: {found} von {total}.',
+  'egg.konami': 'Pass gestempelt. Wohin als Nächstes?',
+  'egg.title': 'Fernweh: bestätigt.',
+  'egg.perfect': 'Glatte hundert für {place}. Jeder Reisende verdient eine perfekte Stadt.',
+  'about.eggs': 'Ostereier: {found} von {total} gefunden',
 };
 
 export default de;

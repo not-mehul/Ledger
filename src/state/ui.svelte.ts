@@ -4,7 +4,7 @@ import type { Entry } from '../domain/entry';
 import type { EntryPrefill } from '../platform/incoming';
 
 export type Tab = 'entry' | 'ledger' | 'map' | 'insights' | 'settings';
-export type ToastKind = 'success' | 'error' | 'info';
+export type ToastKind = 'success' | 'error' | 'info' | 'celebrate';
 
 export interface ToastAction {
   label: string;
