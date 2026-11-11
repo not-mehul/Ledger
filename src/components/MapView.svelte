@@ -116,7 +116,7 @@
               <title>{c.properties.name}</title>
             </path>
           {/each}
-          {#each located as e (e.id)}
+          {#each located as e, n (e.id)}
             {@const pt = projection!([e.lon!, e.lat!])}
             {#if pt}
               {#if selectedId === e.id}
@@ -130,6 +130,7 @@
                 class:selected={selectedId === e.id}
                 style:fill={dotColor(e)}
                 style:stroke-width={1.5 / transform.k}
+                style:--n={Math.min(n, 12)}
                 role="button"
                 tabindex="0"
                 aria-label="{e.city}, {e.state}"
@@ -195,6 +196,33 @@
   }
   .dot.selected {
     stroke: var(--text-strong);
+  }
+  /* Opening the map, the pins land one after another (35ms apart, capped at
+     twelve, as any list arrives); a selected pin's halo rings out once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .dot {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pin-land var(--spring-spatial-slow-dur) var(--spring-spatial-slow) both;
+      animation-delay: calc(var(--n) * 35ms);
+    }
+    .halo {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: halo-ring var(--spring-spatial-fast-dur) var(--spring-spatial-fast) both;
+    }
+  }
+  @keyframes pin-land {
+    from {
+      opacity: 0;
+      transform: scale(0);
+    }
+  }
+  @keyframes halo-ring {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
   }
   .map-controls {
     position: absolute;

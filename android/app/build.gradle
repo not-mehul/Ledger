@@ -1,12 +1,32 @@
 apply plugin: 'com.android.application'
 
-// Release signing is read from android/keystore.properties (gitignored).
-// See keystore.properties.example. Without it, release builds are unsigned.
-def keystorePropertiesFile = rootProject.file('keystore.properties')
+// The version comes from the release tag (.github/workflows/release.yml):
+// `-PledgerVersion=1.2.3` gives versionName 1.2.3 and versionCode 10203, so
+// codes always rise. Without the property it is 2.1.0, the last version
+// shipped by hand.
+def ledgerVersion = (findProperty('ledgerVersion') ?: '').toString().replaceFirst(/^v/, '')
+if (!(ledgerVersion ==~ /\d+\.\d+\.\d+/)) ledgerVersion = '2.1.0'
+def ledgerVersionCode = Math.max(1, ledgerVersion.tokenize('.').collect { it as int }
+    .with { it[0] * 10000 + it[1] * 100 + it[2] })
+
+// The release key, read from android/keystore.properties (gitignored; see
+// keystore.properties.example) or the LEDGER_KEYSTORE… environment that the
+// release workflow sets from repository secrets (RELEASING.md). Every
+// release must be signed with the same key, or Android refuses the update.
 def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
 }
+def signingValue = { String key, String env ->
+    def value = keystoreProperties.getProperty(key) ?: System.getenv(env)
+    value?.trim() ?: null
+}
+def releaseStoreFile = signingValue('storeFile', 'LEDGER_KEYSTORE')
+def releaseStorePassword = signingValue('storePassword', 'LEDGER_KEYSTORE_PASSWORD')
+def releaseKeyAlias = signingValue('keyAlias', 'LEDGER_KEY_ALIAS')
+def releaseKeyPassword = signingValue('keyPassword', 'LEDGER_KEY_PASSWORD')
+def canSign = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it != null }
 
 android {
     namespace = "io.github.notmehul.ledger"
@@ -15,8 +35,8 @@ android {
         applicationId = "io.github.notmehul.ledger"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 2
-        versionName = "2.1.0"
+        versionCode = ledgerVersionCode
+        versionName = ledgerVersion
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     androidResources {
@@ -26,11 +46,11 @@ android {
     }
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
-                storeFile = rootProject.file(keystoreProperties['storeFile'])
-                storePassword = keystoreProperties['storePassword']
-                keyAlias = keystoreProperties['keyAlias']
-                keyPassword = keystoreProperties['keyPassword']
+            if (canSign) {
+                storeFile = rootProject.file(releaseStoreFile)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
             }
         }
     }
@@ -41,7 +61,7 @@ android {
             minifyEnabled = true
             shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (keystorePropertiesFile.exists()) {
+            if (canSign) {
                 signingConfig = signingConfigs.release
             }
         }

@@ -193,7 +193,7 @@
     flex: 1;
     height: 4px;
     background: var(--chart-track);
-    border-radius: 2px;
+    border-radius: var(--corner-full);
   }
   .diverging::after {
     content: '';
@@ -209,7 +209,7 @@
     top: 0;
     bottom: 0;
     background: var(--accent-sage);
-    border-radius: 2px;
+    border-radius: var(--corner-full);
   }
   .diverging span.neg {
     background: var(--danger);

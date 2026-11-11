@@ -334,6 +334,16 @@ const es: Messages = {
   'metric.returnDesire.hi': 'Volveré seguro',
   'metric.defaultLo': 'Malo',
   'metric.defaultHi': 'Excelente',
+
+  'egg.found': 'Huevo de Pascua encontrado: {found} de {total}.',
+  'egg.konami': 'Pasaporte sellado. ¿Adónde ahora?',
+  'egg.title': 'Ganas de viajar: confirmadas.',
+  'egg.perfect': 'Un cien redondo para {place}. Todo viajero merece una ciudad perfecta.',
+  'egg.stamps': 'Todas las páginas selladas. Hora de un pasaporte nuevo.',
+  'idle.label': 'Un sello de pasaporte',
+  'idle.stamp': 'Sellar el pasaporte',
+  'idle.hint': '¿Un sitio nuevo? Séllalo.',
+  'about.eggs': 'Huevos de Pascua: {found} de {total} encontrados',
 };
 
 export default es;

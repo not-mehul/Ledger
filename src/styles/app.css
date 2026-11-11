@@ -641,3 +641,8 @@ input[type='range'].metric-slider:focus-visible {
   vertical-align: -1px;
   margin-right: 0.2rem;
 }
+
+/* The title word that tumbles in an easter egg (style.md §11.3). */
+.title-word {
+  display: inline-block;
+}

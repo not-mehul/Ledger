@@ -47,7 +47,7 @@
   }
 </script>
 
-<article class="entry-card" class:open class:comparing id="card-{entry.id}">
+<article class="entry-card dd-lift" class:open class:comparing id="card-{entry.id}">
   <button
     type="button"
     class="entry-card-header"

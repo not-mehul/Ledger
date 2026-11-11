@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cheer, hatch } from '../lib/delight';
   import { deletePhoto } from '../data/photo-store';
   import { isSameVisit, newEntryId, type Entry, type Photo } from '../domain/entry';
   import { RATING_DEFAULT, activeCategories, activeMetrics, metricsIn } from '../domain/metrics';
@@ -186,6 +187,9 @@
     const place = `${entry.city}, ${entry.state}`;
     const s = ledger.scoreOf(entry);
     ui.notify(previous ? t('toast.updated', { place }) : t('toast.saved', { place, score: s ?? '—' }), 'success');
+    // The first city in the ledger, and any city rated Exceptional, get a flurry of stamps.
+    if (!previous && (ledger.entries.length === 1 || (s ?? 0) >= 85)) cheer(null, { count: (s ?? 0) >= 85 ? 80 : 50 });
+    if (s !== null && Math.round(s) === 100) hatch('perfect', t('egg.perfect', { place }));
     reset();
   }
 </script>

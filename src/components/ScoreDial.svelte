@@ -78,14 +78,14 @@
     stroke: var(--text-faint);
     stroke-width: 1.25;
     stroke-linecap: round;
-    transition: stroke var(--dur-settle);
+    transition: stroke var(--spring-effects-default-dur) var(--spring-effects-default);
   }
   .tick.reached {
     stroke: var(--accent-amber);
   }
   .arc {
     transition:
-      stroke-dashoffset var(--dur-settle) var(--ease-settle),
-      stroke var(--dur-settle);
+      stroke-dashoffset var(--spring-spatial-slow-dur) var(--spring-spatial-slow),
+      stroke var(--spring-effects-default-dur) var(--spring-effects-default);
   }
 </style>
