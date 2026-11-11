@@ -339,6 +339,10 @@ const fr: Messages = {
   'egg.konami': 'Passeport tamponné. Et maintenant, où ?',
   'egg.title': 'Envie d’ailleurs : confirmée.',
   'egg.perfect': 'Un cent sur cent pour {place}. Chaque voyageur mérite une ville parfaite.',
+  'egg.stamps': 'Toutes les pages tamponnées. Il est temps d’avoir un nouveau passeport.',
+  'idle.label': 'Un tampon de passeport',
+  'idle.stamp': 'Tamponner le passeport',
+  'idle.hint': 'Un endroit nouveau ? Tamponnez-le.',
   'about.eggs': 'Œufs de Pâques : {found} sur {total} trouvés',
 };
 

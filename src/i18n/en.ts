@@ -343,6 +343,10 @@ const en = {
   'egg.konami': 'Passport stamped. Wherever next?',
   'egg.title': 'Wanderlust: confirmed.',
   'egg.perfect': 'A perfect hundred for {place}. Every traveller deserves one perfect city.',
+  'egg.stamps': 'Every page stamped. Time for a new passport.',
+  'idle.label': 'A passport stamp',
+  'idle.stamp': 'Stamp the passport',
+  'idle.hint': 'Somewhere new? Stamp it.',
   'about.eggs': 'Easter eggs: {found} of {total} found',
 } as const;
 

@@ -5,7 +5,9 @@
   import { ui, type Tab } from './state/ui.svelte';
   import EntryForm from './components/EntryForm.svelte';
   import ExportOptions from './components/ExportOptions.svelte';
+  import IdleStamp from './components/IdleStamp.svelte';
   import LedgerView from './components/LedgerView.svelte';
+  import IdleDock from './components/ui/IdleDock.svelte';
   import SettingsView from './components/SettingsView.svelte';
   import Sheet from './components/Sheet.svelte';
   import Modal from './components/ui/Modal.svelte';
@@ -147,6 +149,8 @@
     </div>
   </Modal>
 {/if}
+
+<IdleDock label={t('idle.label')} disabled={ui.exportOpen || ui.compareOpen || !!ui.confirmRequest}><IdleStamp /></IdleDock>
 
 <Toast
   toast={ui.toast}
