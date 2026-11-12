@@ -4,13 +4,13 @@
 
 import { readPhotoFiles } from '../data/photo-store';
 import { locale, t } from '../i18n/index.svelte';
-import { buildCsv } from '../lib/csv';
 import { buildMarkdown, parseMarkdown, type ParsedImport } from '../lib/markdown';
 import { BACKUP_PREFIX, backupsToPrune, isBackupDue } from '../lib/schedule';
 import { datedName, deleteOutput, isNative, listOutputs, saveFile, type OutputFile } from '../platform/output';
 import { ledger, type ImportSummary } from './ledger.svelte';
 
-export type ExportFormat = 'markdown' | 'csv' | 'json' | 'backup';
+/** A full .zip backup (photos included) or a readable Markdown summary. */
+export type ExportFormat = 'markdown' | 'backup';
 
 export const BACKUP_FOLDER = 'Ledger/Backups';
 
@@ -33,12 +33,6 @@ export async function buildExport(format: ExportFormat): Promise<OutputFile> {
   switch (format) {
     case 'markdown':
       return { name: datedName('ledger', 'md'), data: buildMarkdown(ledger.entries, ctx), mime: 'text/markdown' };
-    case 'csv':
-      return { name: datedName('ledger', 'csv'), data: buildCsv(ledger.entries, ctx), mime: 'text/csv' };
-    case 'json': {
-      const { buildJson } = await backupLib();
-      return { name: datedName('ledger', 'json'), data: buildJson(ledger.entries, ledger.config), mime: 'application/json' };
-    }
     case 'backup':
       return backupFile();
   }

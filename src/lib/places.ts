@@ -94,20 +94,25 @@ export function describe(place: Place): string {
 }
 
 /**
- * Prefix matches on the whole name first, then on later words
- * ("york" → New York), each group ordered by population.
+ * Exact names first ("porto" → Porto before Porto Alegre), then prefix
+ * matches on the whole name, then on later words ("york" → New York),
+ * each group ordered by population.
  */
 export function searchPlaces(index: PlaceIndex, query: string, limit = 6): Place[] {
   const q = fold(query);
   if (q.length < 2) return [];
+  const exact: Place[] = [];
   const starts: Place[] = [];
   const words: Place[] = [];
-  for (let i = 0; i < index.keys.length && starts.length < limit; i++) {
+  for (let i = 0; i < index.keys.length; i++) {
     const key = index.keys[i]!;
-    if (key.startsWith(q)) starts.push(index.places[i]!);
-    else if (words.length < limit && key.includes(` ${q}`)) words.push(index.places[i]!);
+    if (key === q) {
+      if (exact.length < limit) exact.push(index.places[i]!);
+    } else if (key.startsWith(q)) {
+      if (starts.length < limit) starts.push(index.places[i]!);
+    } else if (words.length < limit && key.includes(` ${q}`)) words.push(index.places[i]!);
   }
-  return [...starts, ...words].slice(0, limit);
+  return [...exact, ...starts, ...words].slice(0, limit);
 }
 
 const REGION_ALIASES: Record<string, string> = {

@@ -41,9 +41,9 @@ calls.
   you've visited before offers to start from your last ratings.
 - **Small memories.** The ledger groups cities by year with a count and
   average, and reminds you where you were this month in earlier years.
-- **Export** as Markdown, CSV, JSON, or a full `.zip` backup with photos;
-  **import** any of them, including Travel Logbook exports. The most
-  recently saved copy of each entry wins.
+- **Export** a full `.zip` backup with photos, or a readable Markdown
+  summary; **import** either (and older JSON exports), including Travel
+  Logbook exports. The most recently saved copy of each entry wins.
 - **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or
   monthly, keeping the last N), plus Android's Google-account backup of
   the ledger itself.
@@ -116,17 +116,21 @@ Locally, Playwright can reuse an installed Chromium with
 
 ## Testing and CI
 
-`.github/workflows/ci.yml` runs on every push:
+`.github/workflows/ci.yml` runs on pull requests and pushes to `main`: one
+job with `npm run check` (tokens, formatting, lint, types, unit tests) and a
+production build. That's the gate.
+
+The slow suites live in `.github/workflows/full-checks.yml` and run only when
+started by hand (Actions → Full checks → Run workflow), say before a big
+release or after touching native code:
 
 | Job | Covers |
 |---|---|
-| Lint, typecheck, unit tests | `npm run check` and a production build |
 | End-to-end | Playwright: entries, photos, share cards, custom metrics, every export format and backup restore, map, theme and language |
-| Android build | Debug, R8-minified release and test APKs, Android lint |
-| Android emulator (API 36, 37) | Espresso-Web tests driving the real WebView and on-device storage, then a launch smoke test of the minified release build. API 37 is non-blocking for now: the current emulator image crashes its own system process (see ROADMAP.md) |
+| Android | Debug, R8-minified release and test APKs, Android lint, then Espresso-Web tests on an API 36 emulator and a launch smoke test of the minified release build |
 | iOS | Simulator build with Xcode |
 
-APKs are uploaded as workflow artifacts.
+Run the end-to-end suite locally with `npm run test:e2e`.
 
 ## Project layout
 
@@ -138,7 +142,7 @@ APKs are uploaded as workflow artifacts.
 │   │   └── ui/               # Modal and empty state (tab rail, toast and theme toggle come from dusk-dawn)
 │   ├── state/                # App state (Svelte runes), import/export, sharing
 │   ├── domain/               # Pure logic: metrics config, scoring, entries, document schema
-│   ├── lib/                  # Markdown/CSV/JSON/zip formats, places search, share cards, dates
+│   ├── lib/                  # Markdown/JSON/zip formats, places search, share cards, dates
 │   ├── data/                 # On-device files: ledger document and photos
 │   ├── platform/             # Save/share files, image processing, theme
 │   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)

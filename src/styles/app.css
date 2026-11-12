@@ -334,6 +334,14 @@ input[type='range'].metric-slider::-moz-range-thumb {
 .save-hint {
   flex: 1;
 }
+/* Paired buttons (Clear and Save, Clear and Compare) share one width,
+   the wider label's; colour carries the emphasis (style.md §8.1). */
+.btn-pair {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.75rem;
+}
 
 .logbook-header {
   display: flex;
@@ -466,6 +474,19 @@ input[type='range'].metric-slider::-moz-range-thumb {
   margin-bottom: 0.5rem;
   margin-top: 1.125rem;
 }
+.mini-cat-label,
+.cmp-cat-name,
+.w-cat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* A category heading on the form: its icon, then the serif title. */
+.section-head h2.cat-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
 .mini-cat-label:first-child {
   margin-top: 0;
 }
@@ -552,8 +573,11 @@ input[type='range'].metric-slider::-moz-range-thumb {
     flex-wrap: wrap;
   }
   .save-hint {
-    width: 100%;
+    flex-basis: 100%;
     order: -1;
+  }
+  .save-row .btn-pair {
+    flex: 1;
   }
   .logbook-controls {
     flex-direction: column;

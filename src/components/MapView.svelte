@@ -16,7 +16,9 @@
   type Country = Feature<Geometry, { name: string }> & { id?: string | number };
 
   let width = $state(0);
-  const height = $derived(Math.round(width * 0.56));
+  // Phones get a taller frame: the world still fills the width, and the open
+  // water above and below it leaves room for the zoom buttons.
+  const height = $derived(Math.round(width * (width < 600 ? 0.8 : 0.56)));
   let countries = $state.raw<Country[]>([]);
   let places = $state.raw<PlaceIndex | null>(null);
   let transform = $state({ k: 1, x: 0, y: 0 });
@@ -108,6 +110,7 @@
   <div class="map-frame panel" bind:clientWidth={width}>
     {#if path && countries.length}
       <svg bind:this={svg} {width} {height} viewBox="0 0 {width} {height}" class="map" role="img" aria-label={t('map.title')}>
+        <rect {width} {height} class="sea" />
         <g transform="translate({transform.x} {transform.y}) scale({transform.k})">
           <path d={path(SPHERE)} class="sphere" />
           {#each countries as c, i (i)}
@@ -164,8 +167,13 @@
 
   {#if !ledger.entries.length}
     <p class="map-note">{t('map.empty')}</p>
-  {:else if unplaced > 0}
-    <p class="map-note">{t('map.unplaced', { count: unplaced })}</p>
+  {:else}
+    {#if !selected && located.length}
+      <p class="map-hint">{t('map.hint')}</p>
+    {/if}
+    {#if unplaced > 0}
+      <p class="map-note">{t('map.unplaced', { count: unplaced })}</p>
+    {/if}
   {/if}
 </div>
 
@@ -179,6 +187,10 @@
   .map {
     display: block;
     cursor: grab;
+  }
+  .sea {
+    fill: var(--map-water);
+    opacity: 0.6;
   }
   .sphere {
     fill: var(--map-water);
@@ -282,7 +294,8 @@
     min-width: 0;
     align-items: flex-start;
   }
-  .map-note {
+  .map-note,
+  .map-hint {
     font-size: 0.75rem;
     color: var(--text-dim);
     line-height: 1.6;

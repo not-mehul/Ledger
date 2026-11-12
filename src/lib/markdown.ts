@@ -77,7 +77,7 @@ export function buildMarkdown(entries: readonly Entry[], ctx: ExportContext, now
       const rated = metricsIn(config, cat.id).filter((m) => typeof e.ratings[m.id] === 'number');
       if (!rated.length) continue;
       lines.push(
-        `### ${cat.icon ? `${cat.icon} ` : ''}${categoryName(cat, t)}`,
+        `### ${categoryName(cat, t)}`,
         `| ${t('md.metric')} | ${t('md.rating')} | ${t('md.weight')} |`,
         '|--------|--------|--------|',
       );

@@ -28,6 +28,12 @@ describe('places', () => {
     expect(searchPlaces(index, 'p')).toEqual([]);
   });
 
+  it('puts an exact name ahead of longer, more populous ones', () => {
+    // Austintown is listed as the more populous of the two.
+    const reordered = buildIndex({ ...data, cities: ['Austintown|1|0|41.1|-80.76', 'Austin|1|0|30.27|-97.74'].join('\n') });
+    expect(searchPlaces(reordered, 'austin').map((p) => p.name)).toEqual(['Austin', 'Austintown']);
+  });
+
   it('fills the region with the state for US-style countries, else the country', () => {
     expect(regionFor(searchPlaces(index, 'austin')[0]!)).toBe('Texas');
     expect(regionFor(searchPlaces(index, 'london')[0]!)).toBe('United Kingdom');

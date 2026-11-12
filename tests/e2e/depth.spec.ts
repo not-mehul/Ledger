@@ -74,7 +74,7 @@ test('cards place a visit in context and compare cities side by side', async ({ 
   await expect(page.locator('#compareView .cmp-city')).toHaveText(['Lisbon', 'Kyoto']);
   await expect(page.locator('#compareVerdict')).toContainText('Kyoto comes out ahead by');
   await expect(page.locator('[data-metric="internet"] .cmp-cell.lead')).toHaveCount(1);
-  await page.locator('.sheet .btn-muted', { hasText: 'Close' }).click();
+  await page.locator('.sheet .sheet-close').click();
   await page.click('#compareTray .btn-muted');
   await expect(page.locator('#compareTray')).toBeHidden();
 });

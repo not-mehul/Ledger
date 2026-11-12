@@ -19,6 +19,16 @@
   let sortMode = $state<SortMode>('date');
   const openIds = new SvelteSet<string>();
   let viewer = $state<{ entry: Entry; index: number } | null>(null);
+  let trayHeight = $state(0);
+
+  // While the compare tray is up, a toast (the undo after a delete, say)
+  // sits above it instead of covering its buttons.
+  $effect(() => {
+    if (!trayHeight) return;
+    const style = document.body.style;
+    style.setProperty('--toast-lift', `${trayHeight + 12}px`);
+    return () => style.removeProperty('--toast-lift');
+  });
 
   const visible = $derived(sortEntries(filterEntries(ledger.entries, query), sortMode, ledger.scoreOf));
   const SORTS: { mode: SortMode; key: 'ledger.sortDate' | 'ledger.sortScore' | 'ledger.sortCity' }[] = [
@@ -204,7 +214,7 @@
   </div>
 
   {#if compared.length}
-    <div class="compare-tray" id="compareTray" role="region" aria-label={t('compare.tray', { count: compared.length })}>
+    <div class="compare-tray" id="compareTray" bind:clientHeight={trayHeight} role="region" aria-label={t('compare.tray', { count: compared.length })}>
       <div class="tray-picks">
         {#each compared as e (e.id)}
           <span class="chip chip-tag tray-chip">
@@ -218,7 +228,7 @@
       {#if compared.length < 2}
         <p class="t-hint tray-hint">{t('compare.pickAnother')}</p>
       {/if}
-      <div class="tray-actions">
+      <div class="tray-actions btn-pair">
         <button type="button" class="btn btn-muted" onclick={() => (ui.compareIds = [])}>{t('compare.clear')}</button>
         <button type="button" class="btn btn-primary" id="btnCompare" disabled={compared.length < 2} onclick={() => (ui.compareOpen = true)}>
           {t('action.compare')}
@@ -317,7 +327,6 @@
     order: 3;
   }
   .tray-actions {
-    display: flex;
     gap: 0.5rem;
   }
 </style>

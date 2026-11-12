@@ -7,6 +7,7 @@
   import { categoryName, locale, metricName, t } from '../i18n/index.svelte';
   import { formatMonth } from '../lib/dates';
   import ScoreDial from './ScoreDial.svelte';
+  import CategoryIcon from './ui/CategoryIcon.svelte';
 
   interface Props {
     entries: Entry[];
@@ -51,7 +52,7 @@
   {#each result.groups as g (g.category.id)}
     <section class="cmp-group" aria-label={categoryName(g.category)}>
       <div class="cmp-cat">
-        <span class="cmp-cat-name">{g.category.icon ? `${g.category.icon} ` : ''}{categoryName(g.category)}</span>
+        <span class="cmp-cat-name"><CategoryIcon category={g.category} size={14} />{categoryName(g.category)}</span>
         <span class="cmp-cells">
           {#each g.averages as v, i (i)}
             <span class="cmp-cell cmp-avg" class:lead={g.leaders.includes(i)}>{fmt(v, 1)}</span>

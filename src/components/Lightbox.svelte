@@ -3,6 +3,7 @@
   import { t } from '../i18n/index.svelte';
   import { ui } from '../state/ui.svelte';
   import PhotoImg from './PhotoImg.svelte';
+  import Icon from './ui/Icon.svelte';
 
   interface Props {
     photos: Photo[];
@@ -56,7 +57,7 @@
   {/key}
   <div class="bar">
     <span>{index + 1} / {photos.length}</span>
-    <button type="button" class="btn btn-secondary" onclick={onclose}>{t('action.close')}</button>
+    <button type="button" class="btn-icon" aria-label={t('action.close')} title={t('action.close')} onclick={onclose}><Icon name="x" size={20} /></button>
   </div>
 </div>
 
@@ -100,12 +101,11 @@
     font-size: 0.75rem;
   }
   /* Over a photo, the button keeps the viewer's colours in both themes. */
-  .bar .btn {
+  .bar .btn-icon {
+    margin-left: auto;
     color: var(--scanner-fg);
-    border-color: var(--scanner-fg);
   }
-  .bar .btn:hover {
-    background: var(--scanner-fg);
-    color: var(--scanner-bg);
+  .bar .btn-icon:active {
+    background: var(--scanner-scrim);
   }
 </style>
