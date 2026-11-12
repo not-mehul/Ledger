@@ -15,8 +15,9 @@ calls.
 - **Weighted scoring** with a live score dial. Metrics are yours to
   rename, re-weight, reorder, hide or add (⚙ Settings → Metrics); scores
   update everywhere and only count what an entry actually rated.
-- **City autocomplete** from an offline list of 34,000 cities, which also
-  places the entry on the map.
+- **City autocomplete** from an offline list of every town of 1,000
+  people or more (about 210,000, the same gazetteer Waymark uses), which
+  also pins the entry on the map where the town really is.
 - **Map** of visited cities and countries (offline, pinch to zoom).
   Older or hand-typed entries are placed automatically when the name is
   unambiguous.
@@ -109,7 +110,6 @@ copied web assets and plugin glue are generated, not committed.
 | `sync` / `sync:ios` | `build` + `cap sync` for Android / iOS |
 | `android`, `android:run`, `android:apk`, `ios` | Open / run / build the native apps |
 | `icons` | Regenerate Android and iOS icons and launch images from `assets/icon-source.svg` |
-| `places` | Rebuild `public/data/places.json` from GeoNames |
 
 Locally, Playwright can reuse an installed Chromium with
 `PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:e2e`.
@@ -147,11 +147,10 @@ Run the end-to-end suite locally with `npm run test:e2e`.
 │   ├── platform/             # Save/share files, image processing, theme
 │   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)
 │   └── styles/               # app.css (imports dusk-dawn's tokens.css and components.css first)
-├── public/data/places.json   # Offline city list (GeoNames)
 ├── tests/unit, tests/e2e     # Vitest and Playwright
 ├── android/, ios/            # Native projects (committed)
 ├── assets/icon-source.svg    # Master app icon
-└── scripts/                  # Icon and places generators, emulator test scripts
+└── scripts/                  # Icon generator, emulator test scripts
 ```
 
 ## Data
@@ -208,7 +207,9 @@ script relies on.
 
 ## Credits
 
-City data © [GeoNames](https://www.geonames.org/) (CC BY 4.0). Map shapes
+City data © [GeoNames](https://www.geonames.org/) (CC BY 4.0), shipped from
+the shared gazetteer in `dusk-dawn/places` as `data/places.txt` (see its
+`places/LICENSE.md` for what was selected). Map shapes
 © [Natural Earth](https://www.naturalearthdata.com/) via `world-atlas`.
 
 ## Troubleshooting

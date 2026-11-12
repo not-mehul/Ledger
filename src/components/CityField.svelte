@@ -76,7 +76,7 @@
   />
   {#if open}
     <ul class="suggestions" id="citySuggestions" role="listbox">
-      {#each suggestions as place, i (`${place.rank}`)}
+      {#each suggestions as place, i (place.id)}
         <li
           id="city-opt-{i}"
           role="option"

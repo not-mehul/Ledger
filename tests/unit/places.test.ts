@@ -1,41 +1,41 @@
+import { readWorldPlaces } from 'dusk-dawn/places/vite';
+import { parsePlaces } from 'dusk-dawn/places';
 import { describe, expect, it } from 'vitest';
-import { buildIndex, describe as describePlace, fold, matchPlace, regionFor, searchPlaces, type PlacesData } from '../../src/lib/places';
+import { buildIndex, describe as describePlace, fold, matchPlace, regionFor, searchPlaces } from '../../src/lib/places';
 
-const data: PlacesData = {
-  v: 1,
-  countries: [['US', 'United States', 840], ['FR', 'France', 250], ['BR', 'Brazil', 76], ['GB', 'United Kingdom', 826]],
-  admin1: ['', 'Texas', 'Île-de-France', 'São Paulo', 'England', 'New York'],
-  cities: [
-    'São Paulo|3|2|-23.55|-46.63',
-    'New York City|5|0|40.71|-74.01',
-    'Paris|2|1|48.85|2.35',
-    'London|4|3|51.51|-0.13',
-    'Austin|1|0|30.27|-97.74',
-    'Paris|1|0|33.66|-95.56',
-  ].join('\n'),
-};
-const index = buildIndex(data);
+// The same file the app ships: towns only, from dusk-dawn.
+const index = buildIndex(parsePlaces(readWorldPlaces({ kinds: ['city'] })));
 
 describe('places', () => {
+  it('covers the world down to small towns', () => {
+    expect(index.world.size).toBeGreaterThan(200_000);
+    // Zermatt has about 6,000 people; the old list started at 15,000.
+    expect(matchPlace(index, 'Zermatt', 'Switzerland')?.country).toBe('CH');
+    expect(matchPlace(index, 'Giethoorn', 'Netherlands')?.lat).toBeCloseTo(52.74, 1);
+  });
+
   it('folds accents, case and punctuation', () => {
     expect(fold('São  Paulo!')).toBe('sao paulo');
   });
 
-  it('searches by prefix, then by word, most populous first', () => {
-    expect(searchPlaces(index, 'par').map(describePlace)).toEqual(['Île-de-France, France', 'Texas, United States']);
-    expect(searchPlaces(index, 'york').map((p) => p.name)).toEqual(['New York City']);
-    expect(searchPlaces(index, 'sao')[0]!.name).toBe('São Paulo');
+  it('searches by prefix, then by word, largest first', () => {
+    expect(searchPlaces(index, 'par')[0]!.name).toBe('Paris');
+    expect(describePlace(searchPlaces(index, 'par')[0]!)).toBe('Île-de-France, France');
+    expect(searchPlaces(index, 'york city').map((p) => p.name)).toContain('New York City');
+    expect(searchPlaces(index, 'sao pa')[0]!.name).toBe('São Paulo');
     expect(searchPlaces(index, 'p')).toEqual([]);
+    expect(searchPlaces(index, 'eiffel').every((p) => p.name !== 'Eiffel Tower')).toBe(true); // towns only
   });
 
   it('puts an exact name ahead of longer, more populous ones', () => {
-    // Austintown is listed as the more populous of the two.
-    const reordered = buildIndex({ ...data, cities: ['Austintown|1|0|41.1|-80.76', 'Austin|1|0|30.27|-97.74'].join('\n') });
-    expect(searchPlaces(reordered, 'austin').map((p) => p.name)).toEqual(['Austin', 'Austintown']);
+    // Porto Alegre is far larger than Porto, but "porto" means Porto.
+    expect(searchPlaces(index, 'porto')[0]!.country).toBe('PT');
+    expect(searchPlaces(index, 'porto').map((p) => p.name)).toContain('Porto Alegre');
+    expect(searchPlaces(index, 'bombay')[0]!.name).toBe('Mumbai');
   });
 
   it('fills the region with the state for US-style countries, else the country', () => {
-    expect(regionFor(searchPlaces(index, 'austin')[0]!)).toBe('Texas');
+    expect(regionFor(matchPlace(index, 'Austin', 'Texas')!)).toBe('Texas');
     expect(regionFor(searchPlaces(index, 'london')[0]!)).toBe('United Kingdom');
   });
 
@@ -44,12 +44,20 @@ describe('places', () => {
     expect(matchPlace(index, 'paris', 'France')?.country).toBe('FR');
     expect(matchPlace(index, 'London', 'England')?.country).toBe('GB');
     expect(matchPlace(index, 'Austin', 'USA')?.admin1).toBe('Texas');
+    expect(matchPlace(index, 'Bombay', 'India')?.name).toBe('Mumbai');
     expect(matchPlace(index, 'Paris', 'Narnia')).toBeNull(); // ambiguous
-    expect(matchPlace(index, 'Austin', 'Narnia')?.name).toBe('Austin'); // unique name
-    expect(matchPlace(index, 'Atlantis', '')).toBeNull();
+    expect(matchPlace(index, 'Paris', '')?.country).toBe('FR'); // the largest
+    expect(matchPlace(index, 'Nowhereville', '')).toBeNull();
+  });
+
+  it('pins a town where it is, to within a few hundred metres', () => {
+    const kyoto = matchPlace(index, 'Kyoto', 'Japan')!;
+    expect(kyoto.lat).toBeCloseTo(35.02, 1);
+    expect(kyoto.lon).toBeCloseTo(135.75, 1);
   });
 
   it('maps ISO numeric codes for map shapes', () => {
     expect(index.numericToIso.get(840)).toBe('US');
+    expect(index.numericToIso.get(392)).toBe('JP');
   });
 });
