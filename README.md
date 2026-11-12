@@ -1,225 +1,105 @@
-# Ledger
+<p align="center"><img src="assets/icon-source.svg" width="88" height="88" alt=""></p>
 
-A personal ledger of the cities you visit: rate each one on weighted
-metrics you define, get a 0–100 score, add notes and photos, see your
-travels on a map, and export or back up everything. Formerly
-**Travel Logbook**.
+<h1 align="center">Ledger</h1>
 
-Ledger is a [Capacitor 8](https://capacitorjs.com/) app for Android and
-iOS with a [Svelte 5](https://svelte.dev/) + TypeScript UI built by Vite.
-Everything stays on the device; there are no accounts and no network
-calls.
+<p align="center"><em>A record of cities, their character, and my place in them.</em></p>
+
+<p align="center">
+  Android&nbsp;·&nbsp;iOS&nbsp;·&nbsp;<a href="https://github.com/not-mehul/Ledger/releases/latest">Latest release</a>&nbsp;·&nbsp;MIT&nbsp;·&nbsp;Created by <strong>Mehul Sen</strong>
+</p>
+
+---
+
+Ledger is a personal ledger of the cities you visit. Rate each one on metrics you choose and weight yourself, get a score out of 100, add notes and photos, see your travels on a map, and find out what you actually value in a place. Everything stays on the device: there are no accounts and no network calls.
+
+<p align="center">
+  <img src="docs/screenshots/ledger.webp" width="200" alt="The ledger: cities grouped by year, each with its score dial">
+  <img src="docs/screenshots/insights.webp" width="200" alt="Insights: the year in Ledger with cities, countries, distance, highest and lowest rated, and the best city in each category">
+  <img src="docs/screenshots/map.webp" width="200" alt="The offline map with a pin for each visited city">
+  <img src="docs/screenshots/entry-dawn.webp" width="200" alt="Rating a city in the light Dawn theme: the live weighted score and metric sliders">
+</p>
 
 ## Features
 
-- **Weighted scoring** with a live score dial. Metrics are yours to
-  rename, re-weight, reorder, hide or add (⚙ Settings → Metrics); scores
-  update everywhere and only count what an entry actually rated.
-- **City autocomplete** from an offline list of every town of 1,000
-  people or more (about 210,000, the same gazetteer Waymark uses), which
-  also pins the entry on the map where the town really is.
-- **Map** of visited cities and countries (offline, pinch to zoom).
-  Older or hand-typed entries are placed automatically when the name is
-  unambiguous.
-- **Photos** from the gallery or camera, with a full-screen viewer, and a
-  shareable **city card** image.
-- **Insights.** A **year in review** (cities, countries, months on the
-  road, distance, best and worst city, category winners) with a shareable
-  card; **rankings** by overall score, any category or any single metric;
-  and **what you actually value**, which compares each metric with how
-  much you'd return to a city and suggests weights that match; and
-  **patterns**: your scores over time with a running average, how they
-  spread across the tiers, and the metrics you rate most generously and
-  most harshly.
-- **Context on every entry.** An open card shows where the city ranks, the
-  metric where it most beats (and falls short of) your usual rating, a tick
-  on each bar marking your usual rating elsewhere, and every visit to that
-  city with how its score moved between them.
-- **Compare** two or three cities side by side, metric by metric, with the
-  leader of each row marked and a one-line verdict.
-- **A form that knows your ledger.** The score panel shows where the city
-  would rank as you rate, each category shows its live average, and a city
-  you've visited before offers to start from your last ratings.
-- **Small memories.** The ledger groups cities by year with a count and
-  average, and reminds you where you were this month in earlier years.
-- **Export** a full `.zip` backup with photos, or a readable Markdown
-  summary; **import** either (and older JSON exports), including Travel
-  Logbook exports. The most recently saved copy of each entry wins.
-- **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or
-  monthly, keeping the last N), plus Android's Google-account backup of
-  the ledger itself.
+### Rate a city
+
+- **Weighted scoring with a live dial.** The metrics are yours to rename, re-weight, reorder, hide or add, each with its own icon. Scores update everywhere and only count what an entry actually rated.
+- **A form that knows your ledger.** As you rate, the score panel shows where the city would rank, each category shows its live average, and a city you have visited before offers to start from your last ratings.
+- **City autocomplete, offline.** About 210,000 towns (every town of 1,000 people or more, plus every capital and seat), with old and English names too: "Bombay" finds Mumbai and "Bruges" finds Brugge. Picking one pins the entry where the town really is.
+- **Photos** from the gallery or camera, with a full-screen viewer.
+
+### See the pattern
+
+- **A map** of visited cities and countries, offline, with pinch to zoom.
+- **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category, with a shareable card.
+- **Rankings** by overall score, any category or any single metric.
+- **What you actually value.** Ledger compares each metric with how much you would return to a city and suggests weights that match.
+- **Patterns**: your scores over time with a running average, how they spread across the tiers, and the metrics you rate most generously and most harshly.
+- **Context on every entry.** Where the city ranks, where it most beats or falls short of your usual rating, and every visit to it with how its score moved.
+- **Compare** two or three cities side by side, metric by metric, with a one-line verdict.
+- **Small memories.** The ledger groups cities by year with a count and average, and reminds you where you were this month in earlier years.
+
+### Keep it safe
+
+- **Export** a full `.zip` backup with photos, or a readable Markdown summary. **Import** either, older JSON exports, and Travel Logbook exports. The most recently saved copy of each entry wins.
+- **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or monthly, keeping the last few), plus Android's own backup of the ledger.
 - **Undo** after deleting an entry, instead of a confirmation.
-- **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in, ready to rate and save; `ledger://open` just opens Ledger. The scheme is the one all six apps share (`src/platform/links.ts`, style.md §14.1).
-- Dusk and Dawn themes (or follow the system), in the Editorial Dusk & Dawn
-  design shared with Waymark, BookShelf, Colophon and Rosetta through the
-  [`dusk-dawn`](https://github.com/not-mehul/dusk-dawn) package; English,
-  Spanish, French and German.
+- **Share a city card** as an image.
+- **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in. `ledger://open` just opens Ledger.
 
-## Requirements
+### Make it yours
 
-| Tool | Version |
+- **Dusk and Dawn themes**, or follow the system.
+- **English, Spanish, French and German.**
+- **A little delight.** A flurry of passport stamps for your first city or a high score, an idle stamp to play with, and four easter eggs, counted in Settings. All of it respects reduced motion.
+
+## Private by design
+
+Ledger makes no network calls. Your ledger is one file in the app's private storage, with your photos beside it, and it only leaves the device when you export or back it up.
+
+## Install
+
+- **Android:** download the signed APK from the [latest release](https://github.com/not-mehul/Ledger/releases/latest) and open it on your phone.
+- **iOS:** build it from source with Xcode (see below).
+
+**Coming from Travel Logbook?** Ledger installs alongside it. In Travel Logbook tap **Export**, then in Ledger go to **Settings → Data & backups → Import** and choose `logbook.md`.
+
+## The Dusk & Dawn apps
+
+Ledger is one of six apps by Mehul Sen that share one design system, [Editorial Dusk & Dawn](https://github.com/not-mehul/dusk-dawn), and a common link scheme, so they can hand things to each other.
+
+| App | What it is for |
 |---|---|
-| Node.js | 22.12+ (`.nvmrc`) |
-| Android | JDK 21 and Android Studio with SDK Platform **37** |
-| iOS | macOS with Xcode 16+ (iOS 15+ deployment target) |
+| [Waymark](https://github.com/not-mehul/Waymark) | Your whole trip, offline: flights, stays, plans and costs on one timeline |
+| [BookShelf](https://github.com/not-mehul/BookShelf) | Books, films, shows and the lines worth keeping |
+| [Ledger](https://github.com/not-mehul/Ledger) | A record of cities, scored on what matters to you |
+| [Colophon](https://github.com/not-mehul/Colophon) | Inspect, fix and rebind EPUB editions |
+| [Rosetta](https://github.com/not-mehul/Rosetta) | A quiet library and reader for books, papers and notes |
+| [Mise](https://github.com/not-mehul/Mise) | Recipes from anywhere, cooked one step at a time |
 
-Android uses **AGP 9.5** on **Gradle 9.8** (wrapper), `compileSdk` and
-`targetSdk` **37**, `minSdk` 24. iOS uses Swift Package Manager; no
-CocoaPods needed.
+## Build from source
 
-## Getting started
+Svelte 5 and TypeScript, built by Vite, in a Capacitor 8 app for Android and iOS. You need Node 22.12 or later, plus JDK 21 and Android Studio for Android, or Xcode 16 for iOS.
 
-```bash
+```sh
 npm install
+npm run dev          # the app in a browser
+npm run check        # tokens, lint, types and unit tests
+npm run android      # build, sync and open Android Studio
+npm run ios          # build, sync and open Xcode
 ```
 
-For UI work in a desktop browser (data lives in IndexedDB; exports
-download):
-
-```bash
-npm run dev
-```
-
-Android — builds the web app, syncs it into `android/`, opens Android Studio:
-
-```bash
-npm run android
-```
-
-iOS — the same for Xcode:
-
-```bash
-npm run ios
-```
-
-`npm run android:run` deploys to a connected Android device from the
-terminal, and `npm run android:apk` builds a debug APK at
-`android/app/build/outputs/apk/debug/`. Run `npm run sync` (or
-`sync:ios`) after `npm install` and before opening a native project:
-copied web assets and plugin glue are generated, not committed.
-
-## Scripts
-
-| Script | What it does |
-|---|---|
-| `dev` | Vite dev server with hot reload |
-| `build` | Typecheck, then build the web bundle to `dist/` |
-| `check` | ESLint + svelte-check + unit tests — run before committing |
-| `test` / `test:watch` | Unit tests (Vitest) |
-| `test:e2e` | Build, then Playwright end-to-end tests in Chromium at phone size |
-| `sync` / `sync:ios` | `build` + `cap sync` for Android / iOS |
-| `android`, `android:run`, `android:apk`, `ios` | Open / run / build the native apps |
-| `icons` | Regenerate Android and iOS icons and launch images from `assets/icon-source.svg` |
-
-Locally, Playwright can reuse an installed Chromium with
-`PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:e2e`.
-
-## Testing and CI
-
-`.github/workflows/ci.yml` runs on pull requests and pushes to `main`: one
-job with `npm run check` (tokens, formatting, lint, types, unit tests) and a
-production build. That's the gate.
-
-The slow suites live in `.github/workflows/full-checks.yml` and run only when
-started by hand (Actions → Full checks → Run workflow), say before a big
-release or after touching native code:
-
-| Job | Covers |
-|---|---|
-| End-to-end | Playwright: entries, photos, share cards, custom metrics, every export format and backup restore, map, theme and language |
-| Android | Debug, R8-minified release and test APKs, Android lint, then Espresso-Web tests on an API 36 emulator and a launch smoke test of the minified release build |
-| iOS | Simulator build with Xcode |
-
-Run the end-to-end suite locally with `npm run test:e2e`.
-
-## Project layout
-
-```
-├── index.html, src/main.ts   # Shell and bootstrap (load data, theme, language)
-├── src/
-│   ├── App.svelte            # Header, tabs, export sheet, toasts
-│   ├── components/           # Entry form, ledger, map, settings, photos, …
-│   │   └── ui/               # Modal and empty state (tab rail, toast and theme toggle come from dusk-dawn)
-│   ├── state/                # App state (Svelte runes), import/export, sharing
-│   ├── domain/               # Pure logic: metrics config, scoring, entries, document schema
-│   ├── lib/                  # Markdown/JSON/zip formats, places search, share cards, dates
-│   ├── data/                 # On-device files: ledger document and photos
-│   ├── platform/             # Save/share files, image processing, theme
-│   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)
-│   └── styles/               # app.css (imports dusk-dawn's tokens.css and components.css first)
-├── tests/unit, tests/e2e     # Vitest and Playwright
-├── android/, ios/            # Native projects (committed)
-├── assets/icon-source.svg    # Master app icon
-└── scripts/                  # Icon generator, emulator test scripts
-```
-
-## Data
-
-The ledger is one JSON document (`ledger.json` in the app's private data
-directory) holding entries, the metric configuration and settings, with
-`photos/` alongside. Saves write a temporary file and rename it into
-place, and changes are applied one at a time, so a crash or a burst of
-edits can't corrupt or lose data. Schema changes go through `migrate` in
-`src/domain/doc.ts`: bump `SCHEMA_VERSION`, add a step, and never edit
-one that has shipped.
-
-Exports embed each entry's JSON (and the metric configuration), so any
-export can be imported back losslessly.
-
-### Moving data over from Travel Logbook
-
-Ledger has a new application ID (`io.github.notmehul.ledger`), so it
-installs alongside the old app. In Travel Logbook tap **Export**, then in
-Ledger go to **Settings → Data & backups → Import** and choose
-`logbook.md`.
-
-## Releasing
-
-### Android
-
-1. Create an upload key once and keep it **outside** the repository, backed up:
-
-   ```bash
-   keytool -genkeypair -v -keystore ledger-release.jks -keyalg RSA -keysize 4096 -validity 10000 -alias ledger
-   ```
-
-2. Copy `android/keystore.properties.example` to `android/keystore.properties`
-   (gitignored) and fill it in.
-3. Bump `version` in `package.json`, `versionCode`/`versionName` in
-   `android/app/build.gradle`, and `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION`
-   in the Xcode project.
-4. `npm run sync`, then `cd android && ./gradlew bundleRelease` (AAB for
-   Google Play) or `assembleRelease` (APK). Release builds are minified
-   with R8.
-
-### iOS
-
-Open the project with `npm run ios`, set your team under *Signing &
-Capabilities*, then *Product → Archive*.
-
-## App icon
-
-Edit `assets/icon-source.svg` and run `npm run icons`. It renders the
-Android legacy icon, the adaptive-icon foreground (scaled into the 66dp
-safe zone), the monochrome themed icon, and the iOS app icon and launch
-image. Keep the `#disk` / `#mark` group ids and `data-hub` attributes the
-script relies on.
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) covers the requirements, scripts, tests, project layout, data format, releases and troubleshooting. [RELEASING.md](RELEASING.md) covers signed releases.
 
 ## Credits
 
-City data © [GeoNames](https://www.geonames.org/) (CC BY 4.0), shipped from
-the shared gazetteer in `dusk-dawn/places` as `data/places.txt` (see its
-`places/LICENSE.md` for what was selected). Map shapes
-© [Natural Earth](https://www.naturalearthdata.com/) via `world-atlas`.
+Ledger is designed and built by **Mehul Sen** ([@not-mehul](https://github.com/not-mehul)).
 
-## Troubleshooting
+- City data: [GeoNames](https://www.geonames.org), CC BY 4.0, shipped from the shared gazetteer in `dusk-dawn/places`.
+- Map shapes: [Natural Earth](https://www.naturalearthdata.com) via `world-atlas`.
+- Icons: [Lucide](https://lucide.dev), ISC.
+- Fonts and design: Fraunces (SIL Open Font License) through [dusk-dawn](https://github.com/not-mehul/dusk-dawn).
 
-- **Gradle sync fails right after cloning** — run `npm install && npm run sync`
-  first; Gradle needs the generated plugin projects.
-- **JDK errors** — set Android Studio's Gradle JDK to 21.
-- **"Failed to find target android-37"** — install *Android SDK Platform 37*.
-- **Export says "ready to share" instead of "Saved to Documents"** — a file
-  with that name exists from an earlier install. The share sheet still
-  works; delete the old file to save locally again.
+## Licence
 
-See [ROADMAP.md](ROADMAP.md) for what's next.
+[MIT](LICENSE) © 2026 Mehul Sen. The bundled data keeps its own terms, listed above.
