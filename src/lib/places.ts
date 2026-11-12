@@ -1,9 +1,16 @@
 // ============================================================
-// Offline city lookup backed by public/data/places.json (GeoNames,
-// cities with 15k+ people; see scripts/build-places.mjs).
+// Offline place lookup backed by the shared world gazetteer in dusk-dawn
+// (GeoNames, CC BY 4.0): every town of 1,000 people or more, each with its
+// state or province, so the map pins the city itself rather than the nearest
+// big one. Waymark reads the same file. vite.config.ts ships the towns only,
+// as data/places.txt.
 // ============================================================
 
+import { foldPlaceName, parsePlacesInSlices, type Gazetteer, type WorldPlace } from 'dusk-dawn/places';
+
 export interface Place {
+  /** Stable within one copy of the gazetteer; for keys, not for storage. */
+  id: number;
   name: string;
   admin1: string;
   /** ISO 3166-1 alpha-2. */
@@ -11,21 +18,12 @@ export interface Place {
   countryName: string;
   lat: number;
   lon: number;
-  /** Lower is more populous. */
+  /** Higher is larger: 8 × log10 of population. */
   rank: number;
 }
 
-export interface PlacesData {
-  v: number;
-  countries: [string, string, number][];
-  admin1: string[];
-  cities: string;
-}
-
 export interface PlaceIndex {
-  places: Place[];
-  /** Folded names, parallel to `places`. */
-  keys: string[];
+  world: Gazetteer;
   countryNames: Map<string, string>;
   /** ISO 3166-1 numeric → alpha-2, for matching map shapes. */
   numericToIso: Map<number, string>;
@@ -35,46 +33,39 @@ export interface PlaceIndex {
 const REGION_BY_ADMIN1 = new Set(['US', 'CA', 'AU']);
 
 /** Lowercase, strip accents and punctuation so "São Paulo" matches "sao paulo". */
-export function fold(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim();
+export const fold = foldPlaceName;
+
+export function toPlace(p: WorldPlace): Place {
+  return {
+    id: p.id,
+    name: p.name,
+    admin1: p.region,
+    country: p.country,
+    countryName: p.countryName,
+    lat: p.latitude,
+    lon: p.longitude,
+    rank: p.rank,
+  };
 }
 
-export function buildIndex(data: PlacesData): PlaceIndex {
-  const countryNames = new Map(data.countries.map(([iso, name]) => [iso, name]));
-  const numericToIso = new Map(data.countries.map(([iso, , num]) => [num, iso]));
-  const places: Place[] = [];
-  const keys: string[] = [];
-  data.cities.split('\n').forEach((line, rank) => {
-    const [name, a1, ci, lat, lon] = line.split('|');
-    const [iso, countryName] = data.countries[Number(ci)] ?? ['', ''];
-    places.push({
-      name: name!,
-      admin1: data.admin1[Number(a1)] ?? '',
-      country: iso,
-      countryName,
-      lat: Number(lat),
-      lon: Number(lon),
-      rank,
-    });
-    keys.push(fold(name!));
-  });
-  return { places, keys, countryNames, numericToIso };
+export function buildIndex(world: Gazetteer): PlaceIndex {
+  return {
+    world,
+    countryNames: new Map(world.countries.map((c) => [c.code, c.name])),
+    numericToIso: new Map(world.countries.map((c) => [c.numeric, c.code])),
+  };
 }
 
 let loading: Promise<PlaceIndex> | null = null;
 
-/** Fetches and indexes the dataset once; later calls share the result. */
-export function loadPlaces(url = `${import.meta.env.BASE_URL}data/places.json`): Promise<PlaceIndex> {
+/** Fetches and indexes the gazetteer once, a slice at a time; later calls share the result. */
+export function loadPlaces(url = `${import.meta.env.BASE_URL}data/places.txt`): Promise<PlaceIndex> {
   loading ??= fetch(url)
     .then((res) => {
-      if (!res.ok) throw new Error(`places.json: HTTP ${res.status}`);
-      return res.json() as Promise<PlacesData>;
+      if (!res.ok) throw new Error(`places.txt: HTTP ${res.status}`);
+      return res.text();
     })
+    .then((text) => parsePlacesInSlices(text, { kinds: ['city'] }))
     .then(buildIndex)
     .catch((err) => {
       loading = null;
@@ -95,50 +86,45 @@ export function describe(place: Place): string {
 
 /**
  * Prefix matches on the whole name first, then on later words
- * ("york" → New York), each group ordered by population.
+ * ("york" → New York), each group largest first; then towns also known by a
+ * name that matches ("bomb" → Mumbai).
  */
 export function searchPlaces(index: PlaceIndex, query: string, limit = 6): Place[] {
-  const q = fold(query);
-  if (q.length < 2) return [];
-  const starts: Place[] = [];
-  const words: Place[] = [];
-  for (let i = 0; i < index.keys.length && starts.length < limit; i++) {
-    const key = index.keys[i]!;
-    if (key.startsWith(q)) starts.push(index.places[i]!);
-    else if (words.length < limit && key.includes(` ${q}`)) words.push(index.places[i]!);
-  }
-  return [...starts, ...words].slice(0, limit);
+  return index.world.search(query, { limit, kinds: ['city'] }).map(toPlace);
 }
 
 const REGION_ALIASES: Record<string, string> = {
   usa: 'united states',
   us: 'united states',
+  'u s a': 'united states',
   'united states of america': 'united states',
   america: 'united states',
   uk: 'united kingdom',
+  'u k': 'united kingdom',
   britain: 'united kingdom',
   'great britain': 'united kingdom',
   england: 'united kingdom',
   scotland: 'united kingdom',
   wales: 'united kingdom',
   'northern ireland': 'united kingdom',
+  uae: 'united arab emirates',
+  holland: 'netherlands',
 };
 
 /**
  * Best-effort lookup for an entry typed without picking a suggestion.
- * Prefers an exact name whose state/province or country matches the
- * region text; otherwise accepts the name only if it's unambiguous.
+ * Prefers a town of that name (or a name it is known by, "Bombay") whose
+ * state/province or country matches the region text; otherwise accepts the
+ * name only if it's unambiguous, or the largest town when no region was
+ * given.
  */
 export function matchPlace(index: PlaceIndex, city: string, region: string): Place | null {
-  const c = fold(city);
   const r = fold(region);
   const country = REGION_ALIASES[r] ?? r;
-  const candidates: Place[] = [];
-  for (let i = 0; i < index.keys.length; i++) {
-    if (index.keys[i] !== c) continue;
-    const p = index.places[i]!;
-    if (r && (fold(p.admin1) === r || fold(p.countryName) === country || p.country.toLowerCase() === r)) return p;
-    candidates.push(p);
+  const candidates = index.world.named(city, { kinds: ['city'] });
+  if (r) {
+    const hit = candidates.find((p) => fold(p.region) === r || fold(p.countryName) === country || p.country.toLowerCase() === r);
+    if (hit) return toPlace(hit);
   }
-  return candidates.length === 1 || (!r && candidates.length) ? candidates[0]! : null;
+  return candidates.length === 1 || (!r && candidates.length) ? toPlace(candidates[0]!) : null;
 }

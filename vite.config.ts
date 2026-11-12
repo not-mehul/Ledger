@@ -1,9 +1,13 @@
 /// <reference types="vitest/config" />
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { worldPlaces } from 'dusk-dawn/places/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [svelte()],
+  // The world's towns, from the gazetteer Waymark shares (dusk-dawn, GeoNames
+  // CC BY 4.0), as data/places.txt beside the page. Towns only: Ledger records
+  // cities, and the landmarks would add a megabyte and a half to the app.
+  plugins: [svelte(), worldPlaces({ fileName: 'data/places.txt', kinds: ['city'] })],
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? 'dev'),
   },
