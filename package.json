@@ -51,7 +51,7 @@
     "@types/geojson": "^7946.0.16",
     "@types/node": "^26.6.6",
     "@types/topojson-client": "^3.1.5",
-    "dusk-dawn": "github:not-mehul/dusk-dawn#dae207f2c0491312e273a4f033af5604ec56f40a",
+    "dusk-dawn": "github:not-mehul/dusk-dawn#v2.1.0",
     "eslint": "^10.13.0",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^17.13.0",
