@@ -474,6 +474,19 @@ input[type='range'].metric-slider::-moz-range-thumb {
   margin-bottom: 0.5rem;
   margin-top: 1.125rem;
 }
+.mini-cat-label,
+.cmp-cat-name,
+.w-cat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* A category heading on the form: its icon, then the serif title. */
+.section-head h2.cat-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
 .mini-cat-label:first-child {
   margin-top: 0;
 }

@@ -5,6 +5,7 @@
   import { processPhoto } from '../platform/images';
   import { ui } from '../state/ui.svelte';
   import PhotoImg from './PhotoImg.svelte';
+  import Icon from './ui/Icon.svelte';
 
   interface Props {
     photos: Photo[];
@@ -56,8 +57,9 @@
 </div>
 
 <div class="photo-actions">
-  <label class="btn btn-secondary">
-    {t('form.addPhotos')}
+  <label class="photo-btn" title={t('form.addPhotos')}>
+    <Icon name="imagePlus" size={20} />
+    <span class="visually-hidden">{t('form.addPhotos')}</span>
     <input
       type="file"
       accept="image/*"
@@ -70,8 +72,9 @@
       }}
     />
   </label>
-  <label class="btn btn-secondary">
-    {t('form.takePhoto')}
+  <label class="photo-btn" title={t('form.takePhoto')}>
+    <Icon name="camera" size={20} />
+    <span class="visually-hidden">{t('form.takePhoto')}</span>
     <input
       type="file"
       accept="image/*"
@@ -86,6 +89,27 @@
 </div>
 
 <style>
+  /* The same bordered square as the map's zoom buttons. */
+  .photo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color var(--dur-hover), border-color var(--dur-hover);
+  }
+  .photo-btn:hover {
+    color: var(--text-heading);
+    border-color: var(--text-dim);
+  }
+  .photo-btn:focus-within {
+    outline: 2px solid var(--accent-amber);
+    outline-offset: 2px;
+  }
   .photo-strip {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));

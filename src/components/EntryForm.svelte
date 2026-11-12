@@ -10,6 +10,7 @@
   import { loadPlaces, matchPlace, regionFor, type Place } from '../lib/places';
   import { ledger } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
+  import CategoryIcon from './ui/CategoryIcon.svelte';
   import CityField from './CityField.svelte';
   import MetricSlider from './MetricSlider.svelte';
   import MonthPicker from './MonthPicker.svelte';
@@ -271,7 +272,7 @@
     {#if metrics.length}
       <div class="panel">
         <div class="section-head">
-          <h2>{categoryName(cat)}</h2>
+          <h2 class="cat-heading"><CategoryIcon category={cat} size={22} />{categoryName(cat)}</h2>
           <span class="cat-avg" data-cat={cat.id} aria-label={t('form.categoryAverage', { value: categoryAverage(cat.id).toFixed(1) })}>{categoryAverage(cat.id).toFixed(1)}</span>
         </div>
         {#each metrics as metric (metric.id)}

@@ -11,6 +11,7 @@
   import SettingsView from './components/SettingsView.svelte';
   import Sheet from './components/Sheet.svelte';
   import Modal from './components/ui/Modal.svelte';
+  import Icon from './components/ui/Icon.svelte';
   import { TabRail, ThemeToggle, Toast, konami, play, secretTaps } from 'dusk-dawn';
   import { cheer, hatch } from './lib/delight';
 
@@ -92,7 +93,7 @@
   <div class="file-bar">
     <div class="file-dot" class:connected={ledger.status === 'ready'} id="fileDot" aria-hidden="true"></div>
     <span class="file-status" class:connected={ledger.status === 'ready'} id="fileStatus" role="status">{status}</span>
-    <button type="button" class="btn btn-secondary" id="btnExport" onclick={() => (ui.exportOpen = true)}>{t('action.export')}</button>
+    <button type="button" class="btn-icon" id="btnExport" aria-label={t('action.export')} title={t('action.export')} onclick={() => (ui.exportOpen = true)}><Icon name="download" /></button>
     <button
       type="button"
       class="btn-icon"

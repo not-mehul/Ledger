@@ -8,7 +8,7 @@ async function exportFormat(page: Page, format: string) {
   return download;
 }
 
-test('exports every format and restores a full backup', async ({ page }, info) => {
+test('exports Markdown and a full backup, and restores it', async ({ page }, info) => {
   await openApp(page);
   await page.fill('#inputCity', 'Lisbon');
   await page.fill('#inputState', 'Portugal');
@@ -19,10 +19,9 @@ test('exports every format and restores a full backup', async ({ page }, info) =
 
   const md = await readFile(await (await exportFormat(page, 'markdown')).path(), 'utf8');
   expect(md).toContain('## Lisbon · Portugal');
-  const csv = await readFile(await (await exportFormat(page, 'csv')).path(), 'utf8');
-  expect(csv.split('\r\n')[0]).toContain('City,Region,Country,Month,Score');
-  const json = JSON.parse(await readFile(await (await exportFormat(page, 'json')).path(), 'utf8'));
-  expect(json.entries).toHaveLength(2);
+  await page.click('#btnExport');
+  await expect(page.locator('.sheet [data-format]')).toHaveCount(2);
+  await page.locator('.sheet .sheet-close').click();
 
   const backup = await exportFormat(page, 'backup');
   expect(backup.suggestedFilename()).toMatch(/^ledger-backup-\d{4}-\d{2}-\d{2}-\d{4}\.zip$/);

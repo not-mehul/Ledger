@@ -7,6 +7,7 @@
   import { shareYearReview } from '../../state/share';
   import { ui } from '../../state/ui.svelte';
   import ScoreDial from '../ScoreDial.svelte';
+  import CategoryIcon from '../ui/CategoryIcon.svelte';
 
   interface Props {
     year: number | null;
@@ -81,7 +82,7 @@
       {#each review.winners as w (w.category.id)}
         <li>
           <button type="button" onclick={() => ui.showInLedger(w.entry.id)}>
-            <span class="w-cat">{categoryName(w.category)}</span>
+            <span class="w-cat"><CategoryIcon category={w.category} size={14} />{categoryName(w.category)}</span>
             <span class="w-city">{w.entry.city}</span>
             <span class="mini-val">{w.average.toFixed(1)}</span>
           </button>
