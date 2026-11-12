@@ -27,6 +27,13 @@ describe('places', () => {
     expect(searchPlaces(index, 'eiffel').every((p) => p.name !== 'Eiffel Tower')).toBe(true); // towns only
   });
 
+  it('puts an exact name ahead of longer, more populous ones', () => {
+    // Porto Alegre is far larger than Porto, but "porto" means Porto.
+    expect(searchPlaces(index, 'porto')[0]!.country).toBe('PT');
+    expect(searchPlaces(index, 'porto').map((p) => p.name)).toContain('Porto Alegre');
+    expect(searchPlaces(index, 'bombay')[0]!.name).toBe('Mumbai');
+  });
+
   it('fills the region with the state for US-style countries, else the country', () => {
     expect(regionFor(matchPlace(index, 'Austin', 'Texas')!)).toBe('Texas');
     expect(regionFor(searchPlaces(index, 'london')[0]!)).toBe('United Kingdom');

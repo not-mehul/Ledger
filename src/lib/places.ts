@@ -85,13 +85,26 @@ export function describe(place: Place): string {
 }
 
 /**
- * Prefix matches on the whole name first, then on later words
- * ("york" → New York), each group largest first; then towns also known by a
- * name that matches ("bomb" → Mumbai).
+ * Exact names first, own or also-known-as ("porto" → Porto before Porto
+ * Alegre, "bombay" → Mumbai), unless a prefix match is a hundred times
+ * larger ("par" → Paris, not the Cornish village of Par); then prefix
+ * matches on the whole name, then on later words ("york" → New York), each
+ * group largest first.
  */
 export function searchPlaces(index: PlaceIndex, query: string, limit = 6): Place[] {
-  return index.world.search(query, { limit, kinds: ['city'] }).map(toPlace);
+  if (fold(query).length < 2) return [];
+  const prefix = index.world.search(query, { limit: limit * 2, kinds: ['city'] });
+  const top = prefix[0]?.rank ?? 0;
+  const exact = index.world
+    .named(query, { kinds: ['city'] })
+    .filter((p) => p.rank >= top - EXACT_RANK_SLACK)
+    .slice(0, limit);
+  const seen = new Set(exact.map((p) => p.id));
+  return [...exact, ...prefix.filter((p) => !seen.has(p.id))].slice(0, limit).map(toPlace);
 }
+
+/** Ranks are 8 × log10(population): 16 is a hundredfold. */
+const EXACT_RANK_SLACK = 16;
 
 const REGION_ALIASES: Record<string, string> = {
   usa: 'united states',

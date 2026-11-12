@@ -3,6 +3,7 @@
   import type { Snippet } from 'svelte';
   import { t } from '../i18n/index.svelte';
   import { ui } from '../state/ui.svelte';
+  import Icon from './ui/Icon.svelte';
 
   interface Props {
     title: string;
@@ -57,7 +58,7 @@
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="sheet-head">
       <h2 class="sheet-title" id="sheet-title">{title}</h2>
-      <button type="button" class="btn btn-muted" onclick={onclose}>{t('action.close')}</button>
+      <button type="button" class="btn-icon sheet-close" aria-label={t('action.close')} title={t('action.close')} onclick={onclose}><Icon name="x" size={20} /></button>
     </div>
   </div>
   <div class="sheet-body">

@@ -11,10 +11,8 @@
   let busy = $state<ExportFormat | null>(null);
 
   const FORMATS: { format: ExportFormat; key: MessageKey }[] = [
-    { format: 'markdown', key: 'data.markdown' },
-    { format: 'csv', key: 'data.csv' },
-    { format: 'json', key: 'data.json' },
     { format: 'backup', key: 'data.backup' },
+    { format: 'markdown', key: 'data.markdown' },
   ];
 
   async function run(format: ExportFormat) {

@@ -5,10 +5,13 @@
 // current language until the user renames them.
 // ============================================================
 
+import { isCategoryIcon } from './icons';
+
 export interface Category {
   id: string;
   /** User-provided title; built-ins fall back to a translation. */
   title?: string;
+  /** A name from CATEGORY_ICONS (domain/icons.ts). */
   icon?: string;
   builtin?: boolean;
   archived?: boolean;
@@ -52,12 +55,12 @@ export function defaultConfig(): MetricConfig {
   const metric = (id: string, catId: string, weight: number): Metric => ({ id, cat: catId, weight, builtin: true });
   return {
     categories: [
-      cat('env', '🌿'),
-      cat('city', '🏙️'),
-      cat('food', '🍽️'),
-      cat('people', '👥'),
-      cat('practical', '⚡'),
-      cat('overall', '🧭'),
+      cat('env', 'leaf'),
+      cat('city', 'building'),
+      cat('food', 'utensils'),
+      cat('people', 'users'),
+      cat('practical', 'laptop'),
+      cat('overall', 'compass'),
     ],
     metrics: [
       metric('greenery', 'env', 2),
@@ -116,7 +119,8 @@ export function normalizeConfig(raw: unknown): MetricConfig {
     categories.push({
       id,
       title: str(c.title),
-      icon: str(c.icon),
+      // Older ledgers stored emoji here; those fall back to the default icon.
+      icon: isCategoryIcon(c.icon) ? c.icon : undefined,
       builtin: c.builtin === true || undefined,
       archived: c.archived === true || undefined,
     });
@@ -168,7 +172,7 @@ export function mergeConfig(local: MetricConfig, incoming: MetricConfig): { conf
 // ---------- editing (pure; each returns a new config) ----------
 
 export type MetricPatch = Partial<Pick<Metric, 'label' | 'lo' | 'hi' | 'weight' | 'cat' | 'archived'>>;
-export type CategoryPatch = Partial<Pick<Category, 'title' | 'archived'>>;
+export type CategoryPatch = Partial<Pick<Category, 'title' | 'icon' | 'archived'>>;
 
 /** Text fields: blank means "use the default", so built-ins fall back to translations. */
 function cleanText(value: string | undefined): string | undefined {

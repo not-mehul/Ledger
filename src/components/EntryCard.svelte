@@ -6,6 +6,8 @@
   import { formatMonth } from '../lib/dates';
   import { ledger } from '../state/ledger.svelte';
   import PhotoImg from './PhotoImg.svelte';
+  import CategoryIcon from './ui/CategoryIcon.svelte';
+  import Icon from './ui/Icon.svelte';
   import ScoreDial from './ScoreDial.svelte';
 
   interface Props {
@@ -65,7 +67,7 @@
     <span class="entry-city-block">
       <span class="entry-city-name">{entry.city}<span class="entry-region">, {entry.state}</span></span>
       <span class="entry-meta"
-        >{formatMonth(entry.date, locale())}{#if entry.photos.length} · <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>{entry.photos.length}{/if}{visits.length > 1
+        >{formatMonth(entry.date, locale())}{#if entry.photos.length}&#32;· <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>{entry.photos.length}{/if}{visits.length > 1
           ? ` · ${t('ledger.visitN', { n: visitNumber })}`
           : ''}</span
       >
@@ -117,7 +119,7 @@
       {/if}
 
       {#each categories as { cat, metrics } (cat.id)}
-        <div class="mini-cat-label">{cat.icon ? `${cat.icon} ` : ''}{categoryName(cat)}</div>
+        <div class="mini-cat-label"><CategoryIcon category={cat} size={14} />{categoryName(cat)}</div>
         {#each metrics as m (m.id)}
           {@const val = entry.ratings[m.id] ?? 0}
           {@const avg = usual.get(m.id)}
@@ -175,14 +177,14 @@
       {/if}
 
       <div class="entry-card-actions">
-        <button type="button" class="btn btn-secondary" data-action="edit" onclick={onedit}>{t('action.edit')}</button>
-        <button type="button" class="btn btn-secondary" data-action="share" onclick={onshare}>{t('action.share')}</button>
+        <button type="button" class="btn-icon" data-action="edit" aria-label={t('action.edit')} title={t('action.edit')} onclick={onedit}><Icon name="pencil" /></button>
+        <button type="button" class="btn-icon" data-action="share" aria-label={t('action.share')} title={t('action.share')} onclick={onshare}><Icon name="share" /></button>
         {#if oncompare}
-          <button type="button" class="btn btn-muted compare-toggle" data-action="compare" aria-pressed={comparing} onclick={oncompare}>
-            {t('action.compare')}
+          <button type="button" class="btn-icon compare-toggle" data-action="compare" aria-label={t('action.compare')} title={t('action.compare')} aria-pressed={comparing} onclick={oncompare}>
+            <Icon name="compare" />
           </button>
         {/if}
-        <button type="button" class="btn btn-danger" data-action="delete" onclick={ondelete}>{t('action.delete')}</button>
+        <button type="button" class="btn-icon delete" data-action="delete" aria-label={t('action.delete')} title={t('action.delete')} onclick={ondelete}><Icon name="trash" /></button>
       </div>
     </div>
   {/if}
@@ -344,10 +346,17 @@
   }
 
   .entry-card-actions {
-    flex-wrap: wrap;
+    gap: 0.25rem;
   }
+  /* Selected for comparing: the one active control gets the accent. */
   .compare-toggle[aria-pressed='true'] {
-    color: var(--accent-amber);
-    border-color: var(--accent-amber);
+    background: var(--accent-bright);
+    color: var(--on-accent);
+    border-radius: var(--corner-md);
+  }
+  /* Delete sits apart, at the far end, in the danger colour. */
+  .delete {
+    margin-left: auto;
+    color: var(--danger);
   }
 </style>

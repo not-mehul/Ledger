@@ -30,11 +30,11 @@
 
 ## Still to do
 
-- **Make the API 37 emulator job blocking again.** Current API 37 images
+- **Add an API 37 emulator run to the full checks.** Current API 37 images
   crash `system_server` in its task-snapshot thread
   (`Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma`), so
-  that CI job is marked `experimental`. Flip it back once a fixed system
-  image ships, and give Ledger a pass on a physical Android 17 device.
+  the manual full checks run API 36 only. Add 37 once a fixed system image
+  ships, and give Ledger a pass on a physical Android 17 device.
 
 - **Rotate the old signing key and clean history.** `keystore.jks` and a
   24 MB APK are still in early commits. Sign Ledger with a new key and

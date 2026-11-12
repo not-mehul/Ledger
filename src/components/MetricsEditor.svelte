@@ -17,13 +17,18 @@
     type Metric,
     type MetricConfig,
   } from '../domain/metrics';
+  import { CATEGORY_ICONS, categoryIcon } from '../domain/icons';
   import { categoryName, metricEnds, metricName, t } from '../i18n/index.svelte';
   import { ledger } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
+  import Icon from './ui/Icon.svelte';
 
   const config = $derived(ledger.config);
   const WEIGHTS = Array.from({ length: (WEIGHT_MAX - WEIGHT_MIN) / WEIGHT_STEP + 1 }, (_, i) => WEIGHT_MIN + i * WEIGHT_STEP);
   const rated = $derived(new Set(ledger.entries.flatMap((e) => Object.keys(e.ratings))));
+
+  /** The category whose icon picker is open, if any. */
+  let picking = $state<string | null>(null);
 
   class NothingVisible extends Error {}
 
@@ -69,6 +74,15 @@
   <fieldset class="cat-edit" class:archived={cat.archived}>
     <legend class="visually-hidden">{categoryName(cat)}</legend>
     <div class="cat-head">
+      <button
+        type="button"
+        class="btn-icon cat-icon-btn"
+        aria-label={t('metrics.iconFor', { name: categoryName(cat) })}
+        aria-expanded={picking === cat.id}
+        onclick={() => (picking = picking === cat.id ? null : cat.id)}
+      >
+        <Icon name={categoryIcon(cat)} size={20} />
+      </button>
       <input
         class="input cat-title"
         aria-label={t('metrics.categoryName')}
@@ -77,13 +91,36 @@
         onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateCategory(c, cat.id, { title: v })); }}
       />
       <div class="icon-actions">
-        <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={ci === 0} onclick={() => apply((c) => moveCategory(c, cat.id, -1))}>↑</button>
-        <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={ci === config.categories.length - 1} onclick={() => apply((c) => moveCategory(c, cat.id, 1))}>↓</button>
-        <button type="button" class="btn btn-secondary small" onclick={() => apply((c) => updateCategory(c, cat.id, { archived: !c.categories.find((x) => x.id === cat.id)?.archived }))}>
-          {cat.archived ? t('metrics.show') : t('metrics.hide')}
+        <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={ci === 0} onclick={() => apply((c) => moveCategory(c, cat.id, -1))}><Icon name="arrowUp" /></button>
+        <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={ci === config.categories.length - 1} onclick={() => apply((c) => moveCategory(c, cat.id, 1))}><Icon name="arrowDown" /></button>
+        <button
+          type="button"
+          class="btn-icon"
+          aria-label={cat.archived ? t('metrics.show') : t('metrics.hide')}
+          title={cat.archived ? t('metrics.show') : t('metrics.hide')}
+          onclick={() => apply((c) => updateCategory(c, cat.id, { archived: !c.categories.find((x) => x.id === cat.id)?.archived }))}
+        >
+          <Icon name={cat.archived ? 'eyeOff' : 'eye'} />
         </button>
       </div>
     </div>
+    {#if picking === cat.id}
+      <div class="icon-picker" role="radiogroup" aria-label={t('metrics.icon')}>
+        {#each CATEGORY_ICONS as name (name)}
+          <button
+            type="button"
+            class="btn-icon"
+            role="radio"
+            aria-checked={categoryIcon(cat) === name}
+            aria-label={t(`icon.${name}`)}
+            title={t(`icon.${name}`)}
+            onclick={() => { apply((c) => updateCategory(c, cat.id, { icon: name })); picking = null; }}
+          >
+            <Icon name={name} size={20} />
+          </button>
+        {/each}
+      </div>
+    {/if}
 
     {#if !cat.archived}
       {#each metricsOf(cat) as m, mi (m.id)}
@@ -131,13 +168,21 @@
           </details>
           <div class="icon-actions">
             {#if m.archived}<span class="tag">{t('metrics.hidden')}</span>{/if}
-            <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={mi === 0} onclick={() => apply((c) => moveMetric(c, m.id, -1))}>↑</button>
-            <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={mi === metricsOf(cat).length - 1} onclick={() => apply((c) => moveMetric(c, m.id, 1))}>↓</button>
-            <button type="button" class="btn btn-secondary small" onclick={() => apply((c) => updateMetric(c, m.id, { archived: !c.metrics.find((x) => x.id === m.id)?.archived }))}>
-              {m.archived ? t('metrics.show') : t('metrics.hide')}
+            <button type="button" class="btn-icon" aria-label={t('metrics.moveUp')} disabled={mi === 0} onclick={() => apply((c) => moveMetric(c, m.id, -1))}><Icon name="arrowUp" /></button>
+            <button type="button" class="btn-icon" aria-label={t('metrics.moveDown')} disabled={mi === metricsOf(cat).length - 1} onclick={() => apply((c) => moveMetric(c, m.id, 1))}><Icon name="arrowDown" /></button>
+            <button
+              type="button"
+              class="btn-icon"
+              aria-label={m.archived ? t('metrics.show') : t('metrics.hide')}
+              title={m.archived ? t('metrics.show') : t('metrics.hide')}
+              onclick={() => apply((c) => updateMetric(c, m.id, { archived: !c.metrics.find((x) => x.id === m.id)?.archived }))}
+            >
+              <Icon name={m.archived ? 'eyeOff' : 'eye'} />
             </button>
             {#if canRemoveMetric(m, (id) => rated.has(id))}
-              <button type="button" class="btn btn-danger small" onclick={() => apply((c) => removeMetric(c, m.id))}>{t('metrics.remove')}</button>
+              <button type="button" class="btn-icon danger" aria-label={t('metrics.remove')} title={t('metrics.remove')} onclick={() => apply((c) => removeMetric(c, m.id))}>
+                <Icon name="trash" />
+              </button>
             {/if}
           </div>
         </div>
@@ -175,11 +220,14 @@
   }
   .cat-head {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
     margin-bottom: 0.75rem;
   }
   .cat-title {
+    flex: 1 1 0;
+    min-width: 0;
     font-family: var(--font-serif);
     font-style: italic;
     font-size: 1.125rem;
@@ -234,12 +282,36 @@
     justify-content: flex-end;
     flex-wrap: wrap;
   }
+  .cat-head .icon-actions {
+    flex-basis: 100%;
+  }
+  .cat-icon-btn {
+    color: var(--accent-amber);
+  }
+  .cat-icon-btn[aria-expanded='true'] {
+    background: var(--hover-bg);
+  }
+  .icon-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: -0.25rem 0 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    background: var(--panel-bg-faint);
+  }
+  .icon-picker [aria-checked='true'] {
+    background: var(--accent-bright);
+    color: var(--on-accent);
+    border-radius: var(--corner-md);
+  }
+  .btn-icon.danger {
+    color: var(--danger);
+  }
   .btn-icon:disabled {
     color: var(--text-faint);
     cursor: default;
-  }
-  .small {
-    padding: 0 0.875rem;
   }
   .tag {
     margin-right: auto;

@@ -16,10 +16,21 @@ import {
   updateCategory,
   updateMetric,
 } from '../../src/domain/metrics';
+import { categoryIcon } from '../../src/domain/icons';
 
 const base = defaultConfig();
 
 describe('normalizeConfig', () => {
+  it('keeps known category icons and lets old emoji fall back', () => {
+    const c = normalizeConfig({
+      categories: [{ id: 'env', icon: '🌿', builtin: true }, { id: 'mine', icon: 'moon' }, { id: 'other', icon: 'nope' }],
+      metrics: [{ id: 'greenery', cat: 'env', weight: 1 }],
+    });
+    expect(c.categories.map((x) => x.icon)).toEqual([undefined, 'moon', undefined]);
+    expect(c.categories.map(categoryIcon)).toEqual(['leaf', 'moon', 'bookmark']);
+    expect(categoryIcon(updateCategory(c, 'other', { icon: 'sun' }).categories[2]!)).toBe('sun');
+  });
+
   it('keeps a valid config and drops broken items', () => {
     const raw = {
       categories: [{ id: 'env', builtin: true }, { id: 'env' }, { title: 'no id' }],
