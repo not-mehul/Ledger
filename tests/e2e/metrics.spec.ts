@@ -8,7 +8,8 @@ test('custom metrics change the form and the score', async ({ page }) => {
 
   // Re-weight Internet Speed to the maximum and hide Air Quality.
   const internet = page.locator('[data-metric="internet"]');
-  await internet.locator('select').first().selectOption('5');
+  await internet.getByRole('combobox', { name: 'Weight' }).click();
+  await page.locator('.dd-option[data-value="5"]').click();
   await page.locator('[data-metric="airQuality"]').getByRole('button', { name: 'Hide' }).click();
 
   // Add a custom metric in the food category and name it.

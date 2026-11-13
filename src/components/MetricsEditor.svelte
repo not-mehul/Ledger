@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Select } from 'dusk-dawn';
   import {
     WEIGHT_MAX,
     WEIGHT_MIN,
@@ -134,16 +135,13 @@
               placeholder={builtinName(m)}
               onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { label: v })); }}
             />
-            <select
-              class="select weight"
-              aria-label={t('metrics.weight')}
+            <Select
+              class="weight"
+              label={t('metrics.weight')}
               value={m.weight}
-              onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { weight: Number(v) })); }}
-            >
-              {#each WEIGHTS as w (w)}
-                <option value={w}>×{w}</option>
-              {/each}
-            </select>
+              options={WEIGHTS.map((w) => ({ value: w, label: `×${w}` }))}
+              onchange={(weight) => apply((c) => updateMetric(c, m.id, { weight }))}
+            />
           </div>
           <details>
             <summary>{t('metrics.low')} / {t('metrics.high')} · {t('metrics.category')}</summary>
@@ -158,11 +156,7 @@
               </label>
               <label class="field-group">
                 <span class="t-field-label">{t('metrics.category')}</span>
-                <select class="select" value={m.cat} onchange={(e) => { const v = e.currentTarget.value; apply((c) => updateMetric(c, m.id, { cat: v })); }}>
-                  {#each config.categories as c (c.id)}
-                    <option value={c.id}>{categoryName(c)}</option>
-                  {/each}
-                </select>
+                <Select value={m.cat} options={config.categories.map((c) => ({ value: c.id, label: categoryName(c) }))} onchange={(cat) => apply((c) => updateMetric(c, m.id, { cat }))} />
               </label>
             </div>
           </details>
@@ -247,7 +241,7 @@
     display: flex;
     gap: 0.5rem;
   }
-  .weight {
+  .metric-main :global(.weight) {
     width: 5.5rem;
     flex-shrink: 0;
     font-family: var(--font-mono);

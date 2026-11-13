@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Select } from 'dusk-dawn';
   import { inYear, rank, type RankKey } from '../../domain/insights';
   import { RATING_MAX, activeCategories, activeMetrics } from '../../domain/metrics';
   import { scoreTier } from '../../domain/score';
@@ -13,7 +14,7 @@
   let { year }: Props = $props();
 
   const TOP = 10;
-  /** "score", "category:<id>" or "metric:<id>" — a plain string so it can drive a <select>. */
+  /** "score", "category:<id>" or "metric:<id>" — a plain string so it can drive a Select. */
   let by = $state('score');
   let showAll = $state(false);
 
@@ -44,19 +45,16 @@
 
   <label class="rank-by">
     <span class="t-field-label">{t('rank.by')}</span>
-    <select class="select" id="rankBy" bind:value={by} onchange={() => (showAll = false)}>
-      <option value="score">{t('rank.overall')}</option>
-      <optgroup label={t('rank.categories')}>
-        {#each activeCategories(ledger.config) as c (c.id)}
-          <option value="category:{c.id}">{categoryName(c)}</option>
-        {/each}
-      </optgroup>
-      <optgroup label={t('rank.metrics')}>
-        {#each activeMetrics(ledger.config) as m (m.id)}
-          <option value="metric:{m.id}">{metricName(m)}</option>
-        {/each}
-      </optgroup>
-    </select>
+    <Select
+      id="rankBy"
+      bind:value={by}
+      options={[
+        { value: 'score', label: t('rank.overall') },
+        ...activeCategories(ledger.config).map((c) => ({ value: `category:${c.id}`, label: categoryName(c), group: t('rank.categories') })),
+        ...activeMetrics(ledger.config).map((m) => ({ value: `metric:${m.id}`, label: metricName(m), group: t('rank.metrics') })),
+      ]}
+      onchange={() => (showAll = false)}
+    />
   </label>
 
   {#if !ranked.length}

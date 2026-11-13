@@ -4,6 +4,7 @@
 // ============================================================
 
 import { App as CapacitorApp } from '@capacitor/app';
+import { dismissOverlay } from 'dusk-dawn';
 import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, locale, setLocale, t } from './i18n/index.svelte';
@@ -30,6 +31,7 @@ async function start(): Promise<void> {
   if (isNative) {
     // Android back: close overlays, then return to the Entry tab, then exit.
     void CapacitorApp.addListener('backButton', () => {
+      if (dismissOverlay()) return;
       if (!ui.back()) void CapacitorApp.exitApp();
     });
     const refreshWidget = () => updateWidget(widgetLines(ledger.entries, ledger.scoreOf, t, locale()));

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Select } from 'dusk-dawn';
   import { MIN_SAMPLES, applySuggestedWeights, defaultTarget, valueSignals } from '../../domain/insights';
   import { activeMetrics, type MetricConfig } from '../../domain/metrics';
   import { metricName, t } from '../../i18n/index.svelte';
@@ -57,11 +58,7 @@
 
   <label class="target">
     <span class="t-field-label">{t('value.target')}</span>
-    <select class="select" id="valueTarget" bind:value={targetId}>
-      {#each activeMetrics(ledger.config) as m (m.id)}
-        <option value={m.id}>{metricName(m)}</option>
-      {/each}
-    </select>
+    <Select id="valueTarget" bind:value={targetId} options={activeMetrics(ledger.config).map((m) => ({ value: m.id, label: metricName(m) }))} />
   </label>
 
   {#if !ready}
