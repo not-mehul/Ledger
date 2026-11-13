@@ -5,6 +5,7 @@
   import { isNative } from '../platform/output';
   import { ledger } from '../state/ledger.svelte';
   import { backupNow, importFile } from '../state/transfer';
+  import { folderSync } from '../state/sync.svelte';
   import { ui } from '../state/ui.svelte';
   import ExportOptions from './ExportOptions.svelte';
   import MetricsEditor from './MetricsEditor.svelte';
@@ -43,6 +44,12 @@
     const { message, ok } = await importFile(file);
     importing = false;
     ui.notify(message, ok ? 'success' : 'error');
+  }
+
+  async function sync(action: 'choose' | 'now') {
+    const result = await (action === 'choose' ? folderSync.choose() : folderSync.now());
+    if (result === 'synced') ui.notify(t('sync.done'), 'success');
+    else if (result === 'failed') ui.notify(t('sync.failed'), 'error');
   }
 
   async function runBackup() {
@@ -126,6 +133,28 @@
     {:else}
       <p class="t-hint">{t('data.autoBackupWeb')}</p>
     {/if}
+
+    <h3 class="t-section-label sub">{t('sync.title')}</h3>
+    {#if isNative}
+      <p class="t-hint">{t('sync.hint')}</p>
+      {#if settings.syncFolder}
+        <p class="t-hint" id="syncStatus">
+          {t('sync.status', {
+            folder: settings.syncFolder.name || '…',
+            when: settings.lastSyncAt ? relativeTime(settings.lastSyncAt) : t('data.never'),
+          })}
+        </p>
+        <div class="backup-row">
+          <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('now')}>{t('sync.now')}</button>
+          <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.change')}</button>
+          <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => folderSync.stop()}>{t('sync.stop')}</button>
+        </div>
+      {:else}
+        <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.choose')}</button>
+      {/if}
+    {:else}
+      <p class="t-hint">{t('sync.web')}</p>
+    {/if}
   </div>
 
   <div class="panel about">
@@ -147,7 +176,7 @@
   }
   .setting-row select {
     width: auto;
-    min-width: 12rem;
+    min-width: min(12rem, 100%);
   }
   .segmented {
     margin-bottom: 1rem;

@@ -109,7 +109,7 @@
 
   <div class="map-frame panel" bind:clientWidth={width}>
     {#if path && countries.length}
-      <svg bind:this={svg} {width} {height} viewBox="0 0 {width} {height}" class="map" role="img" aria-label={t('map.title')}>
+      <svg bind:this={svg} {width} {height} viewBox="0 0 {width} {height}" class="map" role="group" aria-label={t('map.title')}>
         <rect {width} {height} class="sea" />
         <g transform="translate({transform.x} {transform.y}) scale({transform.k})">
           <path d={path(SPHERE)} class="sphere" />

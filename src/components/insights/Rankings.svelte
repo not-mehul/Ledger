@@ -100,7 +100,7 @@
   }
   .ranking button {
     display: grid;
-    grid-template-columns: 1.75rem minmax(0, 1fr) minmax(3rem, 30%) 3rem;
+    grid-template-columns: minmax(1.75rem, auto) minmax(0, 1fr) minmax(0, 30%) minmax(3rem, auto);
     gap: 0.75rem;
     align-items: center;
     width: 100%;

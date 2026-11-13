@@ -10,6 +10,7 @@ import { emptyDoc, type LedgerDoc, type Settings } from '../domain/doc';
 import { applyUpserts, mergeImported, type Entry } from '../domain/entry';
 import { mergeConfig, type MetricConfig } from '../domain/metrics';
 import { calcScore } from '../domain/score';
+import { mergeEntries, type SyncBase, type SyncMerge } from '../domain/sync-merge';
 import type { PhotoFiles } from '../lib/backup';
 import type { ParsedImport } from '../lib/markdown';
 
@@ -49,6 +50,13 @@ class LedgerState {
   }
 
   private queue: Promise<unknown> = Promise.resolve();
+  private listeners = new Set<() => void>();
+
+  /** Called after every saved change to the entries or metrics (not settings). */
+  onChange(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
 
   /**
    * Applies `change` to the latest committed document, one change at a
@@ -59,9 +67,13 @@ class LedgerState {
       .catch(() => undefined)
       .then(async () => {
         if (this.status !== 'ready') throw new Error('Storage is unavailable.');
-        const [next, result] = await change(this.doc);
+        const previous = this.doc;
+        const [next, result] = await change(previous);
         await saveDoc(next);
         this.doc = next;
+        if (next.entries !== previous.entries || next.config !== previous.config) {
+          for (const listener of this.listeners) listener();
+        }
         return result;
       });
     this.queue = run;
@@ -111,6 +123,22 @@ class LedgerState {
 
   updateSettings(patch: Partial<Settings>): Promise<void> {
     return this.mutate((doc) => [{ ...doc, settings: { ...doc.settings, ...patch } }, undefined]);
+  }
+
+  /**
+   * Folds the sync folder's copy into this one (src/domain/sync-merge.ts),
+   * against the latest committed document so an edit made meanwhile isn't lost.
+   */
+  mergeSynced(remote: ParsedImport & { photos: PhotoFiles }, base: SyncBase): Promise<SyncMerge> {
+    return this.mutate(async (doc) => {
+      const merge = mergeEntries(doc.entries, remote.entries, base);
+      const wanted = new Set(merge.incoming.flatMap((e) => e.photos.map((p) => p.id)));
+      await writePhotoFiles(new Map([...remote.photos].filter(([name]) => wanted.has(name.replace(/(_t)?\.jpg$/, '')))));
+      const gone = new Set(merge.removed);
+      for (const e of doc.entries) if (gone.has(e.id)) for (const p of e.photos) void deletePhoto(p.id);
+      const config = remote.config ? mergeConfig(doc.config, remote.config).config : doc.config;
+      return [{ ...doc, config, entries: merge.merged }, merge];
+    });
   }
 
   import(parsed: ParsedImport, photos?: PhotoFiles): Promise<ImportSummary> {

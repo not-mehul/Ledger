@@ -106,7 +106,8 @@
 <style>
   .stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Three across on a phone; fewer when the text is enlarged. */
+    grid-template-columns: repeat(auto-fit, minmax(min(6rem, 100%), 1fr));
     gap: 1.25rem 0.75rem;
     margin-bottom: 1rem;
   }
@@ -127,6 +128,7 @@
     font-variant-numeric: tabular-nums;
   }
   dt {
+    overflow-wrap: anywhere;
     font-family: var(--font-mono);
     font-size: 0.625rem;
     letter-spacing: 0.2em;
