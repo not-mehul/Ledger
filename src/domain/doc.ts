@@ -21,6 +21,12 @@ export interface Settings {
   keepBackups: number;
   /** ISO timestamp of the last automatic or manual backup. */
   lastBackupAt?: string;
+  /** The folder picked for sync (Android), reached through the picker's lasting permission. */
+  syncFolder?: { uri: string; name: string };
+  /** ISO timestamp of the last sync. */
+  lastSyncAt?: string;
+  /** What the sync folder held after the last sync: entry id → savedAt (src/domain/sync-merge.ts). */
+  syncBase?: Record<string, string>;
 }
 
 export interface LedgerDoc {
@@ -53,6 +59,21 @@ export function normalizeSettings(raw: unknown): Settings {
     ...(typeof r.lastBackupAt === 'string' && !Number.isNaN(Date.parse(r.lastBackupAt))
       ? { lastBackupAt: r.lastBackupAt }
       : {}),
+    ...syncSettings(r),
+  };
+}
+
+function syncSettings(r: Record<string, unknown>): Pick<Settings, 'syncFolder' | 'lastSyncAt' | 'syncBase'> {
+  const folder = r.syncFolder as { uri?: unknown; name?: unknown } | undefined;
+  if (!folder || typeof folder.uri !== 'string' || !folder.uri) return {};
+  const base: Record<string, string> = {};
+  if (r.syncBase && typeof r.syncBase === 'object') {
+    for (const [id, at] of Object.entries(r.syncBase as Record<string, unknown>)) if (typeof at === 'string') base[id] = at;
+  }
+  return {
+    syncFolder: { uri: folder.uri, name: typeof folder.name === 'string' ? folder.name : '' },
+    ...(typeof r.lastSyncAt === 'string' && !Number.isNaN(Date.parse(r.lastSyncAt)) ? { lastSyncAt: r.lastSyncAt } : {}),
+    syncBase: base,
   };
 }
 

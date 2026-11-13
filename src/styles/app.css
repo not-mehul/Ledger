@@ -220,7 +220,7 @@ fieldset {
 }
 .score-number .denom {
   font-size: 1.25rem;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .score-desc {
   font-size: 0.8125rem;
@@ -254,7 +254,7 @@ fieldset {
 }
 .metric-val .denom {
   font-size: 0.6875rem;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .metric-val.high-val {
   color: var(--accent-sage);
@@ -669,4 +669,29 @@ input[type='range'].metric-slider:focus-visible {
 /* The title word that tumbles in an easter egg (style.md §11.3). */
 .title-word {
   display: inline-block;
+}
+
+/* ─── Large text (WCAG 1.4.4) ─────────────────────────────────────
+   At 200% text, buttons wrap instead of running off the screen, and a
+   section heading's average drops below a long category name. */
+.btn {
+  max-width: 100%;
+  white-space: normal;
+}
+.section-head {
+  flex-wrap: wrap;
+}
+.section-head h2.cat-heading {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.select {
+  max-width: 100%;
+}
+.toast-text {
+  overflow-wrap: anywhere;
+}
+.btn-pair {
+  grid-auto-columns: minmax(0, 1fr);
+  min-width: 0;
 }

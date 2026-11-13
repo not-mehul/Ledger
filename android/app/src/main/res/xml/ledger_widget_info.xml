@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Updated by the app whenever the ledger changes, so no periodic refresh. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/ledger_widget"
+    android:minWidth="180dp"
+    android:minHeight="80dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="60dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="1"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />
