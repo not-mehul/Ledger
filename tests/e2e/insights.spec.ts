@@ -66,9 +66,11 @@ test('ranks cities by score, category or metric', async ({ page }, info) => {
   await page.click('[data-year="all"]');
   const cities = page.locator('#rankingList .city');
   await expect(cities.first()).toHaveText('Kyoto');
-  await page.selectOption('#rankBy', 'metric:internet');
+  await page.click('#rankBy');
+  await page.click('.dd-option[data-value="metric:internet"]');
   await expect(cities).toHaveText(['Dubai', 'Austin', 'Berlin', 'Bangkok', 'Kyoto', 'Lisbon']);
-  await page.selectOption('#rankBy', 'category:people');
+  await page.click('#rankBy');
+  await page.click('.dd-option[data-value="category:people"]');
   await expect(cities.first()).toHaveText('Kyoto');
   // A year filter narrows the list.
   await page.click('[data-year="2024"]');
@@ -92,6 +94,6 @@ test('explains what drives a verdict and applies suggested weights', async ({ pa
   // The new weights are what Settings → Metrics shows.
   await page.click('#tabSettings');
   await page.click('#metricsEditor summary');
-  await expect(page.locator('[data-metric="foodQuality"] select').first()).toHaveValue('5');
-  await expect(page.locator('[data-metric="internet"] select').first()).toHaveValue('0.5');
+  await expect(page.locator('[data-metric="foodQuality"] .weight')).toHaveText('×5');
+  await expect(page.locator('[data-metric="internet"] .weight')).toHaveText('×0.5');
 });

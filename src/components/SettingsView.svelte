@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Select } from 'dusk-dawn';
   import { EGGS, eggsFound } from '../lib/delight';
   import type { BackupFrequency, LanguageSetting, ThemeSetting } from '../domain/doc';
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
@@ -80,12 +81,15 @@
     </div>
     <label class="setting-row">
       <span class="t-field-label">{t('settings.language')}</span>
-      <select class="select" id="languageSelect" value={settings.language} onchange={(e) => update({ language: e.currentTarget.value as LanguageSetting })}>
-        <option value="system">{t('settings.languageSystem')}</option>
-        {#each LOCALES as code (code)}
-          <option value={code}>{LOCALE_NAMES[code]}</option>
-        {/each}
-      </select>
+      <Select
+        id="languageSelect"
+        value={settings.language}
+        options={[
+          { value: 'system' as LanguageSetting, label: t('settings.languageSystem') },
+          ...LOCALES.map((code) => ({ value: code as LanguageSetting, label: LOCALE_NAMES[code] })),
+        ]}
+        onchange={(language) => update({ language })}
+      />
     </label>
   </div>
 
@@ -119,11 +123,7 @@
       </div>
       <label class="setting-row">
         <span class="t-field-label">{t('data.keep')}</span>
-        <select class="select" value={settings.keepBackups} onchange={(e) => update({ keepBackups: Number(e.currentTarget.value) })}>
-          {#each KEEP as n (n)}
-            <option value={n}>{t('data.keepCount', { count: n })}</option>
-          {/each}
-        </select>
+        <Select value={settings.keepBackups} options={KEEP.map((n) => ({ value: n, label: t('data.keepCount', { count: n }) }))} onchange={(keepBackups) => update({ keepBackups })} />
       </label>
       <div class="backup-row">
         <span class="t-hint">{t('data.lastBackup', { when: settings.lastBackupAt ? relativeTime(settings.lastBackupAt) : t('data.never') })}</span>
@@ -174,7 +174,7 @@
     margin-bottom: 1rem;
     flex-wrap: wrap;
   }
-  .setting-row select {
+  .setting-row :global(.select) {
     width: auto;
     min-width: min(12rem, 100%);
   }

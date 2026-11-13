@@ -22,7 +22,8 @@ test('switches theme and language, and remembers them', async ({ page }) => {
   await openApp(page);
   await page.click('#tabSettings');
   await page.click('[data-theme-option="light"]');
-  await page.selectOption('#languageSelect', 'de');
+  await page.click('#languageSelect');
+  await page.click('.dd-option[data-value="de"]');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('#tabSettings')).toHaveAccessibleName('Einstellungen');
   await expect(page.locator('#tabInsights')).toHaveText('Auswertung');
