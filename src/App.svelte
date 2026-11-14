@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { detectLocale, locale, relativeTime, setLocale, t, type MessageKey } from './i18n/index.svelte';
   import { applyTheme, shown, toggledTheme } from './platform/theme.svelte';
   import { ledger } from './state/ledger.svelte';
@@ -12,15 +13,15 @@
   import Sheet from './components/Sheet.svelte';
   import Modal from './components/ui/Modal.svelte';
   import Icon from './components/ui/Icon.svelte';
-  import { TabRail, ThemeToggle, Toast, konami, play, secretTaps } from 'dusk-dawn';
+  import { IconTabs, ThemeToggle, Toast, konami, play, secretTaps } from 'dusk-dawn';
   import { cheer, hatch } from './lib/delight';
 
   type MainTab = Exclude<Tab, 'settings'>;
-  const TABS: { id: MainTab; dom: string; panel: string; key: MessageKey }[] = [
-    { id: 'entry', dom: 'tabNew', panel: 'viewNew', key: 'tabs.entry' },
-    { id: 'ledger', dom: 'tabLogbook', panel: 'viewLogbook', key: 'tabs.ledger' },
-    { id: 'map', dom: 'tabMap', panel: 'viewMap', key: 'tabs.map' },
-    { id: 'insights', dom: 'tabInsights', panel: 'viewInsights', key: 'tabs.insights' },
+  const TABS: { id: MainTab; dom: string; panel: string; key: MessageKey; icon: Snippet }[] = [
+    { id: 'entry', dom: 'tabNew', panel: 'viewNew', key: 'tabs.entry', icon: entryIcon },
+    { id: 'ledger', dom: 'tabLogbook', panel: 'viewLogbook', key: 'tabs.ledger', icon: ledgerIcon },
+    { id: 'map', dom: 'tabMap', panel: 'viewMap', key: 'tabs.map', icon: mapIcon },
+    { id: 'insights', dom: 'tabInsights', panel: 'viewInsights', key: 'tabs.insights', icon: insightsIcon },
   ];
   const tabs = $derived(
     TABS.map((tab) => ({
@@ -28,6 +29,7 @@
       domId: tab.dom,
       controls: tab.panel,
       label: t(tab.key),
+      icon: tab.icon,
       badge: tab.id === 'ledger' ? ledger.entries.length : undefined,
     })),
   );
@@ -74,6 +76,11 @@
   }
 </script>
 
+{#snippet entryIcon()}<Icon name="pin" size={22} />{/snippet}
+{#snippet ledgerIcon()}<Icon name="book" size={22} />{/snippet}
+{#snippet mapIcon()}<Icon name="map" size={22} />{/snippet}
+{#snippet insightsIcon()}<Icon name="chart" size={22} />{/snippet}
+
 <div class="glow-layer" aria-hidden="true">
   <div class="glow glow-1"></div>
   <div class="glow glow-2"></div>
@@ -111,7 +118,7 @@
   </div>
 
   <nav class="app-tabs">
-    <TabRail {tabs} value={ui.tab === 'settings' ? ('' as MainTab) : ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
+    <IconTabs {tabs} value={ui.tab === 'settings' ? ('' as MainTab) : ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
   </nav>
 
   <!-- The form stays mounted so a half-filled entry survives tab switches. -->
