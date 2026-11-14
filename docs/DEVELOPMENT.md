@@ -64,8 +64,10 @@ Locally, Playwright can reuse an installed Chromium with
 ## Testing and CI
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`: one
-job with `npm run check` (tokens, formatting, lint, types, unit tests) and a
-production build. That's the gate.
+job with `npm run check` (tokens, formatting, lint, types, unit tests), then a
+production build and the Playwright suite against it (entries, photos, share
+cards, custom metrics, every export format and backup restore, map, theme and
+language). That's the gate, and it matches the other apps.
 
 The slow suites live in `.github/workflows/full-checks.yml` and run only when
 started by hand (Actions → Full checks → Run workflow), say before a big
@@ -73,7 +75,6 @@ release or after touching native code:
 
 | Job | Covers |
 |---|---|
-| End-to-end | Playwright: entries, photos, share cards, custom metrics, every export format and backup restore, map, theme and language |
 | Android | Debug, R8-minified release and test APKs, Android lint, then Espresso-Web tests on an API 36 emulator and a launch smoke test of the minified release build |
 | iOS | Simulator build with Xcode |
 
