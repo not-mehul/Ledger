@@ -50,7 +50,7 @@ export function buildMarkdown(entries: readonly Entry[], ctx: ExportContext, now
   const exported = now.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
 
   const lines: string[] = [
-    `# 🧭 ${t('md.title')}`,
+    `# ${t('md.title')}`,
     `*${t('md.subtitle')}*`,
     '',
     `> **${t('md.total')}:** ${entries.length}`,
@@ -64,7 +64,10 @@ export function buildMarkdown(entries: readonly Entry[], ctx: ExportContext, now
 
   for (const e of sortEntries(entries, 'date')) {
     const score = calcScore(e.ratings, config);
-    const scoreText = score === null ? '—' : `${scoreTier(score).marker} **${score}** / 100`;
+    // The tier's name in words (the part of its sentence before the dash, as
+    // on the share card), so the export carries no colour-only emoji.
+    const tier = score === null ? '' : t(`tier.${scoreTier(score).id}`).split(' — ')[0];
+    const scoreText = score === null ? '—' : `**${score}** / 100 · ${tier}`;
     lines.push(
       `## ${e.city} · ${e.state}`,
       `*${formatMonth(e.date, locale)} · ${scoreText}*`,

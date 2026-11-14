@@ -27,22 +27,20 @@ export interface ScoreTier {
   id: TierId;
   /** CSS custom property holding the tier colour (theme-aware). */
   cssVar: string;
-  /** Traffic-light marker used in Markdown export. */
-  marker: string;
 }
 
 const TIERS: readonly (ScoreTier & { min: number })[] = [
-  { min: 85, id: 'exceptional', cssVar: '--scale-1', marker: '🟢' },
-  { min: 72, id: 'strong', cssVar: '--scale-2', marker: '🟢' },
-  { min: 58, id: 'decent', cssVar: '--scale-3', marker: '🟡' },
-  { min: 42, id: 'mixed', cssVar: '--scale-4', marker: '🟠' },
-  { min: -Infinity, id: 'challenging', cssVar: '--scale-5', marker: '🔴' },
+  { min: 85, id: 'exceptional', cssVar: '--scale-1' },
+  { min: 72, id: 'strong', cssVar: '--scale-2' },
+  { min: 58, id: 'decent', cssVar: '--scale-3' },
+  { min: 42, id: 'mixed', cssVar: '--scale-4' },
+  { min: -Infinity, id: 'challenging', cssVar: '--scale-5' },
 ];
 
 /** One shared tiering so the form, cards, map and exports always agree. */
 export function scoreTier(score: number): ScoreTier {
-  const { id, cssVar, marker } = TIERS.find((t) => score >= t.min)!;
-  return { id, cssVar, marker };
+  const { id, cssVar } = TIERS.find((t) => score >= t.min)!;
+  return { id, cssVar };
 }
 
 export type RatingLevel = 'low' | 'mid' | 'high';
