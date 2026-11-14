@@ -23,12 +23,13 @@ describe('markdown export/import', () => {
 
   it('includes a readable, translated summary', () => {
     const md = buildMarkdown(entries, ctx, NOW);
-    expect(md).toContain('# 🧭 Ledger');
+    expect(md).toContain('# Ledger\n');
     expect(md).toContain('**Total cities logged:** 2');
     expect(md).toContain('## Austin · Texas');
     expect(md).toContain('### Environment & Nature');
     expect(md).toContain('| Greenery & Nature Access | `███████░░░` 7/10 | ×2 |');
-    expect(md).toContain('🟡 **70** / 100');
+    expect(md).toContain('**70** / 100 · Decent');
+    expect(md).not.toMatch(/\p{Extended_Pictographic}/u);
     expect(md).toContain('> Line one\n> Line two');
   });
 
