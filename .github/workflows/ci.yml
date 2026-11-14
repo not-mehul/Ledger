@@ -1,10 +1,10 @@
 name: CI
 
-# One quick job on pull requests and on pushes to main: tokens, formatting,
-# lint, types, the unit suite and a production build. The heavier suites
-# (Playwright, Android and iOS builds, the emulator) live in full-checks.yml
-# and run only when started by hand from the Actions tab. Releases run their
-# own checks in release.yml.
+# One quick job on pull requests and on pushes to main: tokens, lint, types,
+# the unit suite, then a production build and the Playwright tests against it,
+# the same as the other apps. The heavier suites (Android and iOS builds, the
+# emulator) live in full-checks.yml and run only when started by hand from the
+# Actions tab. Releases run their own checks in release.yml.
 on:
   pull_request:
   push:
@@ -28,4 +28,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      # Builds the app, then runs the end-to-end tests against it.
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
