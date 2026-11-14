@@ -34,7 +34,8 @@ test('exports Markdown and a full backup, and restores it', async ({ page }, inf
     await page.locator('.entry-card-header').first().click();
     await page.click('[data-action="delete"]');
   }
-  await expect(page.locator('#tabLogbook .badge')).toHaveText('0');
+  // IconTabs shows no count on the icon when the logbook is empty.
+  await expect(page.locator('#tabLogbook .badge')).toHaveCount(0);
 
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', zipPath);
