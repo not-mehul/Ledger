@@ -68,14 +68,13 @@ Ledger makes no network calls. Your ledger is one file in the app's private stor
 
 ## The Dusk & Dawn apps
 
-Ledger is one of six apps by Mehul Sen that share one design system, [Editorial Dusk & Dawn](https://github.com/not-mehul/dusk-dawn), and a common link scheme, so they can hand things to each other.
+Ledger is one of five apps by Mehul Sen that share one design system, [Editorial Dusk & Dawn](https://github.com/not-mehul/dusk-dawn), and a common link scheme, so they can hand things to each other.
 
 | App | What it is for |
 |---|---|
 | [Waymark](https://github.com/not-mehul/Waymark) | Your whole trip, offline: flights, stays, plans and costs on one timeline |
 | [BookShelf](https://github.com/not-mehul/BookShelf) | Books, films, shows and the lines worth keeping |
 | [Ledger](https://github.com/not-mehul/Ledger) | A record of cities, scored on what matters to you |
-| [Colophon](https://github.com/not-mehul/Colophon) | Inspect, fix and rebind EPUB editions |
 | [Rosetta](https://github.com/not-mehul/Rosetta) | A quiet library and reader for books, papers and notes |
 | [Mise](https://github.com/not-mehul/Mise) | Recipes from anywhere, cooked one step at a time |
 
