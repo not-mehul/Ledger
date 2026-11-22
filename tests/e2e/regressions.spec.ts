@@ -1,7 +1,7 @@
 // Regression tests for the November 2026 audit, in the real UI.
 import { expect, test, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { addEntry, openApp, saveEntry, savedFile } from './helpers';
+import { addEntry, closeSheet, openApp, openMetrics, saveEntry, savedFile } from './helpers';
 
 test.beforeEach(async ({ page }) => openApp(page));
 
@@ -14,9 +14,11 @@ test('H2: editing an older entry leaves metrics added since unrated', async ({ p
   await addEntry(page, 'Lisbon', 'Portugal', { greenery: 9, safety: 9, internet: 9, returnDesire: 9, foodQuality: 9 });
   const before = await scoreOf(page, 'Lisbon');
 
-  await page.click('#tabSettings');
-  await page.click('#metricsEditor summary');
-  await page.locator('fieldset.cat-edit').nth(2).getByRole('button', { name: '+ Add metric' }).click();
+  await openMetrics(page);
+  await page.locator('section.cat').nth(2).getByRole('button', { name: 'Add metric' }).click();
+  await expect(page.locator('dialog.sheet[open]')).toHaveCount(2);
+  await closeSheet(page);
+  await closeSheet(page);
 
   await page.click('#settingsBack');
   await page.click('#tabLogbook');

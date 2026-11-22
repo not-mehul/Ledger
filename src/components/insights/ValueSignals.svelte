@@ -21,6 +21,10 @@
   const ready = $derived(signals.some((s) => s.r !== null));
   const changes = $derived(signals.filter((s) => s.suggested !== null && s.suggested !== s.metric.weight).length);
 
+  /** The table opens on the three metrics that track the target most closely; the rest are a tap away. */
+  const SHORT = 3;
+  let showAll = $state(false);
+
   const strongest = $derived(signals.find((s) => s.r !== null && s.r > 0));
   /** A heavily weighted metric that doesn't track the target: the most contradictory one. */
   const mismatch = $derived(
@@ -90,8 +94,8 @@
         </tr>
       </thead>
       <tbody>
-        {#each signals as s (s.metric.id)}
-          <tr data-metric={s.metric.id}>
+        {#each signals as s, i (s.metric.id)}
+          <tr data-metric={s.metric.id} hidden={!showAll && i >= SHORT}>
             <th scope="row">{metricName(s.metric)}</th>
             <td>
               <div class="link">
@@ -116,6 +120,11 @@
         {/each}
       </tbody>
     </table>
+    {#if signals.length > SHORT}
+      <button type="button" class="show-all" id="valueShowAll" aria-expanded={showAll} onclick={() => (showAll = !showAll)}>
+        {showAll ? t('value.showFewer') : t('value.showAll', { count: signals.length })}
+      </button>
+    {/if}
 
     <p class="caveat">{t('value.caveat')}</p>
     <button type="button" class="btn btn-secondary" id="applyWeights" onclick={apply}>{t('value.apply')}</button>
@@ -123,6 +132,22 @@
 </section>
 
 <style>
+  .show-all {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 0.25rem;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--border-faint);
+    cursor: pointer;
+  }
   .target {
     display: flex;
     flex-direction: column;
