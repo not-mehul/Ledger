@@ -8,6 +8,7 @@
   import { categoryName, locale, t } from '../i18n/index.svelte';
   import { currentMonthString, formatMonth } from '../lib/dates';
   import { loadPlaces, matchPlace, regionFor, type Place } from '../lib/places';
+  import { liftToastAbove } from 'dusk-dawn';
   import { EntryGone, ledger } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
   import CategoryIcon from './ui/CategoryIcon.svelte';
@@ -344,17 +345,46 @@
     <textarea class="textarea" id="inputNotes" placeholder={t('form.notesPlaceholder')} bind:value={notes}></textarea>
   </div>
 
-  <div class="save-row">
-    <div class="btn-pair">
-      <button type="button" class="btn btn-muted" id="btnClear" onclick={reset}>{t('action.clear')}</button>
-      <button type="button" class="btn btn-primary" id="btnSave" disabled={saving} onclick={save}>
-        {editingId ? t('form.update') : t('form.save')}
-      </button>
+  <!-- Held at the bottom of the screen while you rate (style.md §8.22): the
+       live score, Clear and Save. -->
+  <div class="action-bar" id="entryActions" use:liftToastAbove>
+    <div class="action-bar-summary" aria-hidden="true">
+      <ScoreDial {score} size={40} stroke={5} labelled />
+      <span class="bar-text">
+        <span class="bar-tier" style:color={tier ? `var(${tier.cssVar})` : undefined}>{tier ? t(`tierName.${tier.id}`) : '—'}</span>
+        {#if placed}<span class="bar-placing">{t('form.placingShort', { position: placed.position, of: placed.of })}</span>{/if}
+      </span>
     </div>
+    <button type="button" class="btn-icon" id="btnClear" aria-label={t('action.clear')} title={t('action.clear')} onclick={reset}><Icon name="reset" size={20} /></button>
+    <button type="button" class="btn btn-primary" id="btnSave" disabled={saving} onclick={save}>
+      {editingId ? t('form.update') : t('form.save')}
+    </button>
   </div>
 </div>
 
 <style>
+  .bar-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .bar-tier {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.2;
+    color: var(--text-heading);
+  }
+  .bar-placing {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .returning {
     margin-top: 1rem;
   }

@@ -27,6 +27,7 @@ async function importCities(page: Page, info: TestInfo, count = CITIES.length) {
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
   await expect(page.locator('#toast')).toContainText('Import complete');
+  await page.click('#settingsBack'); // Settings is a secondary screen, with no tabs
   await page.click('#tabInsights');
 }
 

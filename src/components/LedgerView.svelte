@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { liftToastAbove } from 'dusk-dawn';
   import Icon from './ui/Icon.svelte';
   import { tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
@@ -13,17 +14,11 @@
   import EmptyState from './ui/EmptyState.svelte';
   import CompareView from './CompareView.svelte';
   import EntryCard from './EntryCard.svelte';
-  import { liftAbove } from '../lib/toast-lift';
   import Sheet from './Sheet.svelte';
 
   let query = $state('');
   let sortMode = $state<SortMode>('date');
   const openIds = new SvelteSet<string>();
-  // While the compare tray is up, a toast (the undo after a delete, say)
-  // sits above it instead of covering its buttons.
-  let tray = $state<HTMLElement>();
-  $effect(() => (tray ? liftAbove(tray) : undefined));
-
   const visible = $derived(sortEntries(filterEntries(ledger.entries, query), sortMode, ledger.scoreOf));
   const SORTS: { mode: SortMode; key: 'ledger.sortDate' | 'ledger.sortScore' | 'ledger.sortCity'; name?: 'ledger.sortCityName' }[] = [
     { mode: 'date', key: 'ledger.sortDate' },
@@ -234,7 +229,8 @@
   </div>
 
   {#if compared.length}
-    <div class="compare-tray" id="compareTray" bind:this={tray} role="region" aria-label={t('compare.tray', { count: compared.length })}>
+    <!-- While the tray is up, a toast (the undo after a delete, say) sits above it. -->
+    <div class="compare-tray" id="compareTray" use:liftToastAbove role="region" aria-label={t('compare.tray', { count: compared.length })}>
       <div class="tray-picks">
         {#each compared as e (e.id)}
           <span class="chip chip-tag tray-chip">

@@ -162,15 +162,14 @@
         </div>
       {/if}
 
-      <div class="entry-card-actions">
-        <button type="button" class="btn-icon" data-action="edit" aria-label={t('action.edit')} title={t('action.edit')} onclick={onedit}><Icon name="pencil" /></button>
-        <button type="button" class="btn-icon" data-action="share" aria-label={t('action.share')} title={t('action.share')} onclick={onshare}><Icon name="share" /></button>
+      <!-- Labelled icon actions (style.md §8.23): a word under every icon. -->
+      <div class="entry-card-actions icon-actions">
+        <button type="button" data-action="edit" onclick={onedit}><Icon name="pencil" size={20} /><span class="icon-action-word">{t('action.edit')}</span></button>
+        <button type="button" data-action="share" title={t('action.share')} onclick={onshare}><Icon name="share" size={20} /><span class="icon-action-word">{t('card.share')}</span></button>
         {#if oncompare}
-          <button type="button" class="btn-icon compare-toggle" data-action="compare" aria-label={t('action.compare')} title={t('action.compare')} aria-pressed={comparing} onclick={oncompare}>
-            <Icon name="compare" />
-          </button>
+          <button type="button" data-action="compare" aria-pressed={comparing} onclick={oncompare}><Icon name="compare" size={20} /><span class="icon-action-word">{t('action.compare')}</span></button>
         {/if}
-        <button type="button" class="btn-icon delete" data-action="delete" aria-label={t('action.delete')} title={t('action.delete')} onclick={ondelete}><Icon name="trash" /></button>
+        <button type="button" class="is-danger" data-action="delete" onclick={ondelete}><Icon name="trash" size={20} /><span class="icon-action-word">{t('action.delete')}</span></button>
       </div>
     </div>
   {/if}
@@ -305,18 +304,4 @@
     text-align: right;
   }
 
-  .entry-card-actions {
-    gap: 0.25rem;
-  }
-  /* Selected for comparing: the one active control gets the accent. */
-  .compare-toggle[aria-pressed='true'] {
-    background: var(--accent-bright);
-    color: var(--on-accent);
-    border-radius: var(--corner-md);
-  }
-  /* Delete sits apart, at the far end, in the danger colour. */
-  .delete {
-    margin-left: auto;
-    color: var(--danger);
-  }
 </style>

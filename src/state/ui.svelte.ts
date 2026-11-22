@@ -121,9 +121,18 @@ class UiState {
     return true;
   }
 
+  /** Where Settings, a secondary screen, goes back to. */
+  private returnTo: Exclude<Tab, 'settings'> = 'entry';
+
   go(tab: Tab): void {
+    if (tab === 'settings' && this.tab !== 'settings') this.returnTo = this.tab;
     this.tab = tab;
     globalThis.scrollTo?.({ top: 0 });
+  }
+
+  /** Leaves Settings for the section it was opened from. */
+  closeSettings(): void {
+    this.go(this.returnTo);
   }
 
   edit(entry: Entry): void {
@@ -154,6 +163,10 @@ class UiState {
     const close = this.closers.pop();
     if (close) {
       close();
+      return true;
+    }
+    if (this.tab === 'settings') {
+      this.closeSettings();
       return true;
     }
     if (this.tab !== 'entry') {

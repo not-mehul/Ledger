@@ -18,6 +18,7 @@ test('H2: editing an older entry leaves metrics added since unrated', async ({ p
   await page.click('#metricsEditor summary');
   await page.locator('fieldset.cat-edit').nth(2).getByRole('button', { name: '+ Add metric' }).click();
 
+  await page.click('#settingsBack');
   await page.click('#tabLogbook');
   await page.locator('.entry-card-header').first().click();
   await page.click('[data-action="edit"]');
@@ -131,6 +132,7 @@ test('L12: a long ledger draws a page of cards at a time', async ({ page }, info
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
   await expect(page.locator('#toast')).toContainText('150 added');
+  await page.click('#settingsBack');
   await page.click('#tabLogbook');
   await expect(page.locator('.entry-card')).toHaveCount(60);
   await page.click('#showMore');

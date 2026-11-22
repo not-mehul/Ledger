@@ -88,35 +88,49 @@
 </div>
 
 <div class="container">
-  <header class="site-header">
-    <div class="site-title">
-      <p class="eyebrow">{today}</p>
-      <h1 class="t-page-title" use:secretTaps={{ count: 7, onunlock: wanderlust }}><em class="title-word" bind:this={titleWord}>Ledger</em></h1>
-      <p class="t-tagline">{t('app.tagline')}</p>
-    </div>
-    <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => void toggleTheme()} />
-  </header>
+  {#snippet actions()}
+    <button type="button" class="btn-icon" id="btnExport" aria-label={t('action.export')} title={t('action.export')} onclick={() => (ui.exportOpen = true)}><Icon name="download" size={20} /></button>
+    <button type="button" class="btn-icon" id="tabSettings" aria-label={t('tabs.settings')} title={t('tabs.settings')} onclick={() => ui.go('settings')}><Icon name="settings" size={20} /></button>
+  {/snippet}
 
-  <div class="file-bar">
-    <div class="file-dot" class:connected={ledger.status === 'ready'} id="fileDot" aria-hidden="true"></div>
-    <span class="file-status" class:connected={ledger.status === 'ready'} id="fileStatus" role="status">{status}</span>
-    <button type="button" class="btn-icon" id="btnExport" aria-label={t('action.export')} title={t('action.export')} onclick={() => (ui.exportOpen = true)}><Icon name="download" /></button>
-    <button
-      type="button"
-      class="btn-icon"
-      class:active={ui.tab === 'settings'}
-      id="tabSettings"
-      aria-label={t('tabs.settings')}
-      aria-pressed={ui.tab === 'settings'}
-      onclick={() => ui.go(ui.tab === 'settings' ? 'entry' : 'settings')}
-    >
-      <Icon name="settings" />
-    </button>
-  </div>
+  <!-- Storage state, for screen readers always and on screen only when something is wrong. -->
+  <span class="visually-hidden" class:connected={ledger.status === 'ready'} id="fileStatus" role="status">{status}</span>
 
-  <nav class="app-tabs">
-    <IconTabs {tabs} value={ui.tab === 'settings' ? ('' as MainTab) : ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
-  </nav>
+  {#if ui.tab === 'settings'}
+    <!-- A secondary screen (style.md §8.8): back, title, no tabs. -->
+    <header class="screen-header">
+      <button type="button" class="btn-icon screen-header-back" id="settingsBack" aria-label={t('action.back')} onclick={() => ui.closeSettings()}><Icon name="chevronLeft" size={22} /></button>
+      <h1 class="screen-header-title">{t('tabs.settings')}</h1>
+    </header>
+  {:else if ui.tab === 'entry'}
+    <header class="site-header">
+      <div class="site-title">
+        <p class="eyebrow">{today}</p>
+        <h1 class="t-page-title" use:secretTaps={{ count: 7, onunlock: wanderlust }}><em class="title-word" bind:this={titleWord}>Ledger</em></h1>
+        <p class="t-tagline">{t('app.tagline')}</p>
+      </div>
+      <div class="site-actions">
+        <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => void toggleTheme()} />
+        <div class="screen-header-actions">{@render actions()}</div>
+      </div>
+    </header>
+  {:else}
+    <!-- After the first section, one line (style.md §8.8), so the page starts with its content. -->
+    <header class="screen-header">
+      <p class="screen-header-title"><em>Ledger</em></p>
+      <div class="screen-header-actions">{@render actions()}</div>
+    </header>
+  {/if}
+
+  {#if ledger.status === 'failed'}
+    <p class="notice is-error" role="alert" id="storageNotice">{t('status.unavailable')}</p>
+  {/if}
+
+  {#if ui.tab !== 'settings'}
+    <nav class="app-tabs tab-bar-sticky">
+      <IconTabs {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
+    </nav>
+  {/if}
 
   <!-- The form stays mounted so a half-filled entry survives tab switches. -->
   <div hidden={ui.tab !== 'entry'}><EntryForm /></div>
@@ -165,7 +179,10 @@
 />
 
 <style>
-  .btn-icon.active {
-    color: var(--accent-amber);
+  .site-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-3);
   }
 </style>
