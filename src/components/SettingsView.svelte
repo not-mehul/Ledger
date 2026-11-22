@@ -10,10 +10,14 @@
   import { ui } from '../state/ui.svelte';
   import ExportOptions from './ExportOptions.svelte';
   import MetricsEditor from './MetricsEditor.svelte';
+  import Sheet from './Sheet.svelte';
 
   const settings = $derived(ledger.settings);
   let importing = $state(false);
   let backingUp = $state(false);
+  let metricsOpen = $state(false);
+  const metricCount = $derived(ledger.config.metrics.filter((m) => !m.archived && !ledger.config.categories.find((c) => c.id === m.cat)?.archived).length);
+  const hiddenCount = $derived(ledger.config.metrics.length - metricCount);
 
   const THEMES: { value: ThemeSetting; key: MessageKey }[] = [
     { value: 'system', key: 'settings.themeSystem' },
@@ -101,8 +105,22 @@
 
   <div class="panel">
     <div class="section-head"><h2>{t('metrics.title')}</h2></div>
-    <MetricsEditor />
+    <div class="settings-group">
+      <button type="button" class="settings-row" id="metricsEditor" aria-haspopup="dialog" onclick={() => (metricsOpen = true)}>
+        <span class="settings-row-icon"><Icon name="chart" size={20} /></span>
+        <span class="settings-row-text">
+          <span class="settings-row-title">{t('metrics.edit')}</span>
+          <span class="settings-row-hint">{t('metrics.count', { count: metricCount })}{hiddenCount ? ` · ${t('metrics.hiddenCount', { count: hiddenCount })}` : ''}</span>
+        </span>
+        <Icon name="chevronRight" class="settings-row-chevron" />
+      </button>
+    </div>
   </div>
+  {#if metricsOpen}
+    <Sheet title={t('metrics.title')} onclose={() => (metricsOpen = false)}>
+      <MetricsEditor />
+    </Sheet>
+  {/if}
 
   <div class="panel">
     <div class="section-head"><h2>{t('data.title')}</h2></div>

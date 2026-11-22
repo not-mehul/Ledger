@@ -13,6 +13,9 @@
   }
 
   let { title, onclose, children }: Props = $props();
+  // Sheets can stack (a detail over a list), so each needs its own title id.
+  const uid = $props.id();
+  const titleId = `sheet-title-${uid}`;
   let dialog: HTMLDialogElement;
   let dragFrom: number | null = null;
   let drag = $state(0);
@@ -52,7 +55,7 @@
 <dialog
   bind:this={dialog}
   class="sheet"
-  aria-labelledby="sheet-title"
+  aria-labelledby={titleId}
   class:dragging
   style:transform={drag ? `translateY(${drag}px)` : undefined}
   style:--sheet-dim={drag ? Math.max(0.35, 1 - drag / 320) : undefined}
@@ -64,7 +67,7 @@
   <div class="sheet-grip" onpointerdown={start} onpointermove={move} onpointerup={end} onpointercancel={end} role="presentation">
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="sheet-head">
-      <h2 class="sheet-title" id="sheet-title">{title}</h2>
+      <h2 class="sheet-title" id={titleId}>{title}</h2>
       <button type="button" class="btn-icon sheet-close" aria-label={t('action.close')} title={t('action.close')} onclick={onclose}><Icon name="x" size={20} /></button>
     </div>
   </div>

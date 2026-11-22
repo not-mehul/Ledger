@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { openApp, savedFile } from './helpers';
+import { openApp, openMetrics, savedFile } from './helpers';
 
 const BASE = {
   greenery: 5, airQuality: 5, temperature: 5, visualBeauty: 5, cleanliness: 5, walkability: 5,
@@ -93,8 +93,42 @@ test('explains what drives a verdict and applies suggested weights', async ({ pa
   await expect(page.locator('#valueSignals tr[data-metric="foodQuality"] .w')).toHaveText('×5');
 
   // The new weights are what Settings → Metrics shows.
-  await page.click('#tabSettings');
-  await page.click('#metricsEditor summary');
-  await expect(page.locator('[data-metric="foodQuality"] .weight')).toHaveText('×5');
-  await expect(page.locator('[data-metric="internet"] .weight')).toHaveText('×0.5');
+  await openMetrics(page);
+  await expect(page.locator('.metric-row[data-metric="foodQuality"] .settings-row-value')).toHaveText('×5');
+  await expect(page.locator('.metric-row[data-metric="internet"] .settings-row-value')).toHaveText('×0.5');
+});
+
+test('the jump links bring each section up under the tabs', async ({ page }, info) => {
+  await importCities(page, info);
+  await page.click('#tabInsights');
+  const tabs = page.locator('.tab-bar-sticky');
+  for (const id of ['valueSignals', 'rankings', 'patterns', 'yearReview']) {
+    await page.click(`.jump [data-jump="${id}"]`);
+    await expect(page.locator(`#${id} h2`)).toBeFocused();
+    // Just under the tabs (after the smooth scroll), unless the page cannot scroll that far.
+    await expect
+      .poll(async () => {
+        const [section, bar] = [(await page.locator(`#${id}`).boundingBox())!, (await tabs.boundingBox())!];
+        const gap = section.y - (bar.y + bar.height);
+        const atBottom = await page.evaluate(() => Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight);
+        return gap >= 0 && (gap < 24 || atBottom);
+      })
+      .toBe(true);
+  }
+});
+
+test('the value table opens on its three strongest links', async ({ page }, info) => {
+  await importCities(page, info);
+  await page.click('#tabInsights');
+  const rows = page.locator('#valueSignals tbody tr');
+  const total = await rows.count();
+  expect(total).toBeGreaterThan(3);
+  await expect(page.locator('#valueSignals tbody tr:visible')).toHaveCount(3);
+  const more = page.locator('#valueShowAll');
+  await expect(more).toHaveText(`Show all ${total} metrics`);
+  await more.click();
+  await expect(page.locator('#valueSignals tbody tr:visible')).toHaveCount(total);
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await more.click();
+  await expect(page.locator('#valueSignals tbody tr:visible')).toHaveCount(3);
 });

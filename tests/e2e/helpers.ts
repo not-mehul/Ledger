@@ -66,3 +66,43 @@ export async function savedFile(page: Page, folder: string, name: RegExp, binary
   const { path, content } = found!;
   return { name: path.split('/').pop()!, data: binary ? Buffer.from(content, 'base64') : Buffer.from(content, 'utf8') };
 }
+
+/** Settings → Metrics: opens the editor's sheet. */
+export async function openMetrics(page: Page): Promise<void> {
+  await page.click('#tabSettings');
+  await page.click('#metricsEditor');
+  await expect(page.locator('dialog.sheet .metric-row').first()).toBeVisible();
+  await sheetSettled(page);
+}
+
+/** Waits for every open sheet to finish rising, so positions read are final. */
+export async function sheetSettled(page: Page): Promise<void> {
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('dialog.sheet[open]')].every((d) => d.getAnimations().every((a) => a.playState !== 'running')),
+  );
+}
+
+/** Closes the topmost sheet the way Android back would. */
+export async function closeSheet(page: Page): Promise<void> {
+  const open = page.locator('dialog.sheet[open]');
+  const before = await open.count();
+  await page.keyboard.press('Escape');
+  await expect(open).toHaveCount(before - 1);
+}
+
+type SeedPlace = readonly [city: string, state: string, country: string, lat: number, lon: number];
+
+/** Imports these places as entries through Settings, then returns to the tabs. */
+export async function importPlaces(page: Page, file: string, places: readonly SeedPlace[]): Promise<void> {
+  const entries = places.map(([city, state, country, lat, lon], i) => ({
+    id: `p${i}`, city, state, country, lat, lon, date: `2025-0${(i % 9) + 1}`, notes: '', savedAt: '2025-01-01T00:00:00Z',
+    // Varied, so Insights has links to show.
+    ratings: { greenery: 7, safety: (i * 3) % 10, internet: (i * 7) % 10, foodQuality: 9 - i, returnDesire: (i * 5) % 10 },
+  }));
+  const { writeFile } = await import('node:fs/promises');
+  await writeFile(file, JSON.stringify({ schemaVersion: 2, entries }));
+  await page.click('#tabSettings');
+  await page.setInputFiles('#importFile', file);
+  await expect(page.locator('#toast')).toContainText('Import complete');
+  await page.click('#settingsBack');
+}
