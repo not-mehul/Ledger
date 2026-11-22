@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   import { tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import { COMPARE_MAX } from '../domain/compare';
@@ -12,27 +13,23 @@
   import EmptyState from './ui/EmptyState.svelte';
   import CompareView from './CompareView.svelte';
   import EntryCard from './EntryCard.svelte';
+  import { liftAbove } from '../lib/toast-lift';
   import Sheet from './Sheet.svelte';
 
   let query = $state('');
   let sortMode = $state<SortMode>('date');
   const openIds = new SvelteSet<string>();
-  let trayHeight = $state(0);
-
   // While the compare tray is up, a toast (the undo after a delete, say)
   // sits above it instead of covering its buttons.
-  $effect(() => {
-    if (!trayHeight) return;
-    const style = document.body.style;
-    style.setProperty('--toast-lift', `${trayHeight + 12}px`);
-    return () => style.removeProperty('--toast-lift');
-  });
+  let tray = $state<HTMLElement>();
+  $effect(() => (tray ? liftAbove(tray) : undefined));
 
   const visible = $derived(sortEntries(filterEntries(ledger.entries, query), sortMode, ledger.scoreOf));
-  const SORTS: { mode: SortMode; key: 'ledger.sortDate' | 'ledger.sortScore' | 'ledger.sortCity' }[] = [
+  const SORTS: { mode: SortMode; key: 'ledger.sortDate' | 'ledger.sortScore' | 'ledger.sortCity'; name?: 'ledger.sortCityName' }[] = [
     { mode: 'date', key: 'ledger.sortDate' },
     { mode: 'score', key: 'ledger.sortScore' },
-    { mode: 'city', key: 'ledger.sortCity' },
+    // Shown as "A–Z", named in full for screen readers.
+    { mode: 'city', key: 'ledger.sortCity', name: 'ledger.sortCityName' },
   ];
 
   /** Cards are drawn a page at a time, so a long ledger opens quickly. */
@@ -146,7 +143,10 @@
 <div id="viewLogbook" role="tabpanel" aria-labelledby="tabLogbook">
   <div class="logbook-header">
     <h2>{t('ledger.title')}</h2>
-    <span class="logbook-count" id="logbookCount">{t('status.entries', { count: ledger.entries.length })}</span>
+    <!-- The tab's badge already counts the cities: a count here only while searching. -->
+    <span class="logbook-count" id="logbookCount" role="status"
+      >{query.trim() ? t('ledger.matches', { count: visible.length, total: ledger.entries.length }) : ''}</span
+    >
   </div>
 
   <div class="logbook-controls">
@@ -163,7 +163,7 @@
       <span class="t-field-label" id="sortLabel">{t('ledger.sort')}</span>
       <div class="segmented" role="radiogroup" aria-labelledby="sortLabel">
         {#each SORTS as s (s.mode)}
-          <button type="button" role="radio" data-sort={s.mode} aria-checked={sortMode === s.mode} onclick={() => (sortMode = s.mode)}>
+          <button type="button" role="radio" data-sort={s.mode} aria-checked={sortMode === s.mode} aria-label={s.name && t(s.name)} onclick={() => (sortMode = s.mode)}>
             {t(s.key)}
           </button>
         {/each}
@@ -174,18 +174,14 @@
   {#if memory && !query}
     {@const memoryNote = memory.notes.trim()}
     <button type="button" class="notice memory" id="memoryNotice" onclick={() => focus(memory.id)}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
-      </svg>
+      <Icon name="calendar" size={20} />
       <span class="notice-text">
         <span class="notice-title">{t('ledger.thisMonth', { month: formatMonth(memory.date, locale()), city: memory.city })}</span>
         {#if memoryNote}
           <span class="notice-detail memory-note">{memoryNote.length > 110 ? `${memoryNote.slice(0, 110).trimEnd()}…` : memoryNote}</span>
         {/if}
       </span>
-      <svg class="notice-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="m9 18 6-6-6-6" />
-      </svg>
+      <Icon name="chevronRight" class="notice-chevron" />
     </button>
   {/if}
 
@@ -238,13 +234,13 @@
   </div>
 
   {#if compared.length}
-    <div class="compare-tray" id="compareTray" bind:clientHeight={trayHeight} role="region" aria-label={t('compare.tray', { count: compared.length })}>
+    <div class="compare-tray" id="compareTray" bind:this={tray} role="region" aria-label={t('compare.tray', { count: compared.length })}>
       <div class="tray-picks">
         {#each compared as e (e.id)}
           <span class="chip chip-tag tray-chip">
             {e.city}
             <button type="button" class="tray-remove" aria-label={t('compare.remove', { city: e.city })} onclick={() => ui.toggleCompare(e.id, COMPARE_MAX)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              <Icon name="x" size={14} />
             </button>
           </span>
         {/each}
@@ -354,5 +350,18 @@
   }
   .tray-actions {
     gap: 0.5rem;
+  }
+  /* A phone: the picked cities, the hint, then the buttons across the full width. */
+  @media (max-width: 480px) {
+    .tray-picks {
+      flex-basis: 100%;
+    }
+    .tray-hint {
+      order: 1;
+    }
+    .tray-actions {
+      order: 2;
+      flex: 1 1 100%;
+    }
   }
 </style>

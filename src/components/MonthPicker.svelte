@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   // A field shaped like a text input that opens a picker (style.md §8.6). The
   // value only changes when Choose is pressed.
   import { locale, t } from '../i18n/index.svelte';
@@ -50,15 +51,11 @@
   <Modal title={t('form.chooseMonth')} closeLabel={t('action.close')} onclose={() => (open = false)}>
     <div class="year-nav">
       <button type="button" class="btn-icon" id="dpPrevYear" aria-label={t('form.prevYear')} onclick={() => viewYear--}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="m15 18-6-6 6-6" />
-        </svg>
+        <Icon name="chevronLeft" />
       </button>
       <p class="t-card-title" aria-live="polite">{viewYear}</p>
       <button type="button" class="btn-icon" id="dpNextYear" aria-label={t('form.nextYear')} onclick={() => viewYear++}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <Icon name="chevronRight" />
       </button>
     </div>
     <div class="hairline-grid month-grid" id="dpGrid">

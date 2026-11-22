@@ -162,7 +162,7 @@
 
   <div class="panel about">
     <div class="section-head"><h2>{t('about.title')}</h2></div>
-    <p class="t-hint">Ledger · {t('about.version', { version: __APP_VERSION__ })}</p>
+    <p class="t-hint" id="aboutVersion">Ledger · {t('about.version', { version: __APP_VERSION__ })} · {t('app.designedBy')}</p>
     <p class="t-hint" id="eggCount">{t('about.eggs', { found: eggsFound(), total: EGGS.length })}</p>
     <p class="t-hint">{t('about.attribution')}</p>
   </div>

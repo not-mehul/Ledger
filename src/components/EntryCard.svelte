@@ -70,9 +70,7 @@
           : ''}</span
       >
     </span>
-    <svg class="entry-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
+    <Icon name="chevronDown" class="entry-chevron" />
   </button>
 
   {#if open}

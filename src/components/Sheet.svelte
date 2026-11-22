@@ -2,6 +2,7 @@
   // style.md §8.11: rises from the bottom on phones, a modal from 900px up.
   import type { Snippet } from 'svelte';
   import { t } from '../i18n/index.svelte';
+  import { liftAbove } from '../lib/toast-lift';
   import { ui } from '../state/ui.svelte';
   import Icon from './ui/Icon.svelte';
 
@@ -19,7 +20,13 @@
 
   $effect(() => {
     dialog.showModal();
-    return ui.pushOverlay(onclose);
+    const popOverlay = ui.pushOverlay(onclose);
+    // A toast raised while the sheet is open sits above it, not over its buttons.
+    const dropLift = liftAbove(dialog);
+    return () => {
+      dropLift();
+      popOverlay();
+    };
   });
 
   // Swipe down on the handle or the header to dismiss.

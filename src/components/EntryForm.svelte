@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   import { cheer, hatch } from '../lib/delight';
   import { isSameVisit, newEntryId, nextSavedAt, type Entry } from '../domain/entry';
   import { RATING_DEFAULT, activeCategories, activeMetrics, metricsIn } from '../domain/metrics';
@@ -261,28 +262,22 @@
       </div>
     </div>
     {#if located.lat !== undefined}
-      <p class="located"><svg class="located-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg> {t('form.located')}</p>
+      <p class="located"><Icon name="pin" size={14} class="located-icon" /> {t('form.located')}</p>
     {/if}
     {#if sameVisit}
       <button type="button" class="notice returning" id="sameVisitNotice" onclick={() => editExisting(sameVisit)}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" />
-        </svg>
+        <Icon name="pencil" size={20} />
         <span class="notice-text">
           <span class="notice-title">{t('form.alreadyTitle', { city: sameVisit.city, month: formatMonth(sameVisit.date, locale()) })}</span>
           <span class="notice-detail">{t('form.alreadyDetail')}</span>
         </span>
-        <svg class="notice-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <Icon name="chevronRight" class="notice-chevron" />
       </button>
     {/if}
     {#if returning}
       {@const prevScore = ledger.scoreOf(returning)}
       <button type="button" class="notice returning" id="returningNotice" onclick={() => startFrom(returning)}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" />
-        </svg>
+        <Icon name="history" size={20} />
         <span class="notice-text">
           <span class="notice-title">{t('form.returningTitle', { city: returning.city })}</span>
           <span class="notice-detail">
@@ -291,9 +286,7 @@
             })}
           </span>
         </span>
-        <svg class="notice-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <Icon name="chevronRight" class="notice-chevron" />
       </button>
     {/if}
   </div>
@@ -352,7 +345,6 @@
   </div>
 
   <div class="save-row">
-    <span class="t-hint save-hint">{t('app.designedBy')}</span>
     <div class="btn-pair">
       <button type="button" class="btn btn-muted" id="btnClear" onclick={reset}>{t('action.clear')}</button>
       <button type="button" class="btn btn-primary" id="btnSave" disabled={saving} onclick={save}>

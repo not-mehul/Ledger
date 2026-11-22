@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
   // style.md §8.10. A centred card on the native <dialog>, so focus trapping
   // and the inert background come for free.
   import type { Snippet } from 'svelte';
@@ -46,17 +47,7 @@
         <h2 class="modal-title" id="modal-title">{title}</h2>
       </div>
       <button type="button" class="btn-icon" aria-label={closeLabel} onclick={onclose}>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
+        <Icon name="x" />
       </button>
     </div>
     {@render children()}
