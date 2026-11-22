@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '../i18n/index.svelte';
-  import { describe, loadPlaces, searchPlaces, type Place, type PlaceIndex } from '../lib/places';
+  import { describe, loadPlaces, loadQuickPlaces, searchPlaces, type Place, type PlaceIndex } from '../lib/places';
 
   interface Props {
     city: string;
@@ -13,6 +13,9 @@
   let { city = $bindable(), onpick, ontype }: Props = $props();
 
   let index = $state.raw<PlaceIndex | null>(null);
+  /** Whether `index` is the whole list yet, rather than the quick one. */
+  let whole = false;
+  let started = false;
   let focused = $state(false);
   let active = $state(-1);
   let dismissed = $state(false);
@@ -20,8 +23,28 @@
   const suggestions = $derived(index && focused && !dismissed ? searchPlaces(index, city) : []);
   const open = $derived(suggestions.length > 0);
 
+  // The larger towns answer first; the whole list takes over when it's ready,
+  // and is read only after them, so it never slows the first suggestions.
   function ensureIndex() {
-    if (!index) loadPlaces().then((i) => (index = i)).catch((err) => console.warn('Places unavailable:', err));
+    if (started) return;
+    started = true;
+    const warn = (err: unknown) => console.warn('Places unavailable:', err);
+    const loadWhole = () =>
+      loadPlaces()
+        .then((i) => {
+          index = i;
+          whole = true;
+        })
+        .catch((err: unknown) => {
+          started = false;
+          warn(err);
+        });
+    loadQuickPlaces()
+      .then((i) => {
+        if (!whole) index = i;
+      })
+      .catch(warn)
+      .finally(loadWhole);
   }
 
   function pick(place: Place) {
