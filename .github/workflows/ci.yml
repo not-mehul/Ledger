@@ -2,7 +2,7 @@ name: CI
 
 # One quick job on pull requests and on pushes to main: tokens, lint, types,
 # the unit suite, then a production build and the Playwright tests against it,
-# the same as the other apps. The heavier suites (Android and iOS builds, the
+# the same as the other apps. The heavier suites (the Android builds and the
 # emulator) live in full-checks.yml and run only when started by hand from the
 # Actions tab. Releases run their own checks in release.yml.
 on:

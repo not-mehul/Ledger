@@ -1,4 +1,3 @@
-import { photoUrl } from '../data/photo-store';
 import type { Entry } from '../domain/entry';
 import { categoryAverage, type YearReview } from '../domain/insights';
 import { activeCategories } from '../domain/metrics';
@@ -18,7 +17,6 @@ export function categoryAverages(entry: Entry): { label: string; average: number
 }
 
 export async function shareEntryCard(entry: Entry): Promise<void> {
-  const cover = entry.photos[0];
   const score = ledger.scoreOf(entry);
   const blob = await renderCard({
     city: entry.city,
@@ -28,7 +26,6 @@ export async function shareEntryCard(entry: Entry): Promise<void> {
     // The tier's name, without the sentence after the dash.
     tier: score === null ? null : (t(`tier.${scoreTier(score).id}`).split(' — ')[0] ?? null),
     categories: categoryAverages(entry),
-    photoUrl: cover ? await photoUrl(cover.id, 'full') : undefined,
     brand: 'Ledger',
     tagline: t('share.tagline'),
   });

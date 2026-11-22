@@ -19,13 +19,21 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
   await expect(page.locator('#toast')).toHaveText('Saved: Austin, Texas — 46.6/100');
   await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
 
-  // Same city and month again updates rather than duplicates.
+  // Same city and month again: the form offers the logged entry, and Save
+  // asks before updating it, keeping its notes.
   await page.fill('#inputCity', 'austin');
   await page.fill('#inputState', 'TEXAS');
-  await saveEntry(page);
+  await expect(page.locator('#sameVisitNotice')).toContainText('You already logged Austin in');
+  await page.click('#btnSave');
+  await expect(page.locator('.modal-card')).toContainText('This visit is already in your ledger.');
+  await page.click('#confirmAction');
+  await expect(page.locator('#toast')).toHaveText('Updated: austin, TEXAS.');
   await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
-
   await page.click('#tabLogbook');
+  await page.click('.entry-card-header');
+  await expect(page.locator('.entry-notes-text')).toHaveText('Tacos <b>everywhere</b>');
+  await page.click('.entry-card-header');
+
   await page.click('.entry-card-header');
   await page.click('[data-action="edit"]');
   await expect(page.locator('#inputCity')).toHaveValue('austin');

@@ -1,34 +1,36 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFile, writeFile } from 'node:fs/promises';
-import { PHOTO, addEntry, openApp, saveEntry } from './helpers';
+import { writeFile } from 'node:fs/promises';
+import { addEntry, openApp, saveEntry, savedFile } from './helpers';
 
-async function exportFormat(page: Page, format: string) {
+/** Exports from the sheet; the file lands in Documents/Ledger (IndexedDB in the test build). */
+async function exportFormat(page: Page, format: string, name: RegExp, binary = false) {
   await page.click('#btnExport');
-  const [download] = await Promise.all([page.waitForEvent('download'), page.click(`.sheet [data-format="${format}"]`)]);
-  return download;
+  await page.click(`.sheet [data-format="${format}"]`);
+  await expect(page.locator('#toast')).toContainText('Saved to Documents/Ledger/');
+  return savedFile(page, 'DOCUMENTS/Ledger', name, binary);
 }
 
 test('exports Markdown and a full backup, and restores it', async ({ page }, info) => {
   await openApp(page);
   await page.fill('#inputCity', 'Lisbon');
   await page.fill('#inputState', 'Portugal');
-  await page.setInputFiles('#photoInput', PHOTO);
-  await expect(page.locator('.photo-strip img')).toHaveCount(1);
+  await page.fill('#inputNotes', 'Tiles\u2028and trams');
   await saveEntry(page);
   await addEntry(page, 'Kyoto', 'Japan');
 
-  const md = await readFile(await (await exportFormat(page, 'markdown')).path(), 'utf8');
-  expect(md).toContain('## Lisbon · Portugal');
+  const md = await exportFormat(page, 'markdown', /^ledger-\d{4}-\d{2}-\d{2}\.md$/);
+  expect(md.data.toString('utf8')).toContain('## Lisbon · Portugal');
   await page.click('#btnExport');
   await expect(page.locator('.sheet [data-format]')).toHaveCount(2);
   await page.locator('.sheet .sheet-close').click();
 
-  const backup = await exportFormat(page, 'backup');
-  expect(backup.suggestedFilename()).toMatch(/^ledger-backup-\d{4}-\d{2}-\d{2}-\d{4}\.zip$/);
-  const zipPath = info.outputPath('backup.zip');
-  await backup.saveAs(zipPath);
+  const backup = await exportFormat(page, 'backup', /^ledger-backup-\d{4}-\d{2}-\d{2}-\d{4}\.zip$/, true);
+  const zipPath = info.outputPath(backup.name);
+  await writeFile(zipPath, backup.data);
+  const mdPath = info.outputPath(md.name);
+  await writeFile(mdPath, md.data);
 
-  // Wipe the ledger, then restore it from the backup, photos included.
+  // Wipe the ledger, then restore it from the backup.
   await page.click('#tabLogbook');
   for (let i = 0; i < 2; i++) {
     await page.locator('.entry-card-header').first().click();
@@ -40,9 +42,12 @@ test('exports Markdown and a full backup, and restores it', async ({ page }, inf
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', zipPath);
   await expect(page.locator('#toast')).toHaveText('Import complete: 2 added, 0 updated.');
+  // The Markdown export reads back too, separators in the notes and all.
+  await page.setInputFiles('#importFile', mdPath);
+  await expect(page.locator('#toast')).toHaveText('Import complete: 0 added, 0 updated, 2 already up to date.');
   await page.click('#tabLogbook');
   await page.locator('.entry-card', { hasText: 'Lisbon' }).locator('.entry-card-header').click();
-  await expect(page.locator('.gallery img')).toHaveCount(1);
+  await expect(page.locator('.entry-notes-text')).toContainText('Tiles');
 });
 
 test('imports a Travel Logbook export', async ({ page }, info) => {

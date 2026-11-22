@@ -11,7 +11,6 @@
 import { App } from '@capacitor/app';
 import { normalizeMonth } from '../lib/dates';
 import { dateParam, parseLink } from './links';
-import { isNative } from './output';
 
 export interface EntryPrefill {
   city: string;
@@ -41,7 +40,6 @@ export function readLedgerLink(url: string): EntryPrefill | 'open' | null {
 
 /** Calls `onAdd` for the link Ledger was launched with, and for each one after. */
 export async function listenForLinks(onAdd: (prefill: EntryPrefill) => void): Promise<void> {
-  if (!isNative) return;
   const handle = (url: string | undefined) => {
     const read = url ? readLedgerLink(url) : null;
     if (read && read !== 'open') onAdd(read);

@@ -34,8 +34,6 @@ export interface CardData {
   tier: string | null;
   /** Category name and the entry's average rating (1–10) in it. */
   categories: { label: string; average: number }[];
-  /** Cover photo URL, same-origin so the canvas isn't tainted. */
-  photoUrl?: string;
   brand: string;
   tagline: string;
 }
@@ -45,22 +43,6 @@ const INNER = W - CONTENT_INSET * 2;
 
 function tierColor(p: Palette, score: number): string {
   return p[scoreTier(score).cssVar.slice(2) as CardToken];
-}
-
-function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
-  const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-  const sw = w / scale;
-  const sh = h / scale;
-  ctx.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, x, y, w, h);
 }
 
 /** The 270° score dial (§8.15), with the number in serif at its centre. */
@@ -116,19 +98,6 @@ export async function renderCard(data: CardData): Promise<Blob> {
   const { canvas, ctx } = createCard(W, H);
   drawFrame(ctx, p);
   let y = drawEyebrow(ctx, p, `${data.brand} · ${data.month}`) + 48;
-
-  if (data.photoUrl) {
-    try {
-      const img = await loadImage(data.photoUrl);
-      drawCover(ctx, img, CONTENT_INSET, y, INNER, 420);
-      ctx.strokeStyle = p['border-faint'];
-      ctx.lineWidth = 2;
-      ctx.strokeRect(CONTENT_INSET, y, INNER, 420);
-      y += 420;
-    } catch {
-      // Render without the photo.
-    }
-  }
 
   // Title: the city, and the region in italic under it.
   y += 130;

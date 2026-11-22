@@ -2,14 +2,13 @@
 // Import, export and backups, wired to app state.
 // ============================================================
 
-import { readPhotoFiles } from '../data/photo-store';
 import { locale, t } from '../i18n/index.svelte';
 import { buildMarkdown, parseMarkdown, type ParsedImport } from '../lib/markdown';
 import { BACKUP_PREFIX, backupsToPrune, isBackupDue } from '../lib/schedule';
-import { datedName, deleteOutput, isNative, listOutputs, saveFile, type OutputFile } from '../platform/output';
+import { datedName, deleteOutput, listOutputs, saveFile, type OutputFile } from '../platform/output';
 import { ledger, type ImportSummary } from './ledger.svelte';
 
-/** A full .zip backup (photos included) or a readable Markdown summary. */
+/** A full .zip backup or a readable Markdown summary. */
 export type ExportFormat = 'markdown' | 'backup';
 
 export const BACKUP_FOLDER = 'Ledger/Backups';
@@ -19,11 +18,9 @@ const backupLib = () => import('../lib/backup');
 
 async function backupFile(now = new Date()): Promise<OutputFile> {
   const { buildBackupZip, buildJson } = await backupLib();
-  const entries = ledger.entries;
-  const photos = await readPhotoFiles(entries.flatMap((e) => e.photos.map((p) => p.id)));
   return {
     name: datedName(BACKUP_PREFIX, 'zip', now, true),
-    data: buildBackupZip(buildJson(entries, ledger.config, now), photos),
+    data: buildBackupZip(buildJson(ledger.entries, ledger.config, now)),
     mime: 'application/zip',
   };
 }
@@ -51,7 +48,7 @@ export async function exportAs(format: ExportFormat): Promise<{ message: string;
   }
 }
 
-export async function readImport(file: File): Promise<ParsedImport & { photos?: Map<string, Uint8Array> }> {
+export async function readImport(file: File): Promise<ParsedImport> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const { isZip, parseBackupZip, parseJson } = await backupLib();
   if (isZip(bytes)) return parseBackupZip(bytes);
@@ -72,7 +69,7 @@ export async function importFile(file: File): Promise<{ message: string; ok: boo
   try {
     const parsed = await readImport(file);
     if (!parsed.entries.length) return { message: t('import.none'), ok: false };
-    const summary = await ledger.import(parsed, parsed.photos);
+    const summary = await ledger.import(parsed);
     return { message: describeImport(summary), ok: true };
   } catch (err) {
     console.error('Import failed:', err);
@@ -98,7 +95,7 @@ let running = false;
 /** Called on launch and when the app returns to the foreground. */
 export async function autoBackupIfDue(): Promise<void> {
   const { autoBackup, lastBackupAt } = ledger.settings;
-  if (!isNative || running || ledger.status !== 'ready' || !ledger.entries.length) return;
+  if (running || ledger.status !== 'ready' || !ledger.entries.length) return;
   if (!isBackupDue(autoBackup, lastBackupAt)) return;
   running = true;
   try {

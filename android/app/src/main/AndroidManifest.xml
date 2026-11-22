@@ -2,9 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Ledger works fully offline; INTERNET is required by the Capacitor
-         WebView bridge. No storage or camera permissions are needed:
-         exports go to Documents/ (app-created files) and the share sheet,
-         and photos come from the system picker or camera app. -->
+         WebView bridge. No storage permission is needed: exports go to
+         Documents/ (app-created files) and the share sheet. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application

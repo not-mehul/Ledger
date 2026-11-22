@@ -43,6 +43,6 @@ describe('markdown export/import', () => {
     const parsed = parseMarkdown(legacy);
     expect(parsed.skipped).toBe(1);
     expect(parsed.config).toBeUndefined();
-    expect(parsed.entries[0]).toMatchObject({ id: 'lx2k9', city: 'Austin', ratings: { greenery: 7 }, photos: [] });
+    expect(parsed.entries[0]).toMatchObject({ id: 'lx2k9', city: 'Austin', ratings: { greenery: 7 } });
   });
 });

@@ -2,13 +2,6 @@ import { normalizeMonth } from '../lib/dates';
 import { RATING_MAX, RATING_MIN } from './metrics';
 import type { Ratings } from './score';
 
-export interface Photo {
-  /** File id; see src/data/photo-store.ts. */
-  id: string;
-  width: number;
-  height: number;
-}
-
 export interface Entry {
   id: string;
   city: string;
@@ -23,7 +16,6 @@ export interface Entry {
   /** Ratings keyed by metric id. Unrated metrics are absent. */
   ratings: Ratings;
   notes: string;
-  photos: Photo[];
   /** ISO timestamp of the last save. */
   savedAt: string;
 }
@@ -34,10 +26,31 @@ export function newEntryId(): string {
   return crypto.randomUUID();
 }
 
+/** A rating from untrusted data: a number or a numeric string. Anything else (null, "", true) is unrated. */
 function clampRating(value: unknown): number | null {
-  const n = Math.round(Number(value));
+  const raw = typeof value === 'number' ? value : typeof value === 'string' && value.trim() ? Number(value) : NaN;
+  const n = Math.round(raw);
   if (!Number.isFinite(n)) return null;
   return Math.min(RATING_MAX, Math.max(RATING_MIN, n));
+}
+
+/** How far ahead of this phone's clock a saved time may be before it's treated as wrong. */
+const CLOCK_SLACK_MS = 86_400_000;
+
+/**
+ * A `savedAt` from untrusted data. Missing, unreadable or far-future times
+ * (a phone with its clock set ahead) become now, so they can't outrank every
+ * later edit in "most recently saved wins".
+ */
+function savedTime(value: unknown, now: number): string {
+  const t = typeof value === 'string' ? Date.parse(value) : NaN;
+  return Number.isNaN(t) || t > now + CLOCK_SLACK_MS ? new Date(now).toISOString() : (value as string);
+}
+
+/** The `savedAt` for a save now: always later than the copy it replaces, so the edit wins. */
+export function nextSavedAt(previous?: string, now = Date.now()): string {
+  const before = previous ? Date.parse(previous) : NaN;
+  return new Date(Number.isNaN(before) ? now : Math.max(now, before + 1)).toISOString();
 }
 
 function coord(value: unknown, limit: number): number | undefined {
@@ -45,22 +58,14 @@ function coord(value: unknown, limit: number): number | undefined {
   return typeof value === 'number' && Number.isFinite(n) && Math.abs(n) <= limit ? n : undefined;
 }
 
-function normalizePhotos(raw: unknown): Photo[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((p: Record<string, unknown>) =>
-    p && typeof p.id === 'string' && /^[\w-]+$/.test(p.id)
-      ? [{ id: p.id, width: Number(p.width) || 0, height: Number(p.height) || 0 }]
-      : [],
-  );
-}
-
 /**
  * Validates untrusted data (an import, an older schema) and returns a
  * well-formed Entry, or null if it can't be salvaged. Any `score` in the
  * input is ignored: scores are always derived from ratings and the
- * current metric configuration.
+ * current metric configuration. Photos, which older versions kept, are
+ * dropped.
  */
-export function normalizeEntry(raw: unknown): Entry | null {
+export function normalizeEntry(raw: unknown, now = Date.now()): Entry | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
 
@@ -77,10 +82,7 @@ export function normalizeEntry(raw: unknown): Entry | null {
     }
   }
 
-  const savedAt =
-    typeof r.savedAt === 'string' && !Number.isNaN(Date.parse(r.savedAt))
-      ? r.savedAt
-      : new Date().toISOString();
+  const savedAt = savedTime(r.savedAt, now);
 
   const lat = coord(r.lat, 90);
   const lon = coord(r.lon, 180);
@@ -95,7 +97,6 @@ export function normalizeEntry(raw: unknown): Entry | null {
     date,
     ratings,
     notes: typeof r.notes === 'string' ? r.notes : '',
-    photos: normalizePhotos(r.photos),
     savedAt,
   };
 }
@@ -157,7 +158,9 @@ export function mergeImported(existing: readonly Entry[], imported: readonly Ent
   const result: MergeResult = { toSave: [], added: 0, updated: 0, unchanged: 0 };
 
   for (const incoming of imported) {
-    const idx = current.findIndex((e) => e.id === incoming.id || isSameVisit(e, incoming));
+    // An id match wins over a visit match anywhere else in the list.
+    let idx = current.findIndex((e) => e.id === incoming.id);
+    if (idx < 0) idx = current.findIndex((e) => isSameVisit(e, incoming));
     const match = idx >= 0 ? current[idx] : undefined;
 
     if (!match) {

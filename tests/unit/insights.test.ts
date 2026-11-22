@@ -16,7 +16,7 @@ import { updateMetric } from '../../src/domain/metrics';
 import { config, makeEntry, ratingsOf } from './fixtures';
 
 const austin = makeEntry({ id: 'a', city: 'Austin', state: 'Texas', country: 'US', lat: 30.27, lon: -97.74, date: '2025-03', ratings: { ...ratingsOf(6), foodQuality: 10 } });
-const lisbon = makeEntry({ id: 'l', city: 'Lisbon', state: 'Portugal', country: 'PT', lat: 38.72, lon: -9.14, date: '2025-06', ratings: { ...ratingsOf(8), safety: 10 }, photos: [{ id: 'p', width: 1, height: 1 }] });
+const lisbon = makeEntry({ id: 'l', city: 'Lisbon', state: 'Portugal', country: 'PT', lat: 38.72, lon: -9.14, date: '2025-06', ratings: { ...ratingsOf(8), safety: 10 } });
 const kyoto = makeEntry({ id: 'k', city: 'Kyoto', state: 'Japan', country: 'JP', lat: 35.01, lon: 135.77, date: '2024-11', ratings: ratingsOf(9) });
 const typed = makeEntry({ id: 't', city: 'Nowhere', state: 'Atlantis', date: '2025-06', ratings: { greenery: 2 } });
 
@@ -50,7 +50,7 @@ describe('rank', () => {
 describe('yearReview', () => {
   it('summarises a year', () => {
     const r = yearReview([austin, lisbon, kyoto, typed], config, 2025);
-    expect(r).toMatchObject({ year: 2025, cities: 3, countries: ['PT', 'US'], months: 2, photos: 1 });
+    expect(r).toMatchObject({ year: 2025, cities: 3, countries: ['PT', 'US'], months: 2 });
     expect(r.best?.entry.id).toBe('l');
     expect(r.worst?.entry.id).toBe('t');
     expect(r.first?.id).toBe('a');

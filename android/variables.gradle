@@ -1,5 +1,6 @@
 ext {
-    minSdkVersion = 24
+    // Android 10. Android 7–9 are no longer supported.
+    minSdkVersion = 29
     // Android 17. CI runs the instrumented tests and a minified release smoke
     // test on an API 37 emulator (.github/workflows/ci.yml).
     compileSdkVersion = 37

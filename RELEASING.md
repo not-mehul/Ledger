@@ -103,3 +103,8 @@ Both come from the tag; there is nothing in the source to bump.
 
 Tags must be `vMAJOR.MINOR.PATCH`. Anything else, and any build without a tag,
 builds as `0.0.0` with a warning. A local build without `-PledgerVersion` is `2.1.0`, the last version shipped by hand.
+
+The release workflow refuses a tag whose `versionCode` isn't higher than every
+earlier release tag and than `2.1.0` (`scripts/check-version.sh`), because
+Android won't install it as an update. The `v2.0.x` tags are lower than the
+hand-built 2.1.0, so the next release must be `v2.1.1` or later.

@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Sync through a folder the person picks (src/state/sync.svelte.ts): one Mise
+ * Sync through a folder the person picks (src/state/sync.svelte.ts): one Ledger
  * backup file that Syncthing, Drive, Nextcloud or any other app keeps the
  * same across phones. Ledger reads and writes only that folder, through the
  * permission the system picker grants, so it needs no storage permission.

@@ -1,6 +1,6 @@
 // ============================================================
 // Folder sync (Android). One file, "Ledger sync.zip" (the same zip as
-// a full backup: ledger.json and the photos), in a folder the person
+// a full backup), in a folder the person
 // picks, which Syncthing, Drive, Nextcloud or any other app keeps the
 // same across phones. On launch, on coming back and after a change,
 // Ledger reads the folder's copy, merges it (src/domain/sync-merge.ts)
@@ -9,10 +9,8 @@
 // ============================================================
 
 import { baseOf } from '../domain/sync-merge';
-import { readPhotoFiles } from '../data/photo-store';
 import { base64ToBytes, bytesToBase64 } from '../lib/base64';
 import { FolderSync, type SyncFolderIO } from '../platform/folder';
-import { isNative } from '../platform/output';
 import { ledger } from './ledger.svelte';
 
 export const SYNC_FILE = 'Ledger sync.zip';
@@ -23,6 +21,8 @@ const backupLib = () => import('../lib/backup');
 
 export class FolderSyncState {
   busy = $state(false);
+  /** When the last sync failed, until one succeeds; shown in Settings. */
+  failedAt = $state<string | null>(null);
   /** When the folder's file last changed, as this phone last saw it: an unchanged file isn't read again. */
   private seen: number | undefined;
   private running: Promise<SyncResult> | null = null;
@@ -40,17 +40,21 @@ export class FolderSyncState {
     return this.running;
   }
 
-  /** After a local change: sync a few seconds later, once the edits settle. */
+  /**
+   * After a local change: sync a few seconds later, once the edits settle.
+   * A change made during a sync is picked up when that sync ends (see `run`).
+   */
   soon(): void {
-    if (!this.on || !isNative || this.busy) return;
+    if (!this.on || this.busy) return;
     clearTimeout(this.pushTimer);
     this.pushTimer = setTimeout(() => void this.now(), 4000);
   }
 
   private async run(): Promise<SyncResult> {
     const folder = ledger.settings.syncFolder;
-    if (!folder || !isNative || ledger.status !== 'ready') return 'off';
+    if (!folder || ledger.status !== 'ready') return 'off';
     this.busy = true;
+    let written: { entries: unknown; config: unknown } | undefined;
     try {
       const { buildBackupZip, buildJson, parseBackupZip } = await backupLib();
       const theirs = await this.io.read({ uri: folder.uri, file: SYNC_FILE, since: this.seen });
@@ -58,22 +62,27 @@ export class FolderSyncState {
         await ledger.mergeSynced(parseBackupZip(base64ToBytes(theirs.data)), ledger.settings.syncBase ?? {});
       }
       const entries = ledger.entries;
-      const photos = await readPhotoFiles(entries.flatMap((e) => e.photos.map((p) => p.id)));
+      written = { entries, config: ledger.config };
       const { modified } = await this.io.write({
         uri: folder.uri,
         file: SYNC_FILE,
-        data: bytesToBase64(buildBackupZip(buildJson(entries, ledger.config), photos)),
+        data: bytesToBase64(buildBackupZip(buildJson(entries, ledger.config))),
       });
       this.seen = modified || undefined;
       // The folder now holds exactly these entries: that is what the next sync compares against.
       // eslint-disable-next-line svelte/prefer-svelte-reactivity -- a timestamp, not state
       await ledger.updateSettings({ lastSyncAt: new Date(Date.now()).toJSON(), syncBase: baseOf(entries) });
+      this.failedAt = null;
       return 'synced';
     } catch (err) {
       console.error('Sync failed', err);
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- a timestamp, not state
+      this.failedAt = new Date(Date.now()).toJSON();
       return 'failed';
     } finally {
       this.busy = false;
+      // Edits saved while this sync ran aren't in the folder yet: push them too.
+      if (written && (ledger.entries !== written.entries || ledger.config !== written.config)) this.soon();
     }
   }
 
@@ -93,6 +102,7 @@ export class FolderSyncState {
   async stop(): Promise<void> {
     const old = ledger.settings.syncFolder;
     this.seen = undefined;
+    this.failedAt = null;
     clearTimeout(this.pushTimer);
     await ledger.updateSettings({ syncFolder: undefined, syncBase: undefined, lastSyncAt: undefined });
     if (old) await this.io.release({ uri: old.uri }).catch(() => undefined);

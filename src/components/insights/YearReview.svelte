@@ -26,7 +26,6 @@
     { id: 'countries', value: number.format(review.countries.length), label: t('insights.statCountries') },
     { id: 'months', value: number.format(review.months), label: t('insights.statMonths') },
     { id: 'distance', value: number.format(review.distanceKm), label: t('insights.statDistance') },
-    { id: 'photos', value: number.format(review.photos), label: t('insights.statPhotos') },
     { id: 'average', value: review.averageScore === null ? '—' : review.averageScore.toFixed(1), label: t('insights.statAverage') },
   ]);
 

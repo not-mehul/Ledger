@@ -15,7 +15,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     // Keep in sync with android.minWebViewVersion in capacitor.config.ts.
-    target: ['chrome111', 'safari16'],
+    target: ['chrome111'],
   },
   server: {
     port: 5173,
