@@ -20,7 +20,11 @@
 
 <div class="metric-item">
   <div class="metric-header">
-    <label class="t-field-label metric-name" for={id}>{metricName(metric)}</label>
+    <span class="metric-name-row">
+      <label class="t-field-label metric-name" for={id}>{metricName(metric)}</label>
+      <!-- The weight, only when it isn't the usual ×1. -->
+      {#if metric.weight !== 1}<span class="badge slider-weight" class:is-high={metric.weight >= HEAVY_WEIGHT} aria-hidden="true">×{metric.weight}</span>{/if}
+    </span>
     <span class="metric-val" class:low-val={rated && level === 'low'} class:high-val={rated && level === 'high'} id="disp-{metric.id}"
       >{#if rated}{value}<span class="denom">/{RATING_MAX}</span>{:else}<span class="denom">{t('form.notRated')}</span>{/if}</span
     >
@@ -43,6 +47,5 @@
       <span>{ends[0]}</span>
       <span>{ends[1]}</span>
     </div>
-    <span class="slider-weight" class:is-high={metric.weight >= HEAVY_WEIGHT}>×{metric.weight}</span>
   </div>
 </div>

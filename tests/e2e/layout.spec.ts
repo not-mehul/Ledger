@@ -21,6 +21,7 @@ async function seed(page: Page, info: import('@playwright/test').TestInfo, n = 3
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
   await expect(page.locator('#toast')).toContainText('Import complete');
+  await page.click('#settingsBack'); // Settings is a secondary screen, with no tabs
 }
 
 for (const width of [360, 412]) {
@@ -63,10 +64,13 @@ test('a toast raised under an open sheet sits above it', async ({ page }) => {
   const toast = await box(page.locator('.toast'));
   const sheet = await box(page.locator('dialog.sheet'));
   expect(toast.y + toast.height).toBeLessThanOrEqual(sheet.y);
-  // Closing the sheet lets the toast settle back down.
+  const lift = () => page.evaluate(() => parseFloat(document.body.style.getPropertyValue('--toast-lift')) || 0);
+  const underSheet = await lift();
+  // Closing the sheet lets the toast settle back down, to just above the Save bar.
   await page.keyboard.press('Escape');
   await expect(page.locator('dialog.sheet')).toHaveCount(0);
-  expect(await page.evaluate(() => document.body.style.getPropertyValue('--toast-lift'))).toBe('');
+  await expect.poll(lift).toBeLessThan(underSheet);
+  expect(await lift()).toBeGreaterThan(0);
 });
 
 test('a toast stays above the compare tray', async ({ page }, info) => {
@@ -112,4 +116,48 @@ test('map pins have 44 px touch targets, and the zoom buttons sit below the map'
   await page.locator('.pin[aria-label="Kyoto, Japan"]').focus();
   await page.keyboard.press('Space');
   await expect(page.locator('.map-selected')).toContainText('Kyoto');
+});
+
+test('the entry form keeps Save at the bottom of the screen, and the toast above it', async ({ page }) => {
+  await openApp(page);
+  const bar = page.locator('#entryActions');
+  const vh = page.viewportSize()!.height;
+  // Docked at the bottom while the form is scrolled to the top.
+  const docked = await box(bar);
+  expect(docked.y + docked.height).toBeGreaterThan(vh - 40);
+  await expect(bar.locator('.bar-tier')).toHaveText('Mixed');
+  // Typing doesn't hide it: Save is one tap from the last field.
+  await page.fill('#inputCity', 'Oslo');
+  await page.fill('#inputState', 'Norway');
+  await expect(page.locator('#btnSave')).toBeVisible();
+  await page.click('#btnSave');
+  await expect(page.locator('#toast')).toContainText('Saved');
+  expect(overlaps(await box(page.locator('.toast')), await box(bar))).toBe(false);
+});
+
+test('settings is a secondary screen: back returns to the section it came from', async ({ page }) => {
+  await openApp(page);
+  await page.click('#tabMap');
+  await page.click('#tabSettings');
+  await expect(page.locator('.icon-tabs')).toHaveCount(0);
+  await expect(page.locator('.screen-header-title')).toHaveText('Settings');
+  await page.click('#settingsBack');
+  await expect(page.locator('#tabMap')).toHaveAttribute('aria-selected', 'true');
+});
+
+test('only the Entry tab has the full header; the tabs stay on screen as the page scrolls', async ({ page }, info) => {
+  await openApp(page);
+  await expect(page.locator('.site-header')).toBeVisible();
+  await seed(page, info);
+  await page.click('#tabLogbook');
+  await expect(page.locator('.site-header')).toHaveCount(0);
+  // The first city starts in the top 55% of the screen (before the compact header, 81%).
+  const card = await box(page.locator('.entry-card').first());
+  expect(card.y).toBeLessThan(page.viewportSize()!.height * 0.55);
+  // Down a long page (the entry form), the tabs hold at the top.
+  await page.click('#tabNew');
+  await page.evaluate(() => scrollTo(0, 1500));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(1000);
+  const tabs = await box(page.locator('.tab-bar-sticky'));
+  expect(Math.round(tabs.y)).toBe(0);
 });

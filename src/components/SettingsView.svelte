@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   import { Select } from 'dusk-dawn';
   import { EGGS, eggsFound } from '../lib/delight';
   import type { BackupFrequency, LanguageSetting, ThemeSetting } from '../domain/doc';
@@ -113,11 +114,18 @@
     {#each ledger.setAside as file (file)}
       <p class="t-hint warning" id="setAsideNotice">{t('storage.setAside', { file })}</p>
     {/each}
-    <p class="t-hint">{t('data.importHint')}</p>
-    <label class="btn btn-secondary file-btn" class:busy={importing}>
-      {t('action.import')}{importing ? ' …' : ''}
-      <input type="file" id="importFile" class="visually-hidden" accept=".md,.json,.zip,text/markdown,text/plain,application/json,application/zip" disabled={importing} onchange={(e) => onImport(e.currentTarget)} />
-    </label>
+    <div class="settings-group">
+      <!-- The whole row opens the file picker. -->
+      <label class="settings-row file-row" class:busy={importing}>
+        <span class="settings-row-icon"><Icon name="upload" size={20} /></span>
+        <span class="settings-row-text">
+          <span class="settings-row-title">{t('data.importRow')}{importing ? ' …' : ''}</span>
+          <span class="settings-row-hint">{t('data.importShort')}</span>
+        </span>
+        <Icon name="chevronRight" class="settings-row-chevron" />
+        <input type="file" id="importFile" class="visually-hidden" accept=".md,.json,.zip,text/markdown,text/plain,application/json,application/zip" disabled={importing} onchange={(e) => onImport(e.currentTarget)} />
+      </label>
+    </div>
 
     <h3 class="t-section-label sub">{t('data.autoBackup')}</h3>
     <p class="t-hint">{t('data.autoBackupHint')}</p>
@@ -128,36 +136,55 @@
         </button>
       {/each}
     </div>
-    <label class="setting-row">
-      <span class="t-field-label">{t('data.keep')}</span>
-      <Select value={settings.keepBackups} options={KEEP.map((n) => ({ value: n, label: t('data.keepCount', { count: n }) }))} onchange={(keepBackups) => update({ keepBackups })} />
-    </label>
-    <div class="backup-row">
-      <span class="t-hint">{t('data.lastBackup', { when: settings.lastBackupAt ? relativeTime(settings.lastBackupAt) : t('data.never') })}</span>
-      <button type="button" class="btn btn-secondary" disabled={backingUp || !ledger.entries.length} onclick={runBackup}>{t('data.backupNow')}</button>
+    <div class="settings-group">
+      <label class="settings-row">
+        <span class="settings-row-text"><span class="settings-row-title">{t('data.keep')}</span></span>
+        <Select value={settings.keepBackups} options={KEEP.map((n) => ({ value: n, label: t('data.keepCount', { count: n }) }))} onchange={(keepBackups) => update({ keepBackups })} />
+      </label>
+      <div class="settings-row">
+        <span class="settings-row-text">
+          <span class="settings-row-title" id="lastBackup">{t('data.lastBackup', { when: settings.lastBackupAt ? relativeTime(settings.lastBackupAt) : t('data.never') })}</span>
+        </span>
+        <!-- The one primary action in this section (style.md §8.17). -->
+        <button type="button" class="btn btn-primary" disabled={backingUp || !ledger.entries.length} onclick={runBackup}>{t('data.backupNow')}</button>
+      </div>
     </div>
+
     <p class="t-hint">{t('data.cloudNote')}</p>
 
     <h3 class="t-section-label sub">{t('sync.title')}</h3>
     <p class="t-hint">{t('sync.hint')}</p>
-    {#if settings.syncFolder}
-      <p class="t-hint" id="syncStatus">
-        {t('sync.status', {
-          folder: settings.syncFolder.name || '…',
-          when: settings.lastSyncAt ? relativeTime(settings.lastSyncAt) : t('data.never'),
-        })}
-      </p>
-      {#if folderSync.failedAt}
-        <p class="t-hint warning" id="syncFailed">{t('sync.lastFailed', { when: relativeTime(folderSync.failedAt) })}</p>
-      {/if}
-      <div class="backup-row">
-        <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('now')}>{t('sync.now')}</button>
-        <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.change')}</button>
-        <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => folderSync.stop()}>{t('sync.stop')}</button>
-      </div>
-    {:else}
-      <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.choose')}</button>
+    {#if folderSync.failedAt}
+      <p class="t-hint warning" id="syncFailed">{t('sync.lastFailed', { when: relativeTime(folderSync.failedAt) })}</p>
     {/if}
+    <div class="settings-group">
+      {#if settings.syncFolder}
+        <button type="button" class="settings-row" id="syncStatus" disabled={folderSync.busy} onclick={() => sync('now')}>
+          <span class="settings-row-icon"><Icon name="refresh" size={20} /></span>
+          <span class="settings-row-text">
+            <span class="settings-row-title">{t('sync.now')}</span>
+            <span class="settings-row-hint">
+              {t('sync.statusRow', { folder: settings.syncFolder.name || '…' })} · {t('sync.lastSynced', { when: settings.lastSyncAt ? relativeTime(settings.lastSyncAt) : t('data.never') })}
+            </span>
+          </span>
+        </button>
+        <button type="button" class="settings-row" disabled={folderSync.busy} onclick={() => sync('choose')}>
+          <span class="settings-row-icon"><Icon name="folder" size={20} /></span>
+          <span class="settings-row-text"><span class="settings-row-title">{t('sync.change')}</span></span>
+          <Icon name="chevronRight" class="settings-row-chevron" />
+        </button>
+        <button type="button" class="settings-row" disabled={folderSync.busy} onclick={() => folderSync.stop()}>
+          <span class="settings-row-icon"><Icon name="x" size={20} /></span>
+          <span class="settings-row-text"><span class="settings-row-title">{t('sync.stop')}</span></span>
+        </button>
+      {:else}
+        <button type="button" class="settings-row" disabled={folderSync.busy} onclick={() => sync('choose')}>
+          <span class="settings-row-icon"><Icon name="folder" size={20} /></span>
+          <span class="settings-row-text"><span class="settings-row-title">{t('sync.choose')}</span></span>
+          <Icon name="chevronRight" class="settings-row-chevron" />
+        </button>
+      {/if}
+    </div>
   </div>
 
   <div class="panel about">
@@ -180,7 +207,8 @@
     margin-bottom: 1rem;
     flex-wrap: wrap;
   }
-  .setting-row :global(.select) {
+  .setting-row :global(.select),
+  .settings-row :global(.select) {
     width: auto;
     min-width: min(12rem, 100%);
   }
@@ -193,20 +221,19 @@
   .sub:first-of-type {
     margin-top: 0;
   }
-  .file-btn {
-    position: relative;
-    display: inline-flex;
+  .file-row {
+    cursor: pointer;
+    border-radius: var(--corner-sm);
   }
-  .file-btn.busy {
+  .file-row:hover {
+    background: var(--hover-bg);
+  }
+  .file-row:focus-within {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .file-row.busy {
     opacity: 0.6;
-  }
-  .backup-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
   }
   .t-hint {
     margin-bottom: 0.75rem;

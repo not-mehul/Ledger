@@ -21,6 +21,7 @@ test('custom metrics change the form and the score', async ({ page }) => {
   await name.blur();
   await expect(name).toHaveValue('Coffee');
 
+  await page.click('#settingsBack');
   await page.click('#tabNew');
   await expect(page.locator('#sl-airQuality')).toHaveCount(0);
   await expect(page.getByLabel('Coffee')).toBeVisible();

@@ -25,6 +25,10 @@ test('switches theme and language, and remembers them', async ({ page }) => {
   await page.click('#languageSelect');
   await page.click('.dd-option[data-value="de"]');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  // Settings is its own screen: a back button and its title.
+  await expect(page.locator('.screen-header-title')).toHaveText('Einstellungen');
+  await expect(page.locator('#settingsBack')).toHaveAccessibleName('Zurück');
+  await page.click('#settingsBack');
   await expect(page.locator('#tabSettings')).toHaveAccessibleName('Einstellungen');
   await expect(page.locator('#tabInsights')).toHaveText('Auswertung');
 

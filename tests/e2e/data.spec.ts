@@ -45,6 +45,7 @@ test('exports Markdown and a full backup, and restores it', async ({ page }, inf
   // The Markdown export reads back too, separators in the notes and all.
   await page.setInputFiles('#importFile', mdPath);
   await expect(page.locator('#toast')).toHaveText('Import complete: 0 added, 0 updated, 2 already up to date.');
+  await page.click('#settingsBack');
   await page.click('#tabLogbook');
   await page.locator('.entry-card', { hasText: 'Lisbon' }).locator('.entry-card-header').click();
   await expect(page.locator('.entry-notes-text')).toContainText('Tiles');
@@ -64,6 +65,7 @@ test('imports a Travel Logbook export', async ({ page }, info) => {
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', legacy);
   await expect(page.locator('#toast')).toHaveText('Import complete: 1 added, 0 updated.');
+  await page.click('#settingsBack');
   await page.click('#tabLogbook');
   await expect(page.locator('.entry-meta')).toContainText('March 2024');
   // Only the two rated metrics count: (9×2 + 8×2) / (2+2) → 85.

@@ -21,6 +21,7 @@ async function importLedger(page: Page, info: TestInfo) {
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
   await expect(page.locator('#toast')).toContainText('Import complete');
+  await page.click('#settingsBack'); // Settings is a secondary screen, with no tabs
 }
 
 test('the form ranks a score live, averages each category and offers a past visit', async ({ page }, info) => {
