@@ -5,7 +5,6 @@
   import { categoryName, locale, metricName, t } from '../i18n/index.svelte';
   import { formatMonth } from '../lib/dates';
   import { ledger } from '../state/ledger.svelte';
-  import PhotoImg from './PhotoImg.svelte';
   import CategoryIcon from './ui/CategoryIcon.svelte';
   import Icon from './ui/Icon.svelte';
   import ScoreDial from './ScoreDial.svelte';
@@ -19,13 +18,12 @@
     onedit: () => void;
     ondelete: () => void;
     onshare: () => void;
-    onphoto: (index: number) => void;
     oncompare?: () => void;
     /** Opens another visit to the same city. */
     onvisit?: (id: string) => void;
   }
 
-  let { entry, open, comparing = false, ontoggle, onedit, ondelete, onshare, onphoto, oncompare, onvisit }: Props = $props();
+  let { entry, open, comparing = false, ontoggle, onedit, ondelete, onshare, oncompare, onvisit }: Props = $props();
 
   const score = $derived(ledger.scoreOf(entry));
   const categories = $derived(
@@ -67,7 +65,7 @@
     <span class="entry-city-block">
       <span class="entry-city-name">{entry.city}<span class="entry-region">, {entry.state}</span></span>
       <span class="entry-meta"
-        >{formatMonth(entry.date, locale())}{#if entry.photos.length}&#32;· <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>{entry.photos.length}{/if}{visits.length > 1
+        >{formatMonth(entry.date, locale())}{visits.length > 1
           ? ` · ${t('ledger.visitN', { n: visitNumber })}`
           : ''}</span
       >
@@ -79,16 +77,6 @@
 
   {#if open}
     <div class="entry-detail settle-in" id="detail-{entry.id}">
-      {#if entry.photos.length}
-        <div class="gallery">
-          {#each entry.photos as photo, i (photo.id)}
-            <button type="button" class="gallery-item" class:cover={i === 0} onclick={() => onphoto(i)}>
-              <PhotoImg id={photo.id} variant={i === 0 ? 'full' : 'thumb'} alt={t('ledger.photo', { n: i + 1, total: entry.photos.length })} />
-            </button>
-          {/each}
-        </div>
-      {/if}
-
       {#if rank || stand}
         <dl class="context hairline-grid" data-testid="entry-context">
           {#if rank}
@@ -200,32 +188,6 @@
   .entry-notes-text {
     white-space: pre-line;
   }
-  .gallery {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    margin-bottom: 1.25rem;
-  }
-  .gallery-item {
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: zoom-in;
-    aspect-ratio: 1;
-    overflow: hidden;
-    border-radius: var(--radius);
-  }
-  .gallery-item.cover {
-    grid-column: 1 / -1;
-    aspect-ratio: 16 / 9;
-  }
-  .gallery-item :global(img),
-  .gallery-item :global(.photo-placeholder) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
   /* Rank and standouts: a hairline grid of small tiles (style.md §6.3, §8.15). */
   .context {
     /* Flex rather than grid, so an odd tile out stretches instead of leaving a hole. */

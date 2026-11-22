@@ -1,6 +1,5 @@
 import { SystemBars, SystemBarsStyle } from '@capacitor/core';
 import type { ThemeSetting } from '../domain/doc';
-import { isNative } from './output';
 
 /** Read by the inline script in index.html, so the first paint has the right theme. */
 const STORAGE_KEY = 'ledger.theme';
@@ -22,12 +21,10 @@ function paint(): void {
   shown.dark = theme === 'dark';
   const surface = getComputedStyle(document.documentElement).getPropertyValue('--bg-grad-mid').trim();
   if (surface) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', surface);
-  if (isNative) {
-    // DARK = light icons for dark backgrounds.
-    void SystemBars.setStyle({
-      style: theme === 'dark' ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
-    }).catch(() => undefined);
-  }
+  // DARK = light icons for dark backgrounds.
+  void SystemBars.setStyle({
+    style: theme === 'dark' ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+  }).catch(() => undefined);
   dispatchEvent(new Event('themechange'));
 }
 

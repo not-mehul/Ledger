@@ -9,7 +9,6 @@ import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, locale, setLocale, t } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
-import { isNative } from './platform/output';
 import { applyTheme } from './platform/theme.svelte';
 import { ledger } from './state/ledger.svelte';
 import { autoBackupIfDue } from './state/transfer';
@@ -27,28 +26,28 @@ async function start(): Promise<void> {
   await setLocale(language === 'system' ? detectLocale() : language).catch(() => undefined);
 
   mount(App, { target: document.getElementById('app')! });
+  // An unreadable ledger was moved aside and a new one started: say so (Settings keeps the note).
+  for (const file of ledger.setAside) ui.notify(t('storage.setAside', { file }), 'error');
 
-  if (isNative) {
-    // Android back: close overlays, then return to the Entry tab, then exit.
-    void CapacitorApp.addListener('backButton', () => {
-      if (dismissOverlay()) return;
-      if (!ui.back()) void CapacitorApp.exitApp();
-    });
-    const refreshWidget = () => updateWidget(widgetLines(ledger.entries, ledger.scoreOf, t, locale()));
+  // Android back: close overlays, then return to the Entry tab, then exit.
+  void CapacitorApp.addListener('backButton', () => {
+    if (dismissOverlay()) return;
+    if (!ui.back()) void CapacitorApp.exitApp();
+  });
+  const refreshWidget = () => updateWidget(widgetLines(ledger.entries, ledger.scoreOf, t, locale()));
+  refreshWidget();
+  ledger.onChange(() => {
     refreshWidget();
-    ledger.onChange(() => {
-      refreshWidget();
-      folderSync.soon();
-    });
-    void CapacitorApp.addListener('resume', () => {
-      void autoBackupIfDue();
-      if (folderSync.on) void folderSync.now();
-      refreshWidget();
-    });
+    folderSync.soon();
+  });
+  void CapacitorApp.addListener('resume', () => {
+    void autoBackupIfDue();
     if (folderSync.on) void folderSync.now();
-    // ledger:// links from Waymark and the other apps (style.md §14.1).
-    void listenForLinks((prefill) => ui.startEntry(prefill));
-  }
+    refreshWidget();
+  });
+  if (folderSync.on) void folderSync.now();
+  // ledger:// links from Waymark and the other apps (style.md §14.1).
+  void listenForLinks((prefill) => ui.startEntry(prefill));
   void autoBackupIfDue();
 }
 

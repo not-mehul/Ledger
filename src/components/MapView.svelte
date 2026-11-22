@@ -9,7 +9,7 @@
   import { scoreTier } from '../domain/score';
   import { t } from '../i18n/index.svelte';
   import { loadPlaces, matchPlace, type PlaceIndex } from '../lib/places';
-  import { ledger } from '../state/ledger.svelte';
+  import { ledger, type Placement } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
   import ScoreDial from './ScoreDial.svelte';
 
@@ -50,20 +50,25 @@
       .catch((err) => console.warn('Places unavailable:', err));
   });
 
-  // Place older or hand-typed entries using the city list, once.
+  // Place older or hand-typed entries using the city list. Only the
+  // coordinates are applied, to the latest copy of each entry, so this can
+  // never undo an edit or a sync that lands meanwhile.
   let placing = false;
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- a cache of misses, not state
+  const unplaceable = new Set<string>();
   $effect(() => {
     const index = places;
     if (!index || placing || ledger.status !== 'ready') return;
-    const updates: Entry[] = [];
+    const found: Placement[] = [];
     for (const e of ledger.entries) {
-      if (e.lat !== undefined) continue;
+      if (e.lat !== undefined || unplaceable.has(`${e.city}|${e.state}`)) continue;
       const p = matchPlace(index, e.city, e.state);
-      if (p) updates.push({ ...e, country: p.country, lat: p.lat, lon: p.lon });
+      if (p) found.push({ id: e.id, country: p.country, lat: p.lat, lon: p.lon });
+      else unplaceable.add(`${e.city}|${e.state}`);
     }
-    if (!updates.length) return;
+    if (!found.length) return;
     placing = true;
-    void ledger.saveEntries(updates).finally(() => (placing = false));
+    void ledger.placeEntries(found).catch((err: unknown) => console.warn('Placing entries failed:', err)).finally(() => (placing = false));
   });
 
   $effect(() => {

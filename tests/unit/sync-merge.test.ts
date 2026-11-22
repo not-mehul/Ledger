@@ -9,7 +9,6 @@ const entry = (id: string, savedAt: string, city = id): Entry => ({
   date: '2025-05',
   ratings: {},
   notes: '',
-  photos: [],
   savedAt,
 });
 

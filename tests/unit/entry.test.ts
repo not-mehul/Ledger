@@ -4,7 +4,7 @@ import { makeEntry } from './fixtures';
 
 describe('normalizeEntry', () => {
   it('accepts a well-formed entry unchanged', () => {
-    const e = makeEntry({ country: 'US', lat: 30.27, lon: -97.74, photos: [{ id: 'p1', width: 10, height: 20 }] });
+    const e = makeEntry({ country: 'US', lat: 30.27, lon: -97.74 });
     expect(normalizeEntry(e)).toEqual(e);
   });
 
@@ -19,11 +19,11 @@ describe('normalizeEntry', () => {
     expect(e.ratings).toEqual({ greenery: 10, safety: 1, custom: 4 });
   });
 
-  it('drops invalid coordinates, countries and photo ids', () => {
+  it('drops invalid coordinates and countries, and the photos older versions kept', () => {
     const e = normalizeEntry({ ...makeEntry(), country: 'usa', lat: 120, lon: 3, photos: [{ id: '../evil' }, { id: 'ok' }] })!;
     expect(e).not.toHaveProperty('country');
     expect(e).not.toHaveProperty('lat');
-    expect(e.photos).toEqual([{ id: 'ok', width: 0, height: 0 }]);
+    expect('photos' in e).toBe(false);
   });
 
   it('ignores a stored score and upgrades legacy week dates', () => {

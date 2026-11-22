@@ -53,6 +53,11 @@ export function haversineKm(a: { lat: number; lon: number }, b: { lat: number; l
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+/** The countries visited, as sorted ISO codes: entries placed on the map carry one. */
+export function countriesOf(entries: readonly Entry[]): string[] {
+  return [...new Set(entries.map((e) => e.country).filter((c): c is string => !!c))].sort();
+}
+
 type Located = Entry & { lat: number; lon: number };
 const isLocated = (e: Entry): e is Located => e.lat !== undefined && e.lon !== undefined;
 
@@ -104,7 +109,6 @@ export interface YearReview {
   countries: string[];
   /** Distinct months with at least one visit. */
   months: number;
-  photos: number;
   averageScore: number | null;
   best: Ranked | null;
   worst: Ranked | null;
@@ -135,9 +139,8 @@ export function yearReview(all: readonly Entry[], config: MetricConfig, year: nu
   return {
     year,
     cities: new Set(entries.map((e) => `${e.city.toLowerCase()}|${e.state.toLowerCase()}`)).size,
-    countries: [...new Set(entries.map((e) => e.country).filter((c): c is string => !!c))].sort(),
+    countries: countriesOf(entries),
     months: new Set(entries.map((e) => e.date)).size,
-    photos: entries.reduce((n, e) => n + e.photos.length, 0),
     averageScore: scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null,
     best: byScore[0] ?? null,
     worst: byScore.length > 1 ? byScore[byScore.length - 1]! : null,

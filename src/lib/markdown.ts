@@ -27,17 +27,22 @@ export interface ParsedImport {
   config?: MetricConfig;
 }
 
-const DATA_RE = /^<!-- data:(.*) -->$/;
-const METRICS_RE = /^<!-- metrics:(.*) -->$/;
+// `s`: a line or paragraph separator (U+2028/9) inside the JSON is part of the line.
+const DATA_RE = /^<!-- data:(.*) -->$/s;
+const METRICS_RE = /^<!-- metrics:(.*) -->$/s;
 
 function bar(value: number, max = RATING_MAX): string {
   const filled = Math.max(0, Math.min(max, Math.round(value)));
   return '█'.repeat(filled) + '░'.repeat(max - filled);
 }
 
-/** JSON can only contain "-->" inside strings, where "\u003e" is an equivalent escape. */
+/**
+ * JSON on one line of an HTML comment. "-->" can only occur inside strings,
+ * where "\u003e" is an equivalent escape; line and paragraph separators
+ * (common in pasted text) are escaped so no reader takes them for line breaks.
+ */
 function embedJson(value: unknown): string {
-  return JSON.stringify(value).replaceAll('-->', '--\\u003e');
+  return JSON.stringify(value).replaceAll('-->', '--\\u003e').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
 }
 
 /** Cells can't contain raw pipes or newlines. */

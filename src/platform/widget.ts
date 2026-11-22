@@ -6,9 +6,9 @@
 
 import { registerPlugin } from '@capacitor/core';
 import type { Entry } from '../domain/entry';
+import { countriesOf } from '../domain/insights';
 import { formatMonth } from '../lib/dates';
 import type { Translate } from '../i18n/index.svelte';
-import { isNative } from './output';
 
 export interface WidgetLines {
   /** "12 cities" */
@@ -35,7 +35,8 @@ export function widgetLines(
 ): WidgetLines {
   if (!entries.length) return { headline: 'Ledger', detail: t('widget.empty'), latest: '', score: '' };
   const cities = new Set(entries.map((e) => `${e.city.toLowerCase()}|${e.state.toLowerCase()}`)).size;
-  const countries = new Set(entries.map((e) => e.country ?? e.state.toLowerCase())).size;
+  // Counted the same way as Insights: entries placed on the map, by country code.
+  const countries = countriesOf(entries).length;
   const latest = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.savedAt.localeCompare(a.savedAt))[0]!;
   const score = scoreOf(latest);
   return {
@@ -50,7 +51,6 @@ let last = '';
 
 /** Sends the widget its lines, when they have changed. */
 export function updateWidget(lines: WidgetLines): void {
-  if (!isNative) return;
   const key = JSON.stringify(lines);
   if (key === last) return;
   last = key;

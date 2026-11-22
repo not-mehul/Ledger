@@ -1,14 +1,13 @@
 // ============================================================
-// Writing user-visible files.
-// Native: saves to Documents/<folder>/ (apps may create files there
-// without storage permission on Android 11+; on iOS it's the app's
-// Files folder) and optionally opens the share sheet. If the public
-// write fails — e.g. a same-named file left by a previous install —
-// the file goes to the cache and is shared from there.
-// Web: triggers a download.
+// Writing user-visible files: saves to Documents/<folder>/ (Android 11+
+// lets an app create files there without storage permission) and
+// optionally opens the share sheet. If the public write fails — e.g. a
+// same-named file left by a previous install — the file goes to the
+// cache and is shared from there.
+// Ledger is an Android app. The web build exists only to run the tests,
+// where @capacitor/filesystem keeps these files in IndexedDB.
 // ============================================================
 
-import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { bytesToBase64 } from '../lib/base64';
@@ -24,22 +23,12 @@ export interface OutputResult {
   savedTo: string | null;
 }
 
-export const isNative = Capacitor.isNativePlatform();
-
 /** "ledger-2026-10-30.md", or with `withTime` "ledger-backup-2026-10-30-1435.zip" (sorts chronologically). */
 export function datedName(prefix: string, ext: string, now = new Date(), withTime = false): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   const time = withTime ? `-${pad(now.getHours())}${pad(now.getMinutes())}` : '';
   return `${prefix}-${date}${time}.${ext}`;
-}
-
-function download(file: OutputFile): void {
-  const blob = new Blob([file.data as BlobPart], { type: file.mime });
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement('a'), { href: url, download: file.name });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function payload(file: OutputFile) {
@@ -52,11 +41,6 @@ export async function saveFile(
   file: OutputFile,
   { folder = 'Ledger', share = true }: { folder?: string; share?: boolean } = {},
 ): Promise<OutputResult> {
-  if (!isNative) {
-    download(file);
-    return { savedTo: `Downloads/${file.name}` };
-  }
-
   let uri: string;
   let savedTo: string | null;
   try {
@@ -86,10 +70,6 @@ export async function saveFile(
 
 /** Shares a generated file (e.g. a city card) without keeping a copy. */
 export async function shareFile(file: OutputFile, title: string): Promise<void> {
-  if (!isNative) {
-    download(file);
-    return;
-  }
   const { uri } = await Filesystem.writeFile({ path: file.name, directory: Directory.Cache, ...payload(file) });
   try {
     await Share.share({ title, files: [uri] });

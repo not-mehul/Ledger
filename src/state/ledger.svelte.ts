@@ -5,13 +5,11 @@
 // ============================================================
 
 import { loadDoc, saveDoc } from '../data/doc-store';
-import { collectGarbage, deletePhoto, writePhotoFiles } from '../data/photo-store';
 import { emptyDoc, type LedgerDoc, type Settings } from '../domain/doc';
 import { applyUpserts, mergeImported, type Entry } from '../domain/entry';
 import { mergeConfig, type MetricConfig } from '../domain/metrics';
 import { calcScore } from '../domain/score';
 import { mergeEntries, type SyncBase, type SyncMerge } from '../domain/sync-merge';
-import type { PhotoFiles } from '../lib/backup';
 import type { ParsedImport } from '../lib/markdown';
 
 export interface ImportSummary {
@@ -22,9 +20,17 @@ export interface ImportSummary {
   metricsAdded: number;
 }
 
+/** Thrown by `saveEntry` when the entry being updated was deleted meanwhile. */
+export class EntryGone extends Error {}
+
+/** Coordinates found for an entry that had none (the map places typed cities). */
+export type Placement = Pick<Entry, 'id' | 'country' | 'lat' | 'lon'>;
+
 class LedgerState {
   doc = $state.raw<LedgerDoc>(emptyDoc());
   status = $state<'loading' | 'ready' | 'failed'>('loading');
+  /** Where an unreadable ledger was moved on launch, so it can be recovered. Empty normally. */
+  setAside = $state.raw<string[]>([]);
 
   entries = $derived(this.doc.entries);
   config = $derived(this.doc.config);
@@ -34,9 +40,9 @@ class LedgerState {
   async init(): Promise<void> {
     try {
       const loaded = await loadDoc();
-      if (loaded) this.doc = loaded;
+      if (loaded.doc) this.doc = loaded.doc;
+      this.setAside = loaded.setAside;
       this.status = 'ready';
-      void collectGarbage(new Set(this.doc.entries.flatMap((e) => e.photos.map((p) => p.id)))).catch(() => 0);
     } catch (err) {
       console.error('Storage failed to initialise:', err);
       this.status = 'failed';
@@ -69,6 +75,7 @@ class LedgerState {
         if (this.status !== 'ready') throw new Error('Storage is unavailable.');
         const previous = this.doc;
         const [next, result] = await change(previous);
+        if (next === previous) return result;
         await saveDoc(next);
         this.doc = next;
         if (next.entries !== previous.entries || next.config !== previous.config) {
@@ -80,24 +87,37 @@ class LedgerState {
     return run;
   }
 
-  async saveEntry(entry: Entry): Promise<void> {
-    const previous = await this.mutate((doc) => [
-      { ...doc, entries: applyUpserts(doc.entries, [entry]) },
-      doc.entries.find((e) => e.id === entry.id),
-    ]);
-    // Photos removed while editing are no longer referenced.
-    const kept = new Set(entry.photos.map((p) => p.id));
-    for (const p of previous?.photos ?? []) if (!kept.has(p.id)) void deletePhoto(p.id);
-  }
-
-  saveEntries(entries: readonly Entry[]): Promise<void> {
-    return this.mutate((doc) => [{ ...doc, entries: applyUpserts(doc.entries, entries) }, undefined]);
+  /**
+   * Saves a new entry, or with `update` replaces an existing one. An update
+   * to an entry deleted meanwhile throws EntryGone instead of bringing it back.
+   */
+  saveEntry(entry: Entry, { update = false }: { update?: boolean } = {}): Promise<void> {
+    return this.mutate((doc) => {
+      if (update && !doc.entries.some((e) => e.id === entry.id)) throw new EntryGone(entry.id);
+      return [{ ...doc, entries: applyUpserts(doc.entries, [entry]) }, undefined];
+    });
   }
 
   /**
-   * Removes an entry and returns it, so it can be put back. Its photos stay on
-   * disk until `forgetPhotos`, or until garbage collection finds them unused.
+   * Adds coordinates to entries that still have none, against the latest
+   * document, so a placement worked out from an older copy never replaces
+   * an edit, an import or a sync that landed meanwhile.
    */
+  placeEntries(placements: readonly Placement[]): Promise<number> {
+    return this.mutate((doc) => {
+      const found = new Map(placements.map((p) => [p.id, p]));
+      let placed = 0;
+      const entries = doc.entries.map((e) => {
+        const p = found.get(e.id);
+        if (!p || e.lat !== undefined) return e;
+        placed++;
+        return { ...e, country: p.country, lat: p.lat, lon: p.lon };
+      });
+      return [placed ? { ...doc, entries } : doc, placed];
+    });
+  }
+
+  /** Removes an entry and returns it, so it can be put back. */
   deleteEntry(id: string): Promise<Entry | undefined> {
     return this.mutate((doc) => [
       { ...doc, entries: doc.entries.filter((e) => e.id !== id) },
@@ -108,12 +128,6 @@ class LedgerState {
   /** Undoes `deleteEntry`. */
   restoreEntry(entry: Entry): Promise<void> {
     return this.mutate((doc) => [{ ...doc, entries: applyUpserts(doc.entries, [entry]) }, undefined]);
-  }
-
-  /** Deletes a removed entry's photos, unless the entry has come back. */
-  forgetPhotos(entry: Entry): void {
-    if (this.find(entry.id)) return;
-    for (const p of entry.photos) void deletePhoto(p.id);
   }
 
   /** `update` receives the current config; throw from it to cancel. */
@@ -129,32 +143,20 @@ class LedgerState {
    * Folds the sync folder's copy into this one (src/domain/sync-merge.ts),
    * against the latest committed document so an edit made meanwhile isn't lost.
    */
-  mergeSynced(remote: ParsedImport & { photos: PhotoFiles }, base: SyncBase): Promise<SyncMerge> {
-    return this.mutate(async (doc) => {
+  mergeSynced(remote: ParsedImport, base: SyncBase): Promise<SyncMerge> {
+    return this.mutate((doc) => {
       const merge = mergeEntries(doc.entries, remote.entries, base);
-      const wanted = new Set(merge.incoming.flatMap((e) => e.photos.map((p) => p.id)));
-      await writePhotoFiles(new Map([...remote.photos].filter(([name]) => wanted.has(name.replace(/(_t)?\.jpg$/, '')))));
-      const gone = new Set(merge.removed);
-      for (const e of doc.entries) if (gone.has(e.id)) for (const p of e.photos) void deletePhoto(p.id);
       const config = remote.config ? mergeConfig(doc.config, remote.config).config : doc.config;
       return [{ ...doc, config, entries: merge.merged }, merge];
     });
   }
 
-  import(parsed: ParsedImport, photos?: PhotoFiles): Promise<ImportSummary> {
-    return this.mutate(async (doc) => {
+  import(parsed: ParsedImport): Promise<ImportSummary> {
+    return this.mutate((doc) => {
       const plan = mergeImported(doc.entries, parsed.entries);
       const merged = parsed.config ? mergeConfig(doc.config, parsed.config) : { config: doc.config, added: 0 };
-      if (photos?.size) {
-        const wanted = new Set(plan.toSave.flatMap((e) => e.photos.map((p) => p.id)));
-        await writePhotoFiles(new Map([...photos].filter(([name]) => wanted.has(name.replace(/(_t)?\.jpg$/, '')))));
-      }
-      // Imports without photo files (Markdown, JSON) can't bring photos; keep
-      // whatever the local copy already has instead of dangling references.
-      const local = new Map(doc.entries.map((e) => [e.id, e]));
-      const toSave = photos ? plan.toSave : plan.toSave.map((e) => ({ ...e, photos: local.get(e.id)?.photos ?? [] }));
       return [
-        { ...doc, config: merged.config, entries: applyUpserts(doc.entries, toSave) },
+        { ...doc, config: merged.config, entries: applyUpserts(doc.entries, plan.toSave) },
         {
           added: plan.added,
           updated: plan.updated,

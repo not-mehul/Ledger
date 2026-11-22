@@ -41,7 +41,10 @@ test('every tab fits with text at 200%', async ({ page }) => {
   }
 });
 
-test('folder sync is offered only in the app', async ({ page }) => {
+test('settings always offer automatic backups and folder sync', async ({ page }) => {
   await page.click('#tabSettings');
-  await expect(page.getByText('Folder sync runs in the Android app.')).toBeVisible();
+  await expect(page.getByRole('radiogroup', { name: 'Automatic backup' })).toBeVisible();
+  // The test build has no folder picker: choosing one fails gently.
+  await page.getByRole('button', { name: 'Choose a folder' }).click();
+  await expect(page.locator('#toast')).toHaveText('Sync failed. Your entries here are unchanged.');
 });

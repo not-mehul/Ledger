@@ -1,18 +1,18 @@
 // ============================================================
 // JSON export and full .zip backups.
 //   ledger.json  → { app, schemaVersion, exportedAt, config, entries }
-//   backup .zip  → ledger.json + photos/<id>.jpg (+ photos/<id>_t.jpg)
+//   backup .zip  → ledger.json (older backups also hold photos/, which
+//                  Ledger no longer keeps and ignores on import)
 // Settings are device preferences and aren't included.
 // ============================================================
 
-import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { SCHEMA_VERSION, migrate } from '../domain/doc';
 import type { Entry } from '../domain/entry';
 import type { MetricConfig } from '../domain/metrics';
 import type { ParsedImport } from './markdown';
 
 export const BACKUP_JSON = 'ledger.json';
-const PHOTO_PATH = /^photos\/([\w-]+\.jpg)$/;
 
 export function buildJson(entries: readonly Entry[], config: MetricConfig, now = new Date()): string {
   return JSON.stringify(
@@ -38,28 +38,16 @@ export function parseJson(text: string): ParsedImport {
   };
 }
 
-/** Photo files keyed by file name, e.g. "3f2a….jpg". */
-export type PhotoFiles = Map<string, Uint8Array>;
-
-export function buildBackupZip(json: string, photos: PhotoFiles): Uint8Array {
-  const files: Zippable = { [BACKUP_JSON]: strToU8(json) };
-  for (const [name, bytes] of photos) {
-    // JPEGs are already compressed; store them as-is.
-    files[`photos/${name}`] = [bytes, { level: 0 }];
-  }
-  return zipSync(files, { level: 6 });
+export function buildBackupZip(json: string): Uint8Array {
+  return zipSync({ [BACKUP_JSON]: strToU8(json) }, { level: 6 });
 }
 
-export function parseBackupZip(bytes: Uint8Array): ParsedImport & { photos: PhotoFiles } {
-  const files = unzipSync(bytes);
+export function parseBackupZip(bytes: Uint8Array): ParsedImport {
+  // Only ledger.json is unpacked: photos in older backups are skipped unread.
+  const files = unzipSync(bytes, { filter: (file) => file.name === BACKUP_JSON });
   const json = files[BACKUP_JSON];
   if (!json) throw new Error(`Backup is missing ${BACKUP_JSON}`);
-  const photos: PhotoFiles = new Map();
-  for (const [path, data] of Object.entries(files)) {
-    const match = PHOTO_PATH.exec(path);
-    if (match) photos.set(match[1]!, data);
-  }
-  return { ...parseJson(strFromU8(json)), photos };
+  return parseJson(strFromU8(json));
 }
 
 export function isZip(bytes: Uint8Array): boolean {

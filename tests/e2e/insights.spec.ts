@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { readFile, writeFile } from 'node:fs/promises';
-import { openApp } from './helpers';
+import { writeFile } from 'node:fs/promises';
+import { openApp, savedFile } from './helpers';
 
 const BASE = {
   greenery: 5, airQuality: 5, temperature: 5, visualBeauty: 5, cleanliness: 5, walkability: 5,
@@ -19,7 +19,7 @@ const CITIES: [string, string, string, number, number, string, Partial<typeof BA
 
 async function importCities(page: Page, info: TestInfo, count = CITIES.length) {
   const entries = CITIES.slice(0, count).map(([city, state, country, lat, lon, date, r], i) => ({
-    id: `e${i}`, city, state, country, lat, lon, date, notes: '', photos: [],
+    id: `e${i}`, city, state, country, lat, lon, date, notes: '',
     savedAt: '2025-11-01T00:00:00.000Z', ratings: { ...BASE, ...r },
   }));
   const file = info.outputPath('ledger.json');
@@ -56,9 +56,9 @@ test('summarises each year and all time', async ({ page }, info) => {
   await expect(page.locator('.entry-card.open .entry-city-name')).toContainText('Kyoto');
 
   await page.click('#tabInsights');
-  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#shareReview')]);
-  expect(download.suggestedFilename()).toBe('ledger-2025-review.png');
-  expect((await readFile(await download.path())).subarray(1, 4).toString()).toBe('PNG');
+  await page.click('#shareReview');
+  const card = await savedFile(page, 'CACHE', /^ledger-2025-review\.png$/, true);
+  expect(card.data.subarray(1, 4).toString()).toBe('PNG');
 });
 
 test('ranks cities by score, category or metric', async ({ page }, info) => {

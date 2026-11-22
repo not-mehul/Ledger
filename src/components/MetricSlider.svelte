@@ -1,17 +1,19 @@
 <script lang="ts">
   import { HEAVY_WEIGHT, RATING_MAX, RATING_MIN, type Metric } from '../domain/metrics';
   import { ratingLevel } from '../domain/score';
-  import { metricEnds, metricName } from '../i18n/index.svelte';
+  import { metricEnds, metricName, t } from '../i18n/index.svelte';
 
   interface Props {
     metric: Metric;
     value: number;
+    /** False for a metric the entry being edited never rated: shown as "—" until moved. */
+    rated?: boolean;
   }
 
-  let { metric, value = $bindable() }: Props = $props();
+  let { metric, value = $bindable(), rated = true }: Props = $props();
 
   const level = $derived(ratingLevel(value));
-  const pct = $derived((((value - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100).toFixed(2));
+  const pct = $derived(rated ? (((value - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100).toFixed(2) : '0');
   const ends = $derived(metricEnds(metric));
   const id = $derived(`sl-${metric.id}`);
 </script>
@@ -19,8 +21,8 @@
 <div class="metric-item">
   <div class="metric-header">
     <label class="t-field-label metric-name" for={id}>{metricName(metric)}</label>
-    <span class="metric-val" class:low-val={level === 'low'} class:high-val={level === 'high'} id="disp-{metric.id}"
-      >{value}<span class="denom">/{RATING_MAX}</span></span
+    <span class="metric-val" class:low-val={rated && level === 'low'} class:high-val={rated && level === 'high'} id="disp-{metric.id}"
+      >{#if rated}{value}<span class="denom">/{RATING_MAX}</span>{:else}<span class="denom">{t('form.notRated')}</span>{/if}</span
     >
   </div>
   <div class="slider-wrap">
@@ -32,6 +34,7 @@
       max={RATING_MAX}
       step="1"
       bind:value
+      aria-valuetext={rated ? undefined : t('form.notRated')}
       style:background="linear-gradient(to right, var(--accent-amber) {pct}%, var(--chart-track) {pct}%)"
     />
   </div>

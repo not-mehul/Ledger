@@ -3,7 +3,7 @@
 // still accepted on import and converted to the month they start in.
 
 const MONTH_RE = /^(\d{4})-(\d{2})(?:-\d{2})?$/;
-const WEEK_RE = /^(\d{4})-W(\d{1,2})$/;
+const WEEK_RE = /^(\d{4})-W(0?[1-9]|[1-4]\d|5[0-3])$/;
 
 export function toMonthString(year: number, monthIndex: number): string {
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
@@ -48,7 +48,9 @@ export function parseMonth(value: string): { year: number; monthIndex: number } 
 export function formatMonth(value: string, locale = 'en-US'): string {
   const parsed = parseMonth(value);
   if (!parsed) return value;
-  return new Date(parsed.year, parsed.monthIndex, 1).toLocaleDateString(locale, {
+  const date = new Date(2000, parsed.monthIndex, 1);
+  date.setFullYear(parsed.year); // `new Date(50, …)` would mean 1950
+  return date.toLocaleDateString(locale, {
     year: 'numeric',
     month: 'long',
   });

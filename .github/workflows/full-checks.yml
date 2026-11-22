@@ -52,22 +52,3 @@ jobs:
           emulator-boot-timeout: 420
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none
           script: scripts/android-emulator-tests.sh android/app/build/outputs/apk
-
-  ios:
-    name: iOS simulator build
-    runs-on: macos-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: npm run build && npx cap sync ios
-      - name: Build for the simulator
-        shell: bash
-        run: |
-          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
-            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO build | tail -40

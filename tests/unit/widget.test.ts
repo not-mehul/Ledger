@@ -13,7 +13,6 @@ const entry = (city: string, state: string, date: string, country?: string): Ent
   date,
   ratings: {},
   notes: '',
-  photos: [],
   savedAt: '2026-01-01T00:00:00.000Z',
 });
 

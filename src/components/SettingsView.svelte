@@ -3,7 +3,6 @@
   import { EGGS, eggsFound } from '../lib/delight';
   import type { BackupFrequency, LanguageSetting, ThemeSetting } from '../domain/doc';
   import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
-  import { isNative } from '../platform/output';
   import { ledger } from '../state/ledger.svelte';
   import { backupNow, importFile } from '../state/transfer';
   import { folderSync } from '../state/sync.svelte';
@@ -48,7 +47,13 @@
   }
 
   async function sync(action: 'choose' | 'now') {
-    const result = await (action === 'choose' ? folderSync.choose() : folderSync.now());
+    let result: Awaited<ReturnType<typeof folderSync.now>>;
+    try {
+      result = await (action === 'choose' ? folderSync.choose() : folderSync.now());
+    } catch (err) {
+      console.error('Sync failed', err);
+      result = 'failed';
+    }
     if (result === 'synced') ui.notify(t('sync.done'), 'success');
     else if (result === 'failed') ui.notify(t('sync.failed'), 'error');
   }
@@ -105,6 +110,9 @@
     <ExportOptions />
 
     <h3 class="t-section-label sub">{t('data.import')}</h3>
+    {#each ledger.setAside as file (file)}
+      <p class="t-hint warning" id="setAsideNotice">{t('storage.setAside', { file })}</p>
+    {/each}
     <p class="t-hint">{t('data.importHint')}</p>
     <label class="btn btn-secondary file-btn" class:busy={importing}>
       {t('action.import')}{importing ? ' …' : ''}
@@ -112,48 +120,43 @@
     </label>
 
     <h3 class="t-section-label sub">{t('data.autoBackup')}</h3>
-    {#if isNative}
-      <p class="t-hint">{t('data.autoBackupHint')}</p>
-      <div class="segmented" role="radiogroup" aria-label={t('data.autoBackup')}>
-        {#each FREQUENCIES as opt (opt.value)}
-          <button type="button" role="radio" aria-checked={settings.autoBackup === opt.value} onclick={() => update({ autoBackup: opt.value })}>
-            {t(opt.key)}
-          </button>
-        {/each}
-      </div>
-      <label class="setting-row">
-        <span class="t-field-label">{t('data.keep')}</span>
-        <Select value={settings.keepBackups} options={KEEP.map((n) => ({ value: n, label: t('data.keepCount', { count: n }) }))} onchange={(keepBackups) => update({ keepBackups })} />
-      </label>
-      <div class="backup-row">
-        <span class="t-hint">{t('data.lastBackup', { when: settings.lastBackupAt ? relativeTime(settings.lastBackupAt) : t('data.never') })}</span>
-        <button type="button" class="btn btn-secondary" disabled={backingUp || !ledger.entries.length} onclick={runBackup}>{t('data.backupNow')}</button>
-      </div>
-      <p class="t-hint">{t('data.cloudNote')}</p>
-    {:else}
-      <p class="t-hint">{t('data.autoBackupWeb')}</p>
-    {/if}
+    <p class="t-hint">{t('data.autoBackupHint')}</p>
+    <div class="segmented" role="radiogroup" aria-label={t('data.autoBackup')}>
+      {#each FREQUENCIES as opt (opt.value)}
+        <button type="button" role="radio" aria-checked={settings.autoBackup === opt.value} onclick={() => update({ autoBackup: opt.value })}>
+          {t(opt.key)}
+        </button>
+      {/each}
+    </div>
+    <label class="setting-row">
+      <span class="t-field-label">{t('data.keep')}</span>
+      <Select value={settings.keepBackups} options={KEEP.map((n) => ({ value: n, label: t('data.keepCount', { count: n }) }))} onchange={(keepBackups) => update({ keepBackups })} />
+    </label>
+    <div class="backup-row">
+      <span class="t-hint">{t('data.lastBackup', { when: settings.lastBackupAt ? relativeTime(settings.lastBackupAt) : t('data.never') })}</span>
+      <button type="button" class="btn btn-secondary" disabled={backingUp || !ledger.entries.length} onclick={runBackup}>{t('data.backupNow')}</button>
+    </div>
+    <p class="t-hint">{t('data.cloudNote')}</p>
 
     <h3 class="t-section-label sub">{t('sync.title')}</h3>
-    {#if isNative}
-      <p class="t-hint">{t('sync.hint')}</p>
-      {#if settings.syncFolder}
-        <p class="t-hint" id="syncStatus">
-          {t('sync.status', {
-            folder: settings.syncFolder.name || '…',
-            when: settings.lastSyncAt ? relativeTime(settings.lastSyncAt) : t('data.never'),
-          })}
-        </p>
-        <div class="backup-row">
-          <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('now')}>{t('sync.now')}</button>
-          <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.change')}</button>
-          <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => folderSync.stop()}>{t('sync.stop')}</button>
-        </div>
-      {:else}
-        <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.choose')}</button>
+    <p class="t-hint">{t('sync.hint')}</p>
+    {#if settings.syncFolder}
+      <p class="t-hint" id="syncStatus">
+        {t('sync.status', {
+          folder: settings.syncFolder.name || '…',
+          when: settings.lastSyncAt ? relativeTime(settings.lastSyncAt) : t('data.never'),
+        })}
+      </p>
+      {#if folderSync.failedAt}
+        <p class="t-hint warning" id="syncFailed">{t('sync.lastFailed', { when: relativeTime(folderSync.failedAt) })}</p>
       {/if}
+      <div class="backup-row">
+        <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('now')}>{t('sync.now')}</button>
+        <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.change')}</button>
+        <button type="button" class="btn btn-muted" disabled={folderSync.busy} onclick={() => folderSync.stop()}>{t('sync.stop')}</button>
+      </div>
     {:else}
-      <p class="t-hint">{t('sync.web')}</p>
+      <button type="button" class="btn btn-secondary" disabled={folderSync.busy} onclick={() => sync('choose')}>{t('sync.choose')}</button>
     {/if}
   </div>
 
@@ -166,6 +169,9 @@
 </div>
 
 <style>
+  .warning {
+    color: var(--danger);
+  }
   .setting-row {
     display: flex;
     align-items: center;

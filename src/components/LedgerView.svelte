@@ -12,13 +12,11 @@
   import EmptyState from './ui/EmptyState.svelte';
   import CompareView from './CompareView.svelte';
   import EntryCard from './EntryCard.svelte';
-  import Lightbox from './Lightbox.svelte';
   import Sheet from './Sheet.svelte';
 
   let query = $state('');
   let sortMode = $state<SortMode>('date');
   const openIds = new SvelteSet<string>();
-  let viewer = $state<{ entry: Entry; index: number } | null>(null);
   let trayHeight = $state(0);
 
   // While the compare tray is up, a toast (the undo after a delete, say)
@@ -37,21 +35,41 @@
     { mode: 'city', key: 'ledger.sortCity' },
   ];
 
+  /** Cards are drawn a page at a time, so a long ledger opens quickly. */
+  const PAGE = 60;
+  let limit = $state(PAGE);
+  // A new search or sort starts from the first page again.
+  $effect(() => {
+    void query;
+    void sortMode;
+    limit = PAGE;
+  });
+
+  interface Group {
+    year: string | null;
+    /** Every entry in the group, for its count and average. */
+    entries: Entry[];
+    /** The ones drawn so far. */
+    shown: Entry[];
+    average: number | null;
+  }
+
   /** Sorted by date, the list is broken into years with a small summary each. */
   const groups = $derived.by(() => {
-    if (sortMode !== 'date') return [{ year: null as string | null, entries: visible, average: null as number | null }];
-    const out: { year: string | null; entries: Entry[]; average: number | null }[] = [];
-    for (const e of visible) {
+    if (sortMode !== 'date') return [{ year: null, entries: visible, shown: visible.slice(0, limit), average: null } as Group];
+    const out: Group[] = [];
+    visible.forEach((e, i) => {
       const year = e.date.slice(0, 4);
-      const last = out[out.length - 1];
-      if (last?.year === year) last.entries.push(e);
-      else out.push({ year, entries: [e], average: null });
-    }
+      let group = out[out.length - 1];
+      if (group?.year !== year) out.push((group = { year, entries: [], shown: [], average: null }));
+      group.entries.push(e);
+      if (i < limit) group.shown.push(e);
+    });
     for (const g of out) {
       const scores = g.entries.map(ledger.scoreOf).filter((s): s is number => s !== null);
       g.average = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
     }
-    return out;
+    return out.filter((g) => g.shown.length);
   });
 
   /** "In November 2024 you were in Lisbon": the latest visit from this month in an earlier year. */
@@ -83,7 +101,11 @@
     ui.focusEntryId = null;
     query = '';
     openIds.add(id);
+    // Make sure the card is drawn, wherever it falls in the list.
     void tick().then(() => {
+      limit = Math.max(limit, ledger.entries.length);
+      return tick();
+    }).then(() => {
       const card = document.getElementById(`card-${id}`);
       card?.scrollIntoView({ block: 'start', behavior: 'smooth' });
       // Light the card's frame for a moment so the eye finds it.
@@ -93,7 +115,6 @@
   });
 
   // Deleting is undoable for a few seconds instead of confirmed (style.md §8.12).
-  // The photos stay on disk until the toast goes without an undo.
   async function remove(entry: Entry) {
     try {
       const removed = await ledger.deleteEntry(entry.id);
@@ -105,7 +126,6 @@
             console.error('Undo failed:', err);
             ui.notify(t('toast.saveFailed'), 'error');
           }),
-        dismissed: () => ledger.forgetPhotos(removed),
       });
     } catch (err) {
       console.error('Delete failed:', err);
@@ -195,7 +215,7 @@
             >
           </h3>
         {/if}
-        {#each group.entries as entry (entry.id)}
+        {#each group.shown as entry (entry.id)}
           <EntryCard
             {entry}
             open={openIds.has(entry.id)}
@@ -204,12 +224,16 @@
             onedit={() => ui.edit(entry)}
             ondelete={() => void remove(entry)}
             onshare={() => void share(entry)}
-            onphoto={(index) => (viewer = { entry, index })}
             oncompare={() => toggleCompare(entry)}
             onvisit={focus}
           />
         {/each}
       {/each}
+      {#if visible.length > limit}
+        <button type="button" class="btn btn-secondary show-more" id="showMore" onclick={() => (limit += PAGE)}>
+          {t('ledger.showMore', { count: Math.min(PAGE, visible.length - limit) })}
+        </button>
+      {/if}
     {/if}
   </div>
 
@@ -244,11 +268,13 @@
   </Sheet>
 {/if}
 
-{#if viewer}
-  <Lightbox photos={viewer.entry.photos} bind:index={viewer.index} onclose={() => (viewer = null)} />
-{/if}
 
 <style>
+  .show-more {
+    display: block;
+    width: 100%;
+    margin-top: 1rem;
+  }
   .memory {
     margin-bottom: 1.5rem;
   }

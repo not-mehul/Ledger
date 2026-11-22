@@ -19,7 +19,6 @@ export function makeEntry(overrides: Partial<Entry> = {}): Entry {
     date: '2024-05',
     ratings: ratingsOf(7),
     notes: '',
-    photos: [],
     savedAt: '2024-05-20T12:00:00.000Z',
     ...overrides,
   };

@@ -6,33 +6,67 @@
 // instant the temp file is the newest copy, and `loadDoc` falls back
 // to it.) Saves are serialised so an older document can never
 // overwrite a newer one.
+//
+// A ledger that is there but can't be read is never overwritten: it is
+// renamed aside (ledger.unreadable-<time>.json) before the app starts
+// afresh, so it can still be recovered by hand.
 
-import { migrate, type LedgerDoc } from '../domain/doc';
-import { readText, rename, writeText } from './files';
+import { SCHEMA_VERSION, migrate, type LedgerDoc } from '../domain/doc';
+import { exists, readText, rename, writeText } from './files';
 
 const FILE = 'ledger.json';
 const TEMP = 'ledger.json.tmp';
-/** Browser-only keys from Travel Logbook and early Ledger dev builds. */
-const LEGACY_KEYS = ['ledger.entries', 'tlb_entries'];
 
-export async function loadDoc(): Promise<LedgerDoc | null> {
-  for (const path of [FILE, TEMP]) {
+export interface Loaded {
+  /** The ledger, or null to start a new one. */
+  doc: LedgerDoc | null;
+  /** File names an unreadable ledger was moved to, if any. */
+  setAside: string[];
+}
+
+type Read = LedgerDoc | 'missing' | 'unreadable';
+
+function parse(text: string): LedgerDoc {
+  const raw: unknown = JSON.parse(text);
+  // A ledger written by a newer version would lose what this one doesn't know.
+  const version = (raw as { schemaVersion?: unknown } | null)?.schemaVersion;
+  if (typeof version === 'number' && version > SCHEMA_VERSION) throw new Error(`Schema ${version} is newer than ${SCHEMA_VERSION}`);
+  return migrate(raw);
+}
+
+/** Reads one candidate, trying twice so a one-off read error doesn't count as damage. */
+async function read(path: string): Promise<Read> {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return migrate(JSON.parse(await readText(path)));
+      return parse(await readText(path));
     } catch {
-      // Missing or unreadable — try the next candidate.
+      // Missing, unreadable or not a ledger: try again, then tell which.
     }
   }
-  for (const key of LEGACY_KEYS) {
-    const legacy = globalThis.localStorage?.getItem(key);
-    if (!legacy) continue;
-    try {
-      return migrate(JSON.parse(legacy));
-    } catch {
-      // Ignore corrupt legacy data.
-    }
-  }
-  return null;
+  return (await exists(path)) ? 'unreadable' : 'missing';
+}
+
+function asideName(now = new Date()): string {
+  return `ledger.unreadable-${now.toISOString().replace(/[:.]/g, '-')}.json`;
+}
+
+async function setAside(path: string, aside: string[]): Promise<void> {
+  const name = asideName();
+  const target = aside.length ? name.replace('.json', `-${aside.length + 1}.json`) : name;
+  await rename(path, target);
+  aside.push(target);
+}
+
+export async function loadDoc(): Promise<Loaded> {
+  const aside: string[] = [];
+  const main = await read(FILE);
+  if (typeof main === 'object') return { doc: main, setAside: aside };
+  const temp = await read(TEMP);
+  // Move anything unreadable out of the way before a save could replace it.
+  if (main === 'unreadable') await setAside(FILE, aside);
+  if (typeof temp === 'object') return { doc: temp, setAside: aside };
+  if (temp === 'unreadable') await setAside(TEMP, aside);
+  return { doc: null, setAside: aside };
 }
 
 let queue: Promise<void> = Promise.resolve();

@@ -15,7 +15,7 @@ const ENTRIES = [
 ];
 
 async function importLedger(page: Page, info: TestInfo) {
-  const entries = ENTRIES.map(({ r, ...e }) => ({ ...e, photos: [], savedAt: '2025-11-01T00:00:00.000Z', ratings: { ...BASE, ...r } }));
+  const entries = ENTRIES.map(({ r, ...e }) => ({ ...e, savedAt: '2025-11-01T00:00:00.000Z', ratings: { ...BASE, ...r } }));
   const file = info.outputPath('ledger.json');
   await writeFile(file, JSON.stringify({ app: 'ledger', schemaVersion: 2, entries }));
   await page.click('#tabSettings');

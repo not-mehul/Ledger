@@ -91,6 +91,15 @@ jobs:
           fi
           echo "name=$version" >> "$GITHUB_OUTPUT"
 
+      # Android refuses an update whose versionCode isn't higher than the one
+      # installed, so a release tag must beat every earlier release tag and
+      # 2.1.0, the last version shipped by hand (android/app/build.gradle).
+      - name: Check the version goes up
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.version.outputs.name }}
+        run: scripts/check-version.sh "$VERSION" "$(git ls-remote --tags origin 'v*')"
+
       # The checks every push gets: tokens, formatting, lint, types, the unit
       # suite and a production build.
       - run: npm run check

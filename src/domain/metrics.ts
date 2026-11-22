@@ -144,8 +144,9 @@ export function normalizeConfig(raw: unknown): MetricConfig {
     });
   }
 
-  if (!metrics.some((m) => !m.archived)) return defaultConfig();
-  return { categories, metrics };
+  const config = { categories, metrics };
+  // Nothing to rate (every visible metric in a hidden category, say): start from the defaults.
+  return hasActiveMetric(config) ? config : defaultConfig();
 }
 
 /**
