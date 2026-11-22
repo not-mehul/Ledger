@@ -327,12 +327,10 @@ input[type='range'].metric-slider::-moz-range-thumb {
 
 .save-row {
   display: flex;
+  justify-content: flex-end;
   gap: 0.75rem;
   align-items: center;
   margin-top: 1.5rem;
-}
-.save-hint {
-  flex: 1;
 }
 /* Paired buttons (Clear and Save, Clear and Compare) share one width,
    the wider label's; colour carries the emphasis (style.md §8.1). */
@@ -569,13 +567,6 @@ input[type='range'].metric-slider::-moz-range-thumb {
   .mini-name {
     width: 120px;
   }
-  .save-row {
-    flex-wrap: wrap;
-  }
-  .save-hint {
-    flex-basis: 100%;
-    order: -1;
-  }
   .save-row .btn-pair {
     flex: 1;
   }
@@ -585,6 +576,18 @@ input[type='range'].metric-slider::-moz-range-thumb {
   }
   .search-bar {
     width: 100%;
+  }
+  /* The sort buttons share the row, so it ends at the screen's edge. They
+     wrap only when the phone's text size is turned well up. */
+  .sort-row {
+    flex-wrap: wrap;
+  }
+  .sort-row .segmented {
+    flex: 1;
+    min-width: 0;
+  }
+  .sort-row .segmented button {
+    flex: 1 0 auto;
   }
 }
 

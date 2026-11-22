@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './ui/Icon.svelte';
   import { geoNaturalEarth1, geoPath, type GeoPermissibleObjects } from 'd3-geo';
   import { select } from 'd3-selection';
   import { zoom as d3zoom, zoomIdentity, type ZoomBehavior } from 'd3-zoom';
@@ -130,34 +131,49 @@
               {#if selectedId === e.id}
                 <circle cx={pt[0]} cy={pt[1]} r={14 / transform.k} class="halo" style:stroke-width={0.75 / transform.k} aria-hidden="true" />
               {/if}
-              <circle
-                cx={pt[0]}
-                cy={pt[1]}
-                r={(selectedId === e.id ? 7 : 5) / transform.k}
-                class="dot"
-                class:selected={selectedId === e.id}
-                style:fill={dotColor(e)}
-                style:stroke-width={1.5 / transform.k}
-                style:--n={Math.min(n, 12)}
+              <!-- A 10px pin with a 44px touch target around it (style.md §14). -->
+              <g
+                class="pin"
                 role="button"
                 tabindex="0"
                 aria-label="{e.city}, {e.state}"
+                aria-pressed={selectedId === e.id}
                 onclick={() => (selectedId = e.id)}
-                onkeydown={(ev) => ev.key === 'Enter' && (selectedId = e.id)}
-              />
+                onkeydown={(ev) => {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault();
+                    selectedId = e.id;
+                  }
+                }}
+              >
+                <circle cx={pt[0]} cy={pt[1]} r={22 / transform.k} class="hit" style:stroke-width={2 / transform.k} />
+                <circle
+                  cx={pt[0]}
+                  cy={pt[1]}
+                  r={(selectedId === e.id ? 7 : 5) / transform.k}
+                  class="dot"
+                  class:selected={selectedId === e.id}
+                  style:fill={dotColor(e)}
+                  style:stroke-width={1.5 / transform.k}
+                  style:--n={Math.min(n, 12)}
+                />
+              </g>
             {/if}
           {/each}
         </g>
       </svg>
-      <div class="map-controls">
-        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomIn')} onclick={() => zoomBy(1.6)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg></button>
-        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomOut')} onclick={() => zoomBy(1 / 1.6)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /></svg></button>
-        <button type="button" class="dp-nav-btn" aria-label={t('map.reset')} onclick={reset}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg></button>
-      </div>
     {:else}
       <div class="map-loading" style:height="{height || 200}px">{t('map.loading')}</div>
     {/if}
   </div>
+  {#if path && countries.length}
+    <!-- Below the map, so they never cover a country or a pin. -->
+    <div class="map-controls">
+        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomIn')} onclick={() => zoomBy(1.6)}><Icon name="plus" /></button>
+        <button type="button" class="dp-nav-btn" aria-label={t('map.zoomOut')} onclick={() => zoomBy(1 / 1.6)}><Icon name="minus" /></button>
+        <button type="button" class="dp-nav-btn" aria-label={t('map.reset')} onclick={reset}><Icon name="reset" /></button>
+    </div>
+  {/if}
 
   {#if selected}
     {@const score = ledger.scoreOf(selected)}
@@ -207,9 +223,19 @@
   .country.visited {
     fill: var(--map-visited);
   }
+  .pin {
+    cursor: pointer;
+    outline: none;
+  }
+  .hit {
+    fill: transparent;
+    stroke: none;
+  }
+  .pin:focus-visible .hit {
+    stroke: var(--focus-ring);
+  }
   .dot {
     stroke: var(--bg-grad-mid);
-    cursor: pointer;
   }
   .dot.selected {
     stroke: var(--text-strong);
@@ -242,12 +268,10 @@
     }
   }
   .map-controls {
-    position: absolute;
-    right: 0.5rem;
-    bottom: 0.5rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
   }
   .map-controls button {
     display: inline-flex;
@@ -265,10 +289,6 @@
   }
   .map-controls button:hover {
     color: var(--text-heading);
-  }
-  .map-controls svg {
-    width: 16px;
-    height: 16px;
   }
   /* A soft ring around the chosen city. */
   .halo {

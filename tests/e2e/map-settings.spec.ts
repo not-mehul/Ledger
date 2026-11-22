@@ -13,7 +13,7 @@ test('maps picked and typed cities', async ({ page }) => {
   await expect(page.locator('#viewMap .logbook-count')).toHaveText('2 cities · 2 countries');
   await expect(page.locator('.map-note')).toContainText("1 city isn't on the map yet");
 
-  await page.locator('circle.dot[aria-label="Kyoto, Japan"]').dispatchEvent('click');
+  await page.locator('.pin[aria-label="Kyoto, Japan"]').dispatchEvent('click');
   await page.getByRole('button', { name: 'Open in ledger' }).click();
   await expect(page.locator('.entry-card.open .entry-city-name')).toContainText('Kyoto');
 });
