@@ -2,11 +2,28 @@ import { readWorldPlaces } from 'dusk-dawn/places/vite';
 import { parsePlaces } from 'dusk-dawn/places';
 import { describe, expect, it } from 'vitest';
 import { buildIndex, describe as describePlace, fold, matchPlace, regionFor, searchPlaces } from '../../src/lib/places';
+import { QUICK_MIN_RANK } from '../../src/lib/places-tiers';
 
 // The same file the app ships: towns only, from dusk-dawn.
 const index = buildIndex(parsePlaces(readWorldPlaces({ kinds: ['city'] })));
 
+// And the quick file the city field reads first.
+const quick = buildIndex(parsePlaces(readWorldPlaces({ kinds: ['city'], minRank: QUICK_MIN_RANK })));
+
 describe('places', () => {
+  it('the quick list answers the usual searches as the whole list does', () => {
+    expect(quick.world.size).toBeLessThan(index.world.size / 3);
+    for (const q of ['par', 'porto', 'bombay', 'sao pa', 'lond', 'new y', 'kyo', 'berl']) {
+      const wanted = searchPlaces(index, q, 50).filter((p) => p.rank >= QUICK_MIN_RANK).slice(0, 6);
+      expect(searchPlaces(quick, q).map((p) => [p.name, p.country]), q).toEqual(wanted.map((p) => [p.name, p.country]));
+    }
+    // Small towns wait for the whole list.
+    expect(searchPlaces(quick, 'zermatt')).toEqual([]);
+    expect(searchPlaces(index, 'zermatt')[0]?.country).toBe('CH');
+    // Every country is there to name and to match map shapes.
+    expect(quick.numericToIso.size).toBe(index.numericToIso.size);
+  });
+
   it('covers the world down to small towns', () => {
     expect(index.world.size).toBeGreaterThan(200_000);
     // Zermatt has about 6,000 people; the old list started at 15,000.

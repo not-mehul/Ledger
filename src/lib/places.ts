@@ -56,22 +56,43 @@ export function buildIndex(world: Gazetteer): PlaceIndex {
   };
 }
 
-let loading: Promise<PlaceIndex> | null = null;
+const loading = new Map<string, Promise<PlaceIndex>>();
 
-/** Fetches and indexes the gazetteer once, a slice at a time; later calls share the result. */
+/** Fetches and indexes a places file once, a slice at a time; later calls share the result. */
+function load(url: string): Promise<PlaceIndex> {
+  let p = loading.get(url);
+  if (!p) {
+    p = fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+        return res.text();
+      })
+      .then((text) => parsePlacesInSlices(text, { kinds: ['city'] }))
+      .then(buildIndex)
+      .catch((err: unknown) => {
+        loading.delete(url);
+        throw err;
+      });
+    loading.set(url, p);
+  }
+  return p;
+}
+
+/**
+ * Every town of 1,000 people or more. Use it to match typed text to a pin
+ * (matchPlace): the quick list could put a village on a larger namesake.
+ */
 export function loadPlaces(url = `${import.meta.env.BASE_URL}data/places.txt`): Promise<PlaceIndex> {
-  loading ??= fetch(url)
-    .then((res) => {
-      if (!res.ok) throw new Error(`places.txt: HTTP ${res.status}`);
-      return res.text();
-    })
-    .then((text) => parsePlacesInSlices(text, { kinds: ['city'] }))
-    .then(buildIndex)
-    .catch((err) => {
-      loading = null;
-      throw err;
-    });
-  return loading;
+  return load(url);
+}
+
+/**
+ * Towns of 10,000 or more: a fifth of the size, ready in a fraction of the
+ * time. For suggestions while loadPlaces finishes; it finds the places most
+ * people type, in the order the whole list would.
+ */
+export function loadQuickPlaces(url = `${import.meta.env.BASE_URL}data/places-quick.txt`): Promise<PlaceIndex> {
+  return load(url);
 }
 
 /** The text that goes in the entry's "State / Country" field. */
