@@ -43,6 +43,8 @@ class UiState {
   editing = $state.raw<Entry | null>(null);
   /** A new entry another app started with a ledger:// link (style.md §14.1). */
   prefill = $state.raw<EntryPrefill | null>(null);
+  /** Text shared from another app, for the Entry tab to find a town in. */
+  shared = $state<string | null>(null);
   /** Card to expand and scroll to when the ledger tab opens. */
   focusEntryId = $state<string | null>(null);
   toast = $state.raw<Toast | null>(null);
@@ -143,6 +145,12 @@ class UiState {
   /** Opens the Entry tab on a new entry filled in from a link. */
   startEntry(prefill: EntryPrefill): void {
     this.prefill = prefill;
+    this.go('entry');
+  }
+
+  /** Opens the Entry tab on whatever town the shared text names. */
+  startShared(text: string): void {
+    this.shared = text;
     this.go('entry');
   }
 

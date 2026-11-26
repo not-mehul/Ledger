@@ -44,7 +44,8 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 - **Export** a full `.zip` backup, a readable Markdown summary, or a `.csv` spreadsheet with a column per metric. **Import** either, older JSON exports, and Travel Logbook exports. The most recently saved copy of each entry wins.
 - **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or monthly, keeping the last few), plus Android's own backup of the ledger.
 - **Folder sync**: pick a folder that Syncthing, Drive, Nextcloud or another app keeps the same on your phones. Ledger keeps one file there with your entries, and merges it when you open the app and after each change. The copy saved last wins, and a city deleted on one phone goes from the others.
-- **A home-screen widget**: how many cities and countries you have rated, and the latest visit with its score. Tap it to open Ledger.
+- **A home-screen widget**: how many cities and countries you have rated, and the latest visit with its score. Tap it to open Ledger, or its + to rate a city.
+- **Quick to start.** Share a place from Maps or an address from a browser to Ledger and it starts an entry for that town. Long-press the app icon for **Rate a city**.
 - **Undo** after deleting an entry, instead of a confirmation. A half-rated entry is kept if Android closes the app.
 - **Share a city card** as an image.
 - **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in. `ledger://open` just opens Ledger.

@@ -179,3 +179,65 @@ export function nearbyPlaces(index: PlaceIndex, lat: number, lon: number, limit 
   const rest = around.filter((p) => !within.includes(p));
   return [...within, ...rest].slice(0, limit);
 }
+
+const NAME_LANGUAGES = ['en', 'es', 'fr', 'de', 'pt', 'it', 'nl'];
+let countryByName: Map<string, string> | null = null;
+
+/** A country's code from its name in any of a few languages ("Deutschland", "USA"), else undefined. */
+function countryCode(index: PlaceIndex, text: string): string | undefined {
+  if (!countryByName) {
+    countryByName = new Map();
+    for (const [code, name] of index.countryNames) {
+      countryByName.set(fold(name), code);
+      for (const lang of NAME_LANGUAGES) {
+        try {
+          const local = new Intl.DisplayNames([lang], { type: 'region' }).of(code);
+          if (local && local !== code) countryByName.set(fold(local), code);
+        } catch {
+          // An unknown code or language has no name.
+        }
+      }
+    }
+    for (const [alias, name] of Object.entries(REGION_ALIASES)) {
+      const code = countryByName.get(name);
+      if (code) countryByName.set(alias, code);
+    }
+  }
+  return countryByName.get(fold(text));
+}
+
+/**
+ * The town in something shared from another app: a map link with
+ * coordinates, or an address ("Rua Augusta 24, 1100-053 Lisboa, Portugal").
+ * Read from the end, where addresses name the town and country, with
+ * postcodes and house numbers set aside. Null when nothing names a town.
+ */
+export function placeFromText(index: PlaceIndex, text: string): Place | null {
+  const at = text.match(/(?:@|[?&](?:q|ll|query|center|destination)=|geo:)(-?\d{1,2}\.\d+),\s*(-?\d{1,3}\.\d+)/);
+  if (at) {
+    const lat = Number(at[1]);
+    const lon = Number(at[2]);
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+      const near = nearbyPlaces(index, lat, lon, 1)[0];
+      if (near) return near;
+    }
+  }
+  const parts = text
+    .replace(/https?:\/\/\S+|www\.\S+/gi, '\n')
+    .split(/[\n,·•|]/)
+    // House numbers and postcodes: any word with a digit in it.
+    .map((part) => part.split(/\s+/).filter((w) => !/\d/.test(w)).join(' ').trim())
+    .filter((part) => part.length >= 2);
+  let country: string | undefined;
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const part = parts[i]!;
+    const code = countryCode(index, part);
+    if (code) {
+      country ??= code;
+      continue;
+    }
+    const place = matchPlace(index, part, country ?? '');
+    if (place && (!country || place.country === country)) return place;
+  }
+  return null;
+}

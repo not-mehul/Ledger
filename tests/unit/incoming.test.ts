@@ -37,3 +37,12 @@ describe('ledger:// links', () => {
     expect(readLedgerLink('content://downloads/1')).toBeNull();
   });
 });
+
+describe("Ledger's own links", () => {
+  it('opens the Entry tab for new, and finds shared text for share', () => {
+    expect(readLedgerLink('ledger://new')).toBe('new');
+    expect(readLedgerLink('ledger://share?subject=A+Brasileira&text=Rua+Garrett+120%2C+Lisboa')).toEqual({ shared: 'A Brasileira\nRua Garrett 120, Lisboa' });
+    expect(readLedgerLink('ledger://share')).toBe('new');
+    expect((readLedgerLink(`ledger://share?text=${'x'.repeat(5000)}`) as { shared: string }).shared).toHaveLength(2000);
+  });
+});

@@ -42,6 +42,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ledger" />
             </intent-filter>
+            <!-- Text shared to Ledger (a place from Maps, an address):
+                 MainActivity.java turns it into ledger://share. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- "Rate a city" on a long press of the app icon. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
 
         </activity>
 

@@ -55,4 +55,15 @@
         android:textSize="28sp"
         android:fontFamily="serif"
         android:visibility="gone" />
+
+    <!-- Rate a city: opens the Entry tab (ledger://new). 48dp to tap. -->
+    <ImageView
+        android:id="@+id/widget_add"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/widget_add_background"
+        android:contentDescription="@string/widget_add"
+        android:padding="10dp"
+        android:src="@drawable/ic_widget_add" />
 </LinearLayout>

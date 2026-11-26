@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -14,7 +15,8 @@ import android.widget.RemoteViews;
  * The home-screen widget: how many cities and countries are in the ledger,
  * the latest visit and its score. The app writes the lines (in its own
  * language) through LedgerWidgetPlugin whenever the ledger changes, so the
- * widget never refreshes on a timer. Tapping it opens Ledger.
+ * widget never refreshes on a timer. Tapping it opens Ledger; its + button
+ * opens the Entry tab to rate a city.
  */
 public class LedgerWidget extends AppWidgetProvider {
 
@@ -49,6 +51,13 @@ public class LedgerWidget extends AppWidgetProvider {
             context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(R.id.widget_root, tap);
+
+        Intent rate = new Intent(Intent.ACTION_VIEW, Uri.parse("ledger://new"), context, MainActivity.class)
+            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent add = PendingIntent.getActivity(
+            context, 1, rate, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        views.setOnClickPendingIntent(R.id.widget_add, add);
         return views;
     }
 }

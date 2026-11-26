@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- The few words Android shows outside the app: the shortcut and the widget. -->
+<resources>
+    <string name="widget_description">Vos villes et pays, et la dernière visite avec sa note.</string>
+    <string name="widget_add">Noter une ville</string>
+    <string name="shortcut_rate_short">Noter une ville</string>
+    <string name="shortcut_rate_long">Noter une ville</string>
+</resources>

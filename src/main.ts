@@ -47,7 +47,11 @@ async function start(): Promise<void> {
   });
   if (folderSync.on) void folderSync.now();
   // ledger:// links from Waymark and the other apps (style.md §14.1).
-  void listenForLinks((prefill) => ui.startEntry(prefill));
+  void listenForLinks({
+    add: (prefill) => ui.startEntry(prefill),
+    entry: () => ui.go('entry'),
+    share: (text) => ui.startShared(text),
+  });
   void autoBackupIfDue();
 }
 
