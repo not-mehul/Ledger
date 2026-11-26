@@ -162,3 +162,20 @@ export function matchPlace(index: PlaceIndex, city: string, region: string): Pla
   }
   return candidates.length === 1 || (!r && candidates.length) ? toPlace(candidates[0]!) : null;
 }
+
+/** Roughly how far a town's built-up area runs: 25 km for Paris, 3 km for a town of 5,000. */
+function reachKm(rank: number): number {
+  return 2 + Math.sqrt(10 ** (rank / 8) / 1000) / 2;
+}
+
+/**
+ * The towns someone at this point is most likely in, best first: the largest
+ * town whose area takes in the point (Lisbon, not the Baixa beside its centre
+ * point), then the rest by distance. For "Near me".
+ */
+export function nearbyPlaces(index: PlaceIndex, lat: number, lon: number, limit = 5): (Place & { km: number })[] {
+  const around = index.world.nearest(lat, lon, { limit: 15, withinKm: 50 }).map((p) => ({ ...toPlace(p), km: p.distanceKm }));
+  const within = around.filter((p) => p.km <= reachKm(p.rank)).sort((a, b) => b.rank - a.rank || a.km - b.km);
+  const rest = around.filter((p) => !within.includes(p));
+  return [...within, ...rest].slice(0, limit);
+}
