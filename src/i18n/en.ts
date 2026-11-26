@@ -91,6 +91,7 @@ const en = {
   'toast.saved': 'Saved: {place} — {score}/100',
   'toast.updated': 'Updated: {place}.',
   'toast.loaded': 'Loaded {place} for editing.',
+  'toast.shareNoPlace': "Couldn't find a town in what was shared. Type the city instead.",
   'toast.started': 'Started an entry for {place}. Rate it and save.',
   'toast.deleted': 'Entry deleted.',
   'toast.saveFailed': 'Save failed — your entry is still in the form.',

@@ -1,7 +1,7 @@
 import { readWorldPlaces } from 'dusk-dawn/places/vite';
 import { parsePlaces } from 'dusk-dawn/places';
 import { describe, expect, it } from 'vitest';
-import { buildIndex, describe as describePlace, fold, matchPlace, nearbyPlaces, regionFor, searchPlaces } from '../../src/lib/places';
+import { buildIndex, describe as describePlace, fold, matchPlace, nearbyPlaces, placeFromText, regionFor, searchPlaces } from '../../src/lib/places';
 import { QUICK_MIN_RANK } from '../../src/lib/places-tiers';
 
 // The same file the app ships: towns only, from dusk-dawn.
@@ -89,5 +89,27 @@ describe('nearbyPlaces', () => {
     const town = nearbyPlaces(index, 47.5622, 13.6493);
     expect(town.some((p) => p.name === 'Hallstatt')).toBe(true);
     expect(nearbyPlaces(index, 0, -30)).toEqual([]);
+  });
+});
+
+describe('placeFromText', () => {
+  const name = (text: string) => {
+    const p = placeFromText(index, text);
+    return p && `${p.name} ${p.country}`;
+  };
+  it('finds the town in an address shared from a map app', () => {
+    expect(name('A Brasileira\nRua Garrett 120, 1200-273 Lisboa, Portugal\nhttps://maps.app.goo.gl/abc123')).toBe('Lisbon PT');
+    expect(name('Eiffel Tower, Av. Gustave Eiffel, 75007 Paris, France')).toBe('Paris FR');
+    expect(name('1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA')).toBe('Mountain View US');
+    expect(name('Marienplatz 1, 80331 München, Deutschland')).toBe('Munich DE');
+    expect(name('10 Downing St, London SW1A 2AA, UK')).toBe('London GB');
+  });
+  it('uses coordinates in a map link', () => {
+    expect(name('https://www.google.com/maps/place/x/@38.7077,-9.1365,17z')).toBe('Lisbon PT');
+    expect(name('geo:35.0116,135.7681')).toBe('Kyoto JP');
+  });
+  it('gives up when nothing names a town', () => {
+    expect(placeFromText(index, 'https://maps.app.goo.gl/abc123')).toBeNull();
+    expect(placeFromText(index, 'Great coffee here!')).toBeNull();
   });
 });

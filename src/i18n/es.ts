@@ -88,6 +88,7 @@ const es: Messages = {
   'toast.saved': 'Guardada: {place} — {score}/100',
   'toast.updated': 'Actualizada: {place}.',
   'toast.loaded': '{place} cargada para editar.',
+  'toast.shareNoPlace': 'No se encontró ninguna localidad en lo compartido. Escribe la ciudad.',
   'toast.started': 'Entrada para {place} empezada. Valórala y guárdala.',
   'toast.deleted': 'Entrada eliminada.',
   'toast.saveFailed': 'No se pudo guardar; tu entrada sigue en el formulario.',

@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- The few words Android shows outside the app: the shortcut and the widget. -->
+<resources>
+    <string name="widget_description">Tus ciudades y países, y la última visita con su puntuación.</string>
+    <string name="widget_add">Valorar una ciudad</string>
+    <string name="shortcut_rate_short">Valorar una ciudad</string>
+    <string name="shortcut_rate_long">Valorar una ciudad</string>
+</resources>

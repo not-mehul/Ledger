@@ -1,9 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Ledger</string>
-    <string name="title_activity_main">Ledger</string>
-    <string name="package_name">io.github.notmehul.ledger</string>
-    <string name="custom_url_scheme">io.github.notmehul.ledger</string>
-    <string name="widget_label">Ledger</string>
+    <string name="app_name" translatable="false">Ledger</string>
+    <string name="title_activity_main" translatable="false">Ledger</string>
+    <string name="package_name" translatable="false">io.github.notmehul.ledger</string>
+    <string name="custom_url_scheme" translatable="false">io.github.notmehul.ledger</string>
+    <string name="widget_label" translatable="false">Ledger</string>
     <string name="widget_description">Your cities and countries, and the latest visit with its score.</string>
+    <string name="widget_add">Rate a city</string>
+    <string name="shortcut_rate_short">Rate a city</string>
+    <string name="shortcut_rate_long">Rate a city</string>
 </resources>

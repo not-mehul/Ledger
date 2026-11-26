@@ -7,7 +7,7 @@
   import { calcScore, scoreTier } from '../domain/score';
   import { categoryName, locale, t } from '../i18n/index.svelte';
   import { currentMonthString, formatMonth } from '../lib/dates';
-  import { loadPlaces, matchPlace, nearbyPlaces, regionFor, type Place } from '../lib/places';
+  import { loadPlaces, matchPlace, nearbyPlaces, placeFromText, regionFor, type Place } from '../lib/places';
   import Sheet from './Sheet.svelte';
   import { liftToastAbove } from 'dusk-dawn';
   import { EntryGone, ledger } from '../state/ledger.svelte';
@@ -220,6 +220,27 @@
     city = place.name;
     pickPlace(place);
   }
+
+  // Text shared to Ledger from another app (a place from Maps): a new entry
+  // for the town it names, placed as if picked from the suggestions.
+  $effect(() => {
+    const text = ui.shared;
+    if (!text) return;
+    ui.shared = null;
+    loadPlaces()
+      .then((index) => {
+        const place = placeFromText(index, text);
+        if (!place) return ui.notify(t('toast.shareNoPlace'), 'error');
+        reset();
+        city = place.name;
+        pickPlace(place);
+        ui.notify(t('toast.started', { place: place.name }));
+      })
+      .catch((err) => {
+        console.warn('Places unavailable:', err);
+        ui.notify(t('toast.shareNoPlace'), 'error');
+      });
+  });
 
   function pickPlace(place: Place) {
     region = regionFor(place);
