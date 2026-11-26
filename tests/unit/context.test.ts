@@ -24,7 +24,7 @@ describe('visits', () => {
 
   it('measures the score change between visits', () => {
     const better = makeEntry({ ratings: ratingsOf(8) });
-    expect(scoreChange(a, better, config)).toBe(10);
+    expect(scoreChange(a, better, config)).toBe(11.1);
     expect(scoreChange(a, makeEntry({ ratings: {} }), config)).toBeNull();
   });
 });

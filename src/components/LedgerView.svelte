@@ -5,8 +5,12 @@
   import { SvelteSet } from 'svelte/reactivity';
   import { COMPARE_MAX } from '../domain/compare';
   import { thisMonthBefore } from '../domain/context';
-  import { filterEntries, sortEntries, type Entry, type SortMode } from '../domain/entry';
+  import { applyFilter, filterEntries, isFiltering, sortEntries, type Entry, type EntryFilter, type SortMode } from '../domain/entry';
+  import { TIER_ORDER, countriesOf, yearsOf } from '../domain/insights';
+  import type { TierId } from '../domain/score';
   import { locale, t } from '../i18n/index.svelte';
+  import { countryName, countrySearchNames } from '../i18n/countries';
+  import { Select } from 'dusk-dawn';
   import { formatMonth } from '../lib/dates';
   import { ledger } from '../state/ledger.svelte';
   import { shareEntryCard } from '../state/share';
@@ -18,8 +22,42 @@
 
   let query = $state('');
   let sortMode = $state<SortMode>('date');
+  let filter = $state<EntryFilter>({});
+  const filtering = $derived(isFiltering(filter));
+  // Folded away until asked for, so the list starts high; it stays open while a filter is set.
+  let filtersOpen = $state(false);
+  const filtersShown = $derived(filtersOpen || filtering);
+  const narrowed = $derived(!!query.trim() || filtering);
   const openIds = new SvelteSet<string>();
-  const visible = $derived(sortEntries(filterEntries(ledger.entries, query), sortMode, ledger.scoreOf));
+  const visible = $derived(
+    sortEntries(applyFilter(filterEntries(ledger.entries, query, countrySearchNames), filter, ledger.scoreOf), sortMode, ledger.scoreOf),
+  );
+
+  // Only what the ledger holds: its countries, its years, every tier.
+  const countryOptions = $derived([
+    { value: '', label: t('ledger.anyCountry') },
+    ...countriesOf(ledger.entries)
+      .map((code) => ({ value: code, label: countryName(code) }))
+      .sort((a, b) => a.label.localeCompare(b.label, locale())),
+  ]);
+  const yearOptions = $derived([
+    { value: '', label: t('ledger.anyYear') },
+    ...yearsOf(ledger.entries).map((y) => ({ value: String(y), label: String(y) })),
+  ]);
+  const tierOptions = $derived([
+    { value: '', label: t('ledger.anyTier') },
+    ...TIER_ORDER.map((id) => ({ value: id, label: t(`tierName.${id}`) })),
+  ]);
+  // A filter on a country or year that's no longer in the ledger lets go.
+  $effect(() => {
+    if (filter.country && !countryOptions.some((o) => o.value === filter.country)) filter = { ...filter, country: undefined };
+    if (filter.year && !yearOptions.some((o) => o.value === filter.year)) filter = { ...filter, year: undefined };
+  });
+
+  function clearAll() {
+    query = '';
+    filter = {};
+  }
   const SORTS: { mode: SortMode; key: 'ledger.sortDate' | 'ledger.sortScore' | 'ledger.sortCity'; name?: 'ledger.sortCityName' }[] = [
     { mode: 'date', key: 'ledger.sortDate' },
     { mode: 'score', key: 'ledger.sortScore' },
@@ -34,6 +72,7 @@
   $effect(() => {
     void query;
     void sortMode;
+    void filter;
     limit = PAGE;
   });
 
@@ -91,7 +130,7 @@
     const id = ui.focusEntryId;
     if (!id) return;
     ui.focusEntryId = null;
-    query = '';
+    clearAll();
     openIds.add(id);
     // Make sure the card is drawn, wherever it falls in the list.
     void tick().then(() => {
@@ -140,20 +179,37 @@
     <h2>{t('ledger.title')}</h2>
     <!-- The tab's badge already counts the cities: a count here only while searching. -->
     <span class="logbook-count" id="logbookCount" role="status"
-      >{query.trim() ? t('ledger.matches', { count: visible.length, total: ledger.entries.length }) : ''}</span
+      >{narrowed ? t('ledger.matches', { count: visible.length, total: ledger.entries.length }) : ''}</span
     >
   </div>
 
   <div class="logbook-controls">
-    <input
-      type="search"
-      id="searchLogbook"
-      class="input search-bar"
-      placeholder={t('ledger.search')}
-      aria-label={t('ledger.search')}
-      enterkeyhint="search"
-      bind:value={query}
-    />
+    <div class="search-row">
+      <input
+        type="search"
+        id="searchLogbook"
+        class="input search-bar"
+        placeholder={t('ledger.search')}
+        aria-label={t('ledger.search')}
+        enterkeyhint="search"
+        bind:value={query}
+      />
+      {#if ledger.entries.length > 1}
+        <button
+          type="button"
+          class="btn-icon filter-toggle"
+          id="btnFilter"
+          class:is-active={filtering}
+          aria-expanded={filtersShown}
+          aria-controls="filterRow"
+          aria-label={filtering ? t('ledger.filterOn') : t('ledger.filter')}
+          title={t('ledger.filter')}
+          onclick={() => (filtersOpen = !filtersShown)}
+        >
+          <Icon name="filter" size={20} />
+        </button>
+      {/if}
+    </div>
     <div class="sort-row">
       <span class="t-field-label" id="sortLabel">{t('ledger.sort')}</span>
       <div class="segmented" role="radiogroup" aria-labelledby="sortLabel">
@@ -164,9 +220,37 @@
         {/each}
       </div>
     </div>
+    {#if ledger.entries.length > 1 && filtersShown}
+      <div class="filter-row" id="filterRow" role="group" aria-label={t('ledger.filter')}>
+        <Select
+          id="filterCountry"
+          class="filter"
+          label={t('ledger.filterCountry')}
+          value={filter.country ?? ''}
+          options={countryOptions}
+          onchange={(v) => (filter = { ...filter, country: v || undefined })}
+        />
+        <Select
+          id="filterYear"
+          class="filter"
+          label={t('ledger.filterYear')}
+          value={filter.year ?? ''}
+          options={yearOptions}
+          onchange={(v) => (filter = { ...filter, year: v || undefined })}
+        />
+        <Select
+          id="filterTier"
+          class="filter"
+          label={t('ledger.filterTier')}
+          value={filter.tier ?? ''}
+          options={tierOptions}
+          onchange={(v) => (filter = { ...filter, tier: (v || undefined) as TierId | undefined })}
+        />
+      </div>
+    {/if}
   </div>
 
-  {#if memory && !query}
+  {#if memory && !narrowed}
     {@const memoryNote = memory.notes.trim()}
     <button type="button" class="notice memory" id="memoryNotice" onclick={() => focus(memory.id)}>
       <Icon name="calendar" size={20} />
@@ -191,8 +275,8 @@
       />
     {:else if !visible.length}
       <div class="empty-match">
-        <p class="t-hint" id="noMatch">{t('ledger.noMatchHint')}</p>
-        <button type="button" class="btn btn-muted" onclick={() => (query = '')}>{t('ledger.clearSearch')}</button>
+        <p class="t-hint" id="noMatch">{filtering ? t('ledger.noMatchFilters') : t('ledger.noMatchHint')}</p>
+        <button type="button" class="btn btn-muted" onclick={clearAll}>{filtering ? t('ledger.clearFilters') : t('ledger.clearSearch')}</button>
       </div>
     {:else}
       {#each groups as group (group.year ?? 'all')}

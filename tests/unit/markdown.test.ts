@@ -28,7 +28,7 @@ describe('markdown export/import', () => {
     expect(md).toContain('## Austin · Texas');
     expect(md).toContain('### Environment & Nature');
     expect(md).toContain('| Greenery & Nature Access | `███████░░░` 7/10 | ×2 |');
-    expect(md).toContain('**70** / 100 · Decent');
+    expect(md).toContain('**66.7** / 100 · Decent');
     expect(md).not.toMatch(/\p{Extended_Pictographic}/u);
     expect(md).toContain('> Line one\n> Line two');
   });

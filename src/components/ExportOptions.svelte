@@ -15,6 +15,7 @@
   const FORMATS: { format: ExportFormat; key: MessageKey; hint: MessageKey; icon: IconName }[] = [
     { format: 'backup', key: 'data.backup', hint: 'data.backupHint', icon: 'archive' },
     { format: 'markdown', key: 'data.markdown', hint: 'data.markdownHint', icon: 'fileText' },
+    { format: 'csv', key: 'data.csv', hint: 'data.csvHint', icon: 'table' },
   ];
 
   async function run(format: ExportFormat) {

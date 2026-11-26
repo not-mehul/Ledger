@@ -3,13 +3,15 @@
 // ============================================================
 
 import { locale, t } from '../i18n/index.svelte';
+import { countryName } from '../i18n/countries';
+import { buildCsv } from '../lib/csv';
 import { buildMarkdown, parseMarkdown, type ParsedImport } from '../lib/markdown';
 import { BACKUP_PREFIX, backupsToPrune, isBackupDue } from '../lib/schedule';
 import { datedName, deleteOutput, listOutputs, saveFile, type OutputFile } from '../platform/output';
 import { ledger, type ImportSummary } from './ledger.svelte';
 
 /** A full .zip backup or a readable Markdown summary. */
-export type ExportFormat = 'markdown' | 'backup';
+export type ExportFormat = 'markdown' | 'backup' | 'csv';
 
 export const BACKUP_FOLDER = 'Ledger/Backups';
 
@@ -32,6 +34,12 @@ export async function buildExport(format: ExportFormat): Promise<OutputFile> {
       return { name: datedName('ledger', 'md'), data: buildMarkdown(ledger.entries, ctx), mime: 'text/markdown' };
     case 'backup':
       return backupFile();
+    case 'csv':
+      return {
+        name: datedName('ledger', 'csv'),
+        data: buildCsv(ledger.entries, { config: ledger.config, t, countryName }),
+        mime: 'text/csv',
+      };
   }
 }
 

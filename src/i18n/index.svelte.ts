@@ -97,3 +97,4 @@ export function relativeTime(iso: string, now = Date.now()): string {
   if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
   return rtf.format(Math.round(hours / 24), 'day');
 }
+

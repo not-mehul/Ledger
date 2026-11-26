@@ -16,6 +16,8 @@
   import MetricSlider from './MetricSlider.svelte';
   import MonthPicker from './MonthPicker.svelte';
   import ScoreDial from './ScoreDial.svelte';
+  import { SvelteSet } from 'svelte/reactivity';
+  import { clearDraft, readDraft, writeDraft } from '../state/draft';
 
   type Located = Pick<Entry, 'country' | 'lat' | 'lon'>;
 
@@ -28,6 +30,8 @@
   let located = $state<Located>({});
   /** True until the user moves a slider; a fresh form scores the defaults and says so. */
   let pristine = $state(true);
+  /** Metrics set aside with Skip: left out of the entry, so they don't count. */
+  const skipped = new SvelteSet<string>();
   let editingId = $state<string | null>(null);
   let saving = $state(false);
 
@@ -38,9 +42,9 @@
    * the sliders moved, so a metric added since the visit stays unrated.
    */
   const formRatings = $derived.by(() => {
-    if (editingId) return { ...ratings };
     const all: Record<string, number> = { ...ratings };
-    for (const m of activeMetrics(ledger.config)) all[m.id] = ratings[m.id] ?? RATING_DEFAULT;
+    if (!editingId) for (const m of activeMetrics(ledger.config)) all[m.id] = ratings[m.id] ?? RATING_DEFAULT;
+    for (const id of skipped) delete all[id];
     return all;
   });
   const score = $derived(calcScore(formRatings, ledger.config));
@@ -76,6 +80,8 @@
 
   function startFrom(previous: Entry) {
     ratings = { ...previous.ratings };
+    skipped.clear();
+    for (const m of activeMetrics(ledger.config)) if (previous.ratings[m.id] === undefined) skipped.add(m.id);
     pristine = false;
     if (located.lat === undefined && previous.lat !== undefined && samePlace(previous, { city, state: region })) {
       located = { country: previous.country, lat: previous.lat, lon: previous.lon };
@@ -93,6 +99,7 @@
     month = currentMonthString();
     notes = '';
     ratings = {};
+    skipped.clear();
     located = {};
     pristine = true;
     editingId = null;
@@ -104,6 +111,7 @@
     month = entry.date;
     notes = entry.notes;
     ratings = { ...entry.ratings };
+    skipped.clear();
     located = { country: entry.country, lat: entry.lat, lon: entry.lon };
     pristine = false;
     editingId = entry.id;
@@ -152,6 +160,27 @@
       .catch((err) => console.warn('Places unavailable:', err));
   });
 
+  // The form as you go, kept on the phone so it comes back if Android closes
+  // Ledger while you're in another app. Gone once saved or cleared.
+  const restored = readDraft();
+  if (restored) {
+    city = restored.city;
+    region = restored.region;
+    month = restored.month;
+    notes = restored.notes;
+    ratings = restored.ratings;
+    for (const id of restored.skipped) skipped.add(id);
+    located = restored.located;
+    pristine = restored.pristine;
+    editingId = restored.editingId;
+    queueMicrotask(() => ui.notify(t('form.draftRestored')));
+  }
+  $effect(() => {
+    const draft = { city, region, month, notes, ratings: { ...ratings }, skipped: [...skipped], located: { ...located }, pristine, editingId };
+    if (draft.pristine && !draft.city.trim() && !draft.region.trim() && !draft.notes.trim()) clearDraft();
+    else writeDraft(draft);
+  });
+
   function pickPlace(place: Place) {
     region = regionFor(place);
     located = { country: place.country, lat: place.lat, lon: place.lon };
@@ -167,6 +196,11 @@
       return { country: previous.country, lat: previous.lat, lon: previous.lon };
     }
     return located.country ? { country: located.country } : {};
+  }
+
+  function withoutSkipped(r: Record<string, number>): Record<string, number> {
+    for (const id of skipped) delete r[id];
+    return r;
   }
 
   /** Only defined fields, so an entry never carries `lat: undefined`. */
@@ -203,7 +237,7 @@
       ...draft,
       ...defined(coordinates(previous)),
       id,
-      ratings: existing ? { ...existing.ratings, ...ratings } : { ...formRatings },
+      ratings: existing ? withoutSkipped({ ...existing.ratings, ...ratings }) : { ...formRatings },
       notes: existing && existing.notes ? [existing.notes, newNotes].filter(Boolean).join('\n\n') : newNotes,
       savedAt: nextSavedAt(previous?.savedAt),
     };
@@ -228,7 +262,8 @@
     const s = ledger.scoreOf(entry);
     ui.notify(previous ? t('toast.updated', { place: where }) : t('toast.saved', { place: where, score: s ?? '—' }), 'success');
     // The first city in the ledger, and any city rated Exceptional, get a flurry of stamps.
-    if (!previous && (ledger.entries.length === 1 || (s ?? 0) >= 85)) cheer(null, { count: (s ?? 0) >= 85 ? 80 : 50 });
+    const exceptional = s !== null && scoreTier(s).id === 'exceptional';
+    if (!previous && (ledger.entries.length === 1 || exceptional)) cheer(null, { count: exceptional ? 80 : 50 });
     if (s !== null && Math.round(s) === 100) hatch('perfect', t('egg.perfect', { place: where }));
     reset();
   }
@@ -329,9 +364,15 @@
               () => rating(metric.id),
               (v) => {
                 ratings[metric.id] = Number(v);
+                skipped.delete(metric.id);
                 pristine = false;
               }
             }
+            onskip={() => {
+              delete ratings[metric.id];
+              skipped.add(metric.id);
+              pristine = false;
+            }}
           />
         {/each}
       </div>

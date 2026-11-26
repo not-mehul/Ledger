@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { applyUpserts, filterEntries, mergeImported, normalizeEntry, sortEntries } from '../../src/domain/entry';
-import { makeEntry } from './fixtures';
+import { applyFilter, applyUpserts, filterEntries, isFiltering, mergeImported, normalizeEntry, sortEntries, type Entry } from '../../src/domain/entry';
+import { calcScore } from '../../src/domain/score';
+import { config, makeEntry, ratingsOf } from './fixtures';
 
 describe('normalizeEntry', () => {
   it('accepts a well-formed entry unchanged', () => {
@@ -81,5 +82,32 @@ describe('mergeImported / applyUpserts', () => {
   it('upserts by id, preserving order', () => {
     const merged = applyUpserts([makeEntry({ id: 'a' }), makeEntry({ id: 'b' })], [makeEntry({ id: 'a', notes: 'x' }), makeEntry({ id: 'c' })]);
     expect(merged.map((e) => [e.id, e.notes])).toEqual([['a', 'x'], ['b', ''], ['c', '']]);
+  });
+});
+
+describe('country search and filters', () => {
+  const us = makeEntry({ id: 'us', city: 'Austin', state: 'Texas', country: 'US', date: '2024-03', ratings: ratingsOf(9) });
+  const jp = makeEntry({ id: 'jp', city: 'Kyoto', state: 'Japan', country: 'JP', date: '2025-04', ratings: ratingsOf(5) });
+  const typed = makeEntry({ id: 'typed', city: 'Hallstatt', state: 'Austria', date: '2025-07', ratings: ratingsOf(7) });
+  const names = (code: string) => ({ US: ['United States', 'Estados Unidos'], JP: ['Japan'] })[code] ?? [];
+  const score = (e: Entry) => calcScore(e.ratings, config);
+
+  it('finds entries by their country name, in either language', () => {
+    expect(filterEntries([us, jp, typed], 'united states', names).map((e) => e.id)).toEqual(['us']);
+    expect(filterEntries([us, jp, typed], 'estados', names).map((e) => e.id)).toEqual(['us']);
+    // Without names it searches only what was typed.
+    expect(filterEntries([us, jp, typed], 'united states')).toEqual([]);
+  });
+
+  it('narrows by country, year and tier, together', () => {
+    const all = [us, jp, typed];
+    expect(isFiltering({})).toBe(false);
+    expect(applyFilter(all, {}, score)).toHaveLength(3);
+    expect(applyFilter(all, { country: 'JP' }, score).map((e) => e.id)).toEqual(['jp']);
+    expect(applyFilter(all, { year: '2025' }, score).map((e) => e.id)).toEqual(['jp', 'typed']);
+    expect(applyFilter(all, { tier: 'exceptional' }, score).map((e) => e.id)).toEqual(['us']);
+    expect(applyFilter(all, { year: '2025', tier: 'mixed' }, score).map((e) => e.id)).toEqual(['jp']);
+    // An entry with no country never matches a country filter.
+    expect(applyFilter(all, { country: 'AT' }, score)).toEqual([]);
   });
 });

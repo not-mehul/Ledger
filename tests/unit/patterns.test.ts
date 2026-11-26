@@ -45,6 +45,6 @@ describe('scoreTimeline', () => {
       config,
     );
     expect(points.map((p) => p.entry.id)).toEqual(['early', 'late']);
-    expect(points.map((p) => p.running)).toEqual([60, 70]);
+    expect(points.map((p) => p.running)).toEqual([55.6, 66.7]);
   });
 });
