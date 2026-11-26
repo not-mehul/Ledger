@@ -4,6 +4,7 @@
 // Return Desire). Pure functions over entries + metric config.
 // ============================================================
 
+import { continentOf, type Continent } from './continents';
 import type { Entry } from './entry';
 import {
   WEIGHT_MAX,
@@ -288,4 +289,73 @@ export function scoreTimeline(entries: readonly Entry[], config: MetricConfig): 
     points.push({ entry, score, running: Math.round((sum / (points.length + 1)) * 10) / 10 });
   }
   return points;
+}
+
+// ---------- cities across visits ----------
+
+export interface CityVisits {
+  city: string;
+  state: string;
+  /** Oldest first. */
+  visits: Entry[];
+  latest: Entry;
+}
+
+/** One row per city, its visits together, most recently visited first. */
+export function citiesOf(entries: readonly Entry[]): CityVisits[] {
+  const by = new Map<string, Entry[]>();
+  for (const e of entries) {
+    const key = `${e.city.toLowerCase()}|${e.state.toLowerCase()}`;
+    by.set(key, [...(by.get(key) ?? []), e]);
+  }
+  return [...by.values()]
+    .map((list) => {
+      const visits = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.savedAt.localeCompare(b.savedAt));
+      const latest = visits.at(-1)!;
+      return { city: latest.city, state: latest.state, visits, latest };
+    })
+    .sort((a, b) => b.latest.date.localeCompare(a.latest.date));
+}
+
+export interface RankedCity extends Ranked {
+  /** How many visits the value averages. */
+  visits: number;
+}
+
+/**
+ * Cities best-first by the chosen measure, averaged over every visit that
+ * has it, so a city visited three times is ranked once. `entry` is the
+ * latest visit, to open from the list.
+ */
+export function rankCities(entries: readonly Entry[], config: MetricConfig, key: RankKey): RankedCity[] {
+  const values = new Map(rank(entries, config, key).map((r) => [r.entry.id, r.value]));
+  const out: RankedCity[] = [];
+  for (const c of citiesOf(entries)) {
+    const vs = c.visits.map((v) => values.get(v.id)).filter((v): v is number => v !== undefined);
+    if (!vs.length) continue;
+    const avg = vs.reduce((a, b) => a + b, 0) / vs.length;
+    out.push({ entry: c.latest, value: Math.round(avg * 10) / 10, visits: vs.length });
+  }
+  return out.sort((a, b) => b.value - a.value || b.visits - a.visits || a.entry.city.localeCompare(b.entry.city));
+}
+
+// ---------- the world ----------
+
+export interface WorldStats {
+  countries: number;
+  /** Continents visited, most countries first. */
+  continents: { id: Continent; countries: number }[];
+}
+
+export function worldStats(entries: readonly Entry[]): WorldStats {
+  const countries = countriesOf(entries);
+  const by = new Map<Continent, number>();
+  for (const c of countries) {
+    const id = continentOf(c);
+    if (id) by.set(id, (by.get(id) ?? 0) + 1);
+  }
+  return {
+    countries: countries.length,
+    continents: [...by].map(([id, n]) => ({ id, countries: n })).sort((a, b) => b.countries - a.countries || a.id.localeCompare(b.id)),
+  };
 }

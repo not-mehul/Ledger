@@ -56,21 +56,33 @@ test('a city the list does not have is placed by hand, and the pin can move', as
   await expect(page.locator('.countries .settings-row[data-country="PT"] .settings-row-value')).toHaveText('2');
   await expect(page.locator('.map-selected')).toContainText('Nowhereville');
 
-  // Move it, then undo the move.
-  const pin = page.locator('.pin[aria-label="Nowhereville, Portugal"] .dot');
+  // Move it, then undo the move. Move pin brings the map into view; positions
+  // are read against the map's frame, as the page scrolls.
+  const frame = page.locator('.map-frame');
+  // Read in one go, so a scroll can't land between the two boxes.
+  const centre = () =>
+    page.evaluate(() => {
+      const b = document.querySelector('.pin[aria-label="Nowhereville, Portugal"] .dot')!.getBoundingClientRect();
+      const f = document.querySelector('.map-frame')!.getBoundingClientRect();
+      return { x: b.x + b.width / 2 - f.x, y: b.y + b.height / 2 - f.y };
+    });
   await page.click('#btnMovePin');
-  // Measured after the tap on Move pin, which may scroll the page.
-  const first = (await pin.boundingBox())!;
-  await page.mouse.click(first.x + first.width / 2 + 6, first.y + first.height / 2 + 8);
+  await expect(page.locator('#pinNotice')).toBeVisible();
+  // The page scrolls the map back into view, smoothly: wait for it to stop.
+  await page.waitForFunction(
+    () =>
+      new Promise((done) => {
+        const y = scrollY;
+        setTimeout(() => done(scrollY === y), 150);
+      }),
+  );
+  const first = await centre();
+  const f = (await frame.boundingBox())!;
+  await page.mouse.click(f.x + first.x + 6, f.y + first.y + 8);
   await expect(page.locator('#toast')).toContainText('Nowhereville is on the map.');
-  await expect.poll(async () => Math.round((await pin.boundingBox())!.y - first.y)).toBeGreaterThan(4);
+  await expect.poll(async () => Math.round((await centre()).y - first.y)).toBeGreaterThan(4);
   await page.locator('#toast').getByRole('button', { name: 'Undo' }).click();
-  // Back where it was (centres, as a selected pin draws larger).
-  const centreY = async () => {
-    const b = (await pin.boundingBox())!;
-    return b.y + b.height / 2;
-  };
-  await expect.poll(async () => Math.round((await centreY()) - (first.y + first.height / 2))).toBe(0);
+  await expect.poll(async () => Math.round((await centre()).y - first.y)).toBe(0);
 
   // Tapping the sea doesn't place it.
   await page.click('#btnMovePin');

@@ -27,6 +27,8 @@ export interface Settings {
   lastSyncAt?: string;
   /** What the sync folder held after the last sync: entry id → savedAt (src/domain/sync-merge.ts). */
   syncBase?: Record<string, string>;
+  /** Your home city, for "vs home" on every card: its latest visit is the baseline. */
+  homeCity?: { city: string; state: string };
 }
 
 export interface LedgerDoc {
@@ -60,7 +62,15 @@ export function normalizeSettings(raw: unknown): Settings {
       ? { lastBackupAt: r.lastBackupAt }
       : {}),
     ...syncSettings(r),
+    ...homeSetting(r.homeCity),
   };
+}
+
+function homeSetting(raw: unknown): Pick<Settings, 'homeCity'> {
+  const h = (raw && typeof raw === 'object' ? raw : {}) as { city?: unknown; state?: unknown };
+  return typeof h.city === 'string' && h.city.trim() && typeof h.state === 'string'
+    ? { homeCity: { city: h.city.trim().slice(0, 120), state: h.state.trim().slice(0, 120) } }
+    : {};
 }
 
 function syncSettings(r: Record<string, unknown>): Pick<Settings, 'syncFolder' | 'lastSyncAt' | 'syncBase'> {

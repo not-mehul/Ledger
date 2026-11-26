@@ -8,6 +8,8 @@
   import { feature } from 'topojson-client';
   import type { Topology } from 'topojson-specification';
   import { nextSavedAt, type Entry } from '../domain/entry';
+  import { INHABITED_CONTINENTS, WORLD_COUNTRIES } from '../domain/continents';
+  import { worldStats } from '../domain/insights';
   import { scoreTier } from '../domain/score';
   import { locale, t } from '../i18n/index.svelte';
   import { loadPlaces, matchPlace, type PlaceIndex } from '../lib/places';
@@ -91,6 +93,10 @@
       return iso;
     }
   }
+  const world = $derived(worldStats(ledger.entries));
+  // Antarctica counts toward "of 6" only once you've been, making it 7.
+  const continentTotal = $derived(world.continents.some((c) => c.id === 'AN') ? INHABITED_CONTINENTS + 1 : INHABITED_CONTINENTS);
+
   /** Visited countries, most cities first. */
   const countryList = $derived.by(() => {
     const by: Record<string, Entry[]> = {};
@@ -215,6 +221,8 @@
     choosing = false;
     selectedIds = [];
     pinningId = id;
+    // The buttons that start this sit below the map: bring the map back into view to tap.
+    svg?.scrollIntoView({ block: 'nearest' });
   }
 
   /** The country under a point: the map's shapes first, else the nearest town's within 50 km. */
@@ -447,12 +455,24 @@
   {#if countryList.length}
     <section class="panel countries" aria-labelledby="countriesTitle">
       <div class="section-head"><h2 id="countriesTitle">{t('map.countriesTitle')}</h2></div>
+      <dl class="world hairline-grid" id="worldStats">
+        <div class="world-tile">
+          <dt class="t-field-label">{t('world.countries')}</dt>
+          <dd class="world-value tabular">{t('world.ofTotal', { count: world.countries, total: WORLD_COUNTRIES })}</dd>
+          <dd class="world-sub">{t('world.share', { percent: Math.round((world.countries / WORLD_COUNTRIES) * 100) })}</dd>
+        </div>
+        <div class="world-tile">
+          <dt class="t-field-label">{t('world.continents')}</dt>
+          <dd class="world-value tabular">{t('world.ofTotal', { count: world.continents.length, total: continentTotal })}</dd>
+          <dd class="world-sub">{world.continents.map((c) => `${t(`continent.${c.id}`)} ${c.countries}`).join(' · ')}</dd>
+        </div>
+      </dl>
       <div class="settings-group">
         {#each countryList as c (c.iso)}
           <button type="button" class="settings-row" data-country={c.iso} onclick={() => showCountry(c.entries)}>
             <span class="settings-row-text">
               <span class="settings-row-title">{c.name}</span>
-              <span class="settings-row-hint">{c.entries.map((e) => e.city).join(', ')}</span>
+              <span class="settings-row-hint">{[...new Set(c.entries.map((e) => e.city))].join(', ')}</span>
             </span>
             <span class="settings-row-value">{c.entries.length}</span>
           </button>
@@ -634,6 +654,27 @@
   }
   .countries {
     margin-top: 1rem;
+  }
+  .world {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .world-tile {
+    flex: 1 1 9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.75rem 0.875rem;
+  }
+  .world-value {
+    font-family: var(--font-serif);
+    font-size: 1.375rem;
+    color: var(--text-heading);
+  }
+  .world-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
   }
   .map-note,
   .map-hint {
