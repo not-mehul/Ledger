@@ -17,7 +17,8 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
   await page.fill('#inputNotes', 'Tacos <b>everywhere</b>');
   await saveEntry(page);
   await expect(page.locator('#toast')).toHaveText('Saved: Austin, Texas — 40.6/100');
-  await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
+  // No count on the tab: the ledger's own header counts the cities.
+  await expect(page.locator('#tabLogbook .badge')).toHaveCount(0);
 
   // Same city and month again: the form offers the logged entry, and Save
   // asks before updating it, keeping its notes.
@@ -28,7 +29,6 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
   await expect(page.locator('.modal-card')).toContainText('This visit is already in your ledger.');
   await page.click('#confirmAction');
   await expect(page.locator('#toast')).toHaveText('Updated: austin, TEXAS.');
-  await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
   await page.click('#tabLogbook');
   await page.click('.entry-card-header');
   await expect(page.locator('.entry-notes-text')).toHaveText('Tacos <b>everywhere</b>');

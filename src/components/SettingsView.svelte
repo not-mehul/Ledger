@@ -1,31 +1,18 @@
 <script lang="ts">
   import Icon from './ui/Icon.svelte';
-  import { Select } from 'dusk-dawn';
   import { EGGS, eggsFound } from '../lib/delight';
-  import type { BackupFrequency, LanguageSetting, ThemeSetting } from '../domain/doc';
-  import { LOCALES, LOCALE_NAMES, relativeTime, t, type MessageKey } from '../i18n/index.svelte';
+  import type { BackupFrequency, ThemeSetting } from '../domain/doc';
+  import { relativeTime, t, type MessageKey } from '../i18n/index.svelte';
   import { ledger } from '../state/ledger.svelte';
-  import { backupNow, importFile } from '../state/transfer';
-  import { folderSync } from '../state/sync.svelte';
+  import { restoreFile } from '../state/transfer';
+  import { backup } from '../state/backup.svelte';
   import { ui } from '../state/ui.svelte';
-  import ExportOptions from './ExportOptions.svelte';
   import MetricsEditor from './MetricsEditor.svelte';
   import Sheet from './Sheet.svelte';
-  import { citiesOf } from '../domain/insights';
 
   const settings = $derived(ledger.settings);
-  let importing = $state(false);
-  let backingUp = $state(false);
+  let restoring = $state(false);
   let metricsOpen = $state(false);
-  let homeOpen = $state(false);
-  const cities = $derived(citiesOf(ledger.entries));
-  const isHome = (c: { city: string; state: string }) =>
-    !!settings.homeCity && settings.homeCity.city.toLowerCase() === c.city.toLowerCase() && settings.homeCity.state.toLowerCase() === c.state.toLowerCase();
-
-  async function setHome(home: { city: string; state: string } | undefined) {
-    homeOpen = false;
-    await update({ homeCity: home });
-  }
   const metricCount = $derived(ledger.config.metrics.filter((m) => !m.archived && !ledger.config.categories.find((c) => c.id === m.cat)?.archived).length);
   const hiddenCount = $derived(ledger.config.metrics.length - metricCount);
 
@@ -34,13 +21,12 @@
     { value: 'dark', key: 'settings.themeDusk' },
     { value: 'light', key: 'settings.themeDawn' },
   ];
-  const FREQUENCIES: { value: BackupFrequency; key: MessageKey }[] = [
-    { value: 'off', key: 'data.freqOff' },
-    { value: 'daily', key: 'data.freqDaily' },
-    { value: 'weekly', key: 'data.freqWeekly' },
-    { value: 'monthly', key: 'data.freqMonthly' },
+  const EVERY: { value: BackupFrequency; key: MessageKey }[] = [
+    { value: 'daily', key: 'backup.daily' },
+    { value: 'weekly', key: 'backup.weekly' },
+    { value: 'monthly', key: 'backup.monthly' },
+    { value: 'off', key: 'backup.off' },
   ];
-  const KEEP = [3, 5, 10, 20];
 
   async function update(patch: Parameters<typeof ledger.updateSettings>[0]) {
     try {
@@ -51,38 +37,50 @@
     }
   }
 
-  async function onImport(input: HTMLInputElement) {
+  // The backup's own status line (as BookShelf has it): what just happened,
+  // else how the last backup went.
+  let notice = $state<{ text: string; kind: 'ok' | 'err' } | null>(null);
+  const standing = $derived.by(() => {
+    if (!settings.syncFolder) return null;
+    if (settings.backupFailedAt) return { text: t('backup.lastFailed', { when: relativeTime(settings.backupFailedAt) }), kind: 'err' as const };
+    if (settings.lastBackupAt) return { text: t('backup.last', { when: relativeTime(settings.lastBackupAt) }), kind: 'ok' as const };
+    return null;
+  });
+  const shownNotice = $derived(notice ?? standing);
+
+  async function backUp() {
+    notice = { text: t('backup.working'), kind: 'ok' };
+    try {
+      const { brought } = await backup.now();
+      notice = { text: brought ? t('backup.doneBrought', { count: brought }) : t('backup.done'), kind: 'ok' };
+    } catch (err) {
+      console.error('Backup failed:', err);
+      notice = { text: t('backup.failed'), kind: 'err' };
+    }
+  }
+
+  async function choose() {
+    try {
+      if (await backup.choose()) await backUp();
+    } catch (err) {
+      console.error('Choosing a folder failed:', err);
+      notice = { text: t('backup.failed'), kind: 'err' };
+    }
+  }
+
+  async function stop() {
+    await backup.stop();
+    notice = null;
+  }
+
+  async function onRestore(input: HTMLInputElement) {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    importing = true;
-    const { message, ok } = await importFile(file);
-    importing = false;
+    restoring = true;
+    const { message, ok } = await restoreFile(file);
+    restoring = false;
     ui.notify(message, ok ? 'success' : 'error');
-  }
-
-  async function sync(action: 'choose' | 'now') {
-    let result: Awaited<ReturnType<typeof folderSync.now>>;
-    try {
-      result = await (action === 'choose' ? folderSync.choose() : folderSync.now());
-    } catch (err) {
-      console.error('Sync failed', err);
-      result = 'failed';
-    }
-    if (result === 'synced') ui.notify(t('sync.done'), 'success');
-    else if (result === 'failed') ui.notify(t('sync.failed'), 'error');
-  }
-
-  async function runBackup() {
-    backingUp = true;
-    try {
-      ui.notify(t('export.backupSaved', { path: await backupNow() }), 'success');
-    } catch (err) {
-      console.error('Backup failed:', err);
-      ui.notify(t('export.backupFailed'), 'error');
-    } finally {
-      backingUp = false;
-    }
   }
 </script>
 
@@ -99,18 +97,6 @@
         {/each}
       </div>
     </div>
-    <label class="setting-row">
-      <span class="t-field-label">{t('settings.language')}</span>
-      <Select
-        id="languageSelect"
-        value={settings.language}
-        options={[
-          { value: 'system' as LanguageSetting, label: t('settings.languageSystem') },
-          ...LOCALES.map((code) => ({ value: code as LanguageSetting, label: LOCALE_NAMES[code] })),
-        ]}
-        onchange={(language) => update({ language })}
-      />
-    </label>
   </div>
 
   <div class="panel">
@@ -124,125 +110,68 @@
         </span>
         <Icon name="chevronRight" class="settings-row-chevron" />
       </button>
-      <button type="button" class="settings-row" id="homeCity" aria-haspopup="dialog" disabled={!cities.length} onclick={() => (homeOpen = true)}>
-        <span class="settings-row-icon"><Icon name="home" size={20} /></span>
-        <span class="settings-row-text">
-          <span class="settings-row-title">{t('home.title')}</span>
-          <span class="settings-row-hint"
-            >{settings.homeCity ? `${settings.homeCity.city}, ${settings.homeCity.state}` : cities.length ? t('home.hint') : t('home.needEntry')}</span
-          >
-        </span>
-        <Icon name="chevronRight" class="settings-row-chevron" />
-      </button>
     </div>
   </div>
-  {#if homeOpen}
-    <Sheet title={t('home.title')} onclose={() => (homeOpen = false)}>
-      <p class="t-hint">{t('home.explain')}</p>
-      <div class="settings-group" id="homeList" role="radiogroup" aria-label={t('home.title')}>
-        {#each cities as c (`${c.city}|${c.state}`)}
-          <button type="button" class="settings-row" role="radio" aria-checked={isHome(c)} onclick={() => setHome({ city: c.latest.city, state: c.latest.state })}>
-            <span class="settings-row-text">
-              <span class="settings-row-title">{c.latest.city}</span>
-              <span class="settings-row-hint">{c.latest.state}</span>
-            </span>
-            {#if isHome(c)}<span class="settings-row-icon"><Icon name="home" size={20} /></span>{/if}
-          </button>
-        {/each}
-        {#if settings.homeCity}
-          <button type="button" class="settings-row" role="radio" aria-checked="false" onclick={() => setHome(undefined)}>
-            <span class="settings-row-text"><span class="settings-row-title">{t('home.none')}</span></span>
-          </button>
-        {/if}
-      </div>
-    </Sheet>
-  {/if}
   {#if metricsOpen}
     <Sheet title={t('metrics.title')} onclose={() => (metricsOpen = false)}>
       <MetricsEditor />
     </Sheet>
   {/if}
 
-  <div class="panel">
-    <div class="section-head"><h2>{t('data.title')}</h2></div>
-
-    <h3 class="t-section-label sub">{t('data.exportAs')}</h3>
-    <ExportOptions />
-
-    <h3 class="t-section-label sub">{t('data.import')}</h3>
-    {#each ledger.setAside as file (file)}
-      <p class="t-hint warning" id="setAsideNotice">{t('storage.setAside', { file })}</p>
-    {/each}
+  <!-- Backup, as BookShelf has it: the folder, how often, back up now or stop. -->
+  <div class="panel" id="backupSection">
+    <div class="section-head"><h2>{t('backup.title')}</h2></div>
+    <p class="t-hint">{t('backup.hint')}</p>
     <div class="settings-group">
-      <!-- The whole row opens the file picker. -->
-      <label class="settings-row file-row" class:busy={importing}>
-        <span class="settings-row-icon"><Icon name="upload" size={20} /></span>
+      <div class="settings-row">
+        <span class="settings-row-icon"><Icon name="folder" size={20} /></span>
         <span class="settings-row-text">
-          <span class="settings-row-title">{t('data.importRow')}{importing ? ' …' : ''}</span>
-          <span class="settings-row-hint">{t('data.importShort')}</span>
+          <span class="settings-row-title">{t('backup.folder')}</span>
+          <span class="settings-row-hint" id="backupFolder">{settings.syncFolder ? settings.syncFolder.name || '…' : t('backup.notChosen')}</span>
         </span>
-        <Icon name="chevronRight" class="settings-row-chevron" />
-        <input type="file" id="importFile" class="visually-hidden" accept=".md,.json,.zip,text/markdown,text/plain,application/json,application/zip" disabled={importing} onchange={(e) => onImport(e.currentTarget)} />
-      </label>
+        <button type="button" class="btn btn-muted" id="btnChooseFolder" disabled={backup.busy} onclick={choose}>
+          {settings.syncFolder ? t('backup.change') : t('backup.choose')}
+        </button>
+      </div>
     </div>
 
-    <h3 class="t-section-label sub">{t('data.autoBackup')}</h3>
-    <p class="t-hint">{t('data.autoBackupHint')}</p>
-    <div class="segmented" role="radiogroup" aria-label={t('data.autoBackup')}>
-      {#each FREQUENCIES as opt (opt.value)}
-        <button type="button" role="radio" aria-checked={settings.autoBackup === opt.value} onclick={() => update({ autoBackup: opt.value })}>
+    <span class="t-field-label every-label" id="backupEveryLabel">{t('backup.every')}</span>
+    <div class="segmented full" role="radiogroup" aria-labelledby="backupEveryLabel">
+      {#each EVERY as opt (opt.value)}
+        <button type="button" role="radio" aria-checked={settings.autoBackup === opt.value} data-every={opt.value} onclick={() => update({ autoBackup: opt.value })}>
           {t(opt.key)}
         </button>
       {/each}
     </div>
-    <div class="settings-group">
-      <label class="settings-row">
-        <span class="settings-row-text"><span class="settings-row-title">{t('data.keep')}</span></span>
-        <Select value={settings.keepBackups} options={KEEP.map((n) => ({ value: n, label: t('data.keepCount', { count: n }) }))} onchange={(keepBackups) => update({ keepBackups })} />
-      </label>
-      <div class="settings-row">
-        <span class="settings-row-text">
-          <span class="settings-row-title" id="lastBackup">{t('data.lastBackup', { when: settings.lastBackupAt ? relativeTime(settings.lastBackupAt) : t('data.never') })}</span>
-        </span>
-        <!-- The one primary action in this section (style.md §8.17). -->
-        <button type="button" class="btn btn-primary" disabled={backingUp || !ledger.entries.length} onclick={runBackup}>{t('data.backupNow')}</button>
+    <p class="t-hint">{settings.autoBackup === 'off' ? t('backup.onlyNow') : t('backup.whenDue')}</p>
+
+    {#if settings.syncFolder}
+      <div class="backup-actions">
+        <button type="button" class="btn btn-muted" id="btnStopBackup" onclick={stop}>{t('backup.stop')}</button>
+        <button type="button" class="btn btn-primary" id="btnBackupNow" disabled={backup.busy} onclick={backUp}>{t('backup.now')}</button>
       </div>
-    </div>
-
-    <p class="t-hint">{t('data.cloudNote')}</p>
-
-    <h3 class="t-section-label sub">{t('sync.title')}</h3>
-    <p class="t-hint">{t('sync.hint')}</p>
-    {#if folderSync.failedAt}
-      <p class="t-hint warning" id="syncFailed">{t('sync.lastFailed', { when: relativeTime(folderSync.failedAt) })}</p>
     {/if}
+    <p class="t-hint backup-notice" class:warning={shownNotice?.kind === 'err'} id="backupNotice" role="status" aria-live="polite">{shownNotice?.text ?? ''}</p>
+  </div>
+
+  <div class="panel">
+    <div class="section-head"><h2>{t('data.title')}</h2></div>
+    {#each ledger.setAside as file (file)}
+      <p class="t-hint warning" id="setAsideNotice">{t('storage.setAside', { file })}</p>
+    {/each}
     <div class="settings-group">
-      {#if settings.syncFolder}
-        <button type="button" class="settings-row" id="syncStatus" disabled={folderSync.busy} onclick={() => sync('now')}>
-          <span class="settings-row-icon"><Icon name="refresh" size={20} /></span>
-          <span class="settings-row-text">
-            <span class="settings-row-title">{t('sync.now')}</span>
-            <span class="settings-row-hint">
-              {t('sync.statusRow', { folder: settings.syncFolder.name || '…' })} · {t('sync.lastSynced', { when: settings.lastSyncAt ? relativeTime(settings.lastSyncAt) : t('data.never') })}
-            </span>
-          </span>
-        </button>
-        <button type="button" class="settings-row" disabled={folderSync.busy} onclick={() => sync('choose')}>
-          <span class="settings-row-icon"><Icon name="folder" size={20} /></span>
-          <span class="settings-row-text"><span class="settings-row-title">{t('sync.change')}</span></span>
-          <Icon name="chevronRight" class="settings-row-chevron" />
-        </button>
-        <button type="button" class="settings-row" disabled={folderSync.busy} onclick={() => folderSync.stop()}>
-          <span class="settings-row-icon"><Icon name="x" size={20} /></span>
-          <span class="settings-row-text"><span class="settings-row-title">{t('sync.stop')}</span></span>
-        </button>
-      {:else}
-        <button type="button" class="settings-row" disabled={folderSync.busy} onclick={() => sync('choose')}>
-          <span class="settings-row-icon"><Icon name="folder" size={20} /></span>
-          <span class="settings-row-text"><span class="settings-row-title">{t('sync.choose')}</span></span>
-          <Icon name="chevronRight" class="settings-row-chevron" />
-        </button>
-      {/if}
+      <div class="settings-row">
+        <span class="settings-row-icon"><Icon name="upload" size={20} /></span>
+        <span class="settings-row-text">
+          <span class="settings-row-title">{t('restore.title')}</span>
+          <span class="settings-row-hint">{t('restore.hint')}</span>
+        </span>
+        <!-- The button is the file picker's label. -->
+        <label class="btn btn-muted file-button" class:busy={restoring}>
+          {restoring ? t('restore.working') : t('restore.button')}
+          <input type="file" id="importFile" class="visually-hidden" accept=".json,.zip,application/json,application/zip" disabled={restoring} onchange={(e) => onRestore(e.currentTarget)} />
+        </label>
+      </div>
     </div>
   </div>
 
@@ -266,35 +195,45 @@
     margin-bottom: 1rem;
     flex-wrap: wrap;
   }
-  .setting-row :global(.select),
-  .settings-row :global(.select) {
-    width: auto;
-    min-width: min(12rem, 100%);
+  .t-hint {
+    margin-bottom: 0.75rem;
   }
-  .segmented {
-    margin-bottom: 1rem;
+  .every-label {
+    display: block;
+    margin: 1.25rem 0 0.5rem;
   }
-  .sub {
-    margin: 1.5rem 0 0.75rem;
+  /* One row sharing the width evenly, as BookShelf's: never wraps to a second line. */
+  .segmented.full {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-bottom: 0.5rem;
   }
-  .sub:first-of-type {
-    margin-top: 0;
+  .segmented.full > button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 0.5rem;
   }
-  .file-row {
+  .backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .backup-notice {
+    min-height: 1.25rem;
+    margin: 0.75rem 0 0;
+  }
+  .file-button {
+    flex-shrink: 0;
     cursor: pointer;
-    border-radius: var(--corner-sm);
   }
-  .file-row:hover {
-    background: var(--hover-bg);
-  }
-  .file-row:focus-within {
+  .file-button:focus-within {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
-  .file-row.busy {
+  .file-button.busy {
     opacity: 0.6;
-  }
-  .t-hint {
-    margin-bottom: 0.75rem;
   }
 </style>

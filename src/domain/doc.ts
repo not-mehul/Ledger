@@ -10,25 +10,20 @@ import { defaultConfig, normalizeConfig, type MetricConfig } from './metrics';
 export const SCHEMA_VERSION = 2;
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
-export type LanguageSetting = 'system' | 'en' | 'es' | 'fr' | 'de';
 export type BackupFrequency = 'off' | 'daily' | 'weekly' | 'monthly';
 
 export interface Settings {
   theme: ThemeSetting;
-  language: LanguageSetting;
+  /** How often to back up to the folder: checked when the app opens or comes back. */
   autoBackup: BackupFrequency;
-  /** How many automatic backups to keep. */
-  keepBackups: number;
-  /** ISO timestamp of the last automatic or manual backup. */
+  /** ISO timestamp of the last backup to the folder. */
   lastBackupAt?: string;
-  /** The folder picked for sync (Android), reached through the picker's lasting permission. */
+  /** ISO timestamp of the last backup that failed, until one succeeds. */
+  backupFailedAt?: string;
+  /** The backup folder (Android), reached through the picker's lasting permission. */
   syncFolder?: { uri: string; name: string };
-  /** ISO timestamp of the last sync. */
-  lastSyncAt?: string;
-  /** What the sync folder held after the last sync: entry id → savedAt (src/domain/sync-merge.ts). */
+  /** What the backup folder held after the last backup: entry id → savedAt (src/domain/sync-merge.ts). */
   syncBase?: Record<string, string>;
-  /** Your home city, for "vs home" on every card: its latest visit is the baseline. */
-  homeCity?: { city: string; state: string };
 }
 
 export interface LedgerDoc {
@@ -39,7 +34,7 @@ export interface LedgerDoc {
 }
 
 export function defaultSettings(): Settings {
-  return { theme: 'system', language: 'system', autoBackup: 'weekly', keepBackups: 5 };
+  return { theme: 'system', autoBackup: 'daily' };
 }
 
 export function emptyDoc(): LedgerDoc {
@@ -49,42 +44,38 @@ export function emptyDoc(): LedgerDoc {
 const pick = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
   allowed.includes(value as T) ? (value as T) : fallback;
 
+const when = (v: unknown): string | undefined => (typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : undefined);
+
+/**
+ * Settings as stored, cleaned up. Fields Ledger no longer has (a language,
+ * how many dated backups to keep, a home city) are dropped. Up to 2.0 the
+ * folder was a "sync" folder with its own lastSyncAt, and lastBackupAt
+ * meant a dated .zip in Documents: with a folder, its last sync is now the
+ * last backup.
+ */
 export function normalizeSettings(raw: unknown): Settings {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const d = defaultSettings();
-  const keep = Math.round(Number(r.keepBackups));
+  const folder = backupFolder(r);
+  const last = folder ? (when(r.lastSyncAt) ?? when(r.lastBackupAt)) : when(r.lastBackupAt);
+  const failed = when(r.backupFailedAt);
   return {
     theme: pick(r.theme, ['system', 'light', 'dark'], d.theme),
-    language: pick(r.language, ['system', 'en', 'es', 'fr', 'de'], d.language),
     autoBackup: pick(r.autoBackup, ['off', 'daily', 'weekly', 'monthly'], d.autoBackup),
-    keepBackups: Number.isFinite(keep) && keep >= 1 && keep <= 50 ? keep : d.keepBackups,
-    ...(typeof r.lastBackupAt === 'string' && !Number.isNaN(Date.parse(r.lastBackupAt))
-      ? { lastBackupAt: r.lastBackupAt }
-      : {}),
-    ...syncSettings(r),
-    ...homeSetting(r.homeCity),
+    ...(last ? { lastBackupAt: last } : {}),
+    ...(failed ? { backupFailedAt: failed } : {}),
+    ...folder,
   };
 }
 
-function homeSetting(raw: unknown): Pick<Settings, 'homeCity'> {
-  const h = (raw && typeof raw === 'object' ? raw : {}) as { city?: unknown; state?: unknown };
-  return typeof h.city === 'string' && h.city.trim() && typeof h.state === 'string'
-    ? { homeCity: { city: h.city.trim().slice(0, 120), state: h.state.trim().slice(0, 120) } }
-    : {};
-}
-
-function syncSettings(r: Record<string, unknown>): Pick<Settings, 'syncFolder' | 'lastSyncAt' | 'syncBase'> {
+function backupFolder(r: Record<string, unknown>): Pick<Settings, 'syncFolder' | 'syncBase'> | undefined {
   const folder = r.syncFolder as { uri?: unknown; name?: unknown } | undefined;
-  if (!folder || typeof folder.uri !== 'string' || !folder.uri) return {};
+  if (!folder || typeof folder.uri !== 'string' || !folder.uri) return undefined;
   const base: Record<string, string> = {};
   if (r.syncBase && typeof r.syncBase === 'object') {
     for (const [id, at] of Object.entries(r.syncBase as Record<string, unknown>)) if (typeof at === 'string') base[id] = at;
   }
-  return {
-    syncFolder: { uri: folder.uri, name: typeof folder.name === 'string' ? folder.name : '' },
-    ...(typeof r.lastSyncAt === 'string' && !Number.isNaN(Date.parse(r.lastSyncAt)) ? { lastSyncAt: r.lastSyncAt } : {}),
-    syncBase: base,
-  };
+  return { syncFolder: { uri: folder.uri, name: typeof folder.name === 'string' ? folder.name : '' }, syncBase: base };
 }
 
 export function normalizeEntries(raw: unknown): Entry[] {

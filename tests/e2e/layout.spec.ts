@@ -20,7 +20,7 @@ async function seed(page: Page, info: import('@playwright/test').TestInfo, n = 3
   await writeFile(file, JSON.stringify({ schemaVersion: 2, entries }));
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
-  await expect(page.locator('#toast')).toContainText('Import complete');
+  await expect(page.locator('#toast')).toContainText('Restored');
   await page.click('#settingsBack'); // Settings is a secondary screen, with no tabs
 }
 
@@ -57,8 +57,11 @@ for (const width of [360, 412]) {
 
 test('a toast raised under an open sheet sits above it', async ({ page }) => {
   await openApp(page);
-  await addEntry(page, 'Oslo', 'Norway');
-  await page.click('#btnExport');
+  // Two cities the map can't place: its "place by hand" list is a short sheet.
+  await addEntry(page, 'Nowhereville', 'Atlantis');
+  await addEntry(page, 'Elsewhere', 'Atlantis');
+  await page.click('#tabMap');
+  await page.click('#btnPlaceByHand');
   await expect(page.locator('dialog.sheet')).toBeVisible();
   await page.waitForTimeout(600); // the sheet's entrance
   const toast = await box(page.locator('.toast'));
@@ -66,11 +69,10 @@ test('a toast raised under an open sheet sits above it', async ({ page }) => {
   expect(toast.y + toast.height).toBeLessThanOrEqual(sheet.y);
   const lift = () => page.evaluate(() => parseFloat(document.body.style.getPropertyValue('--toast-lift')) || 0);
   const underSheet = await lift();
-  // Closing the sheet lets the toast settle back down, to just above the Save bar.
+  // Closing the sheet lets the toast settle back down.
   await page.keyboard.press('Escape');
   await expect(page.locator('dialog.sheet')).toHaveCount(0);
   await expect.poll(lift).toBeLessThan(underSheet);
-  expect(await lift()).toBeGreaterThan(0);
 });
 
 test('a toast stays above the compare tray', async ({ page }, info) => {

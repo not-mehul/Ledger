@@ -112,61 +112,88 @@ describe('editing', () => {
   });
 });
 
-describe('folder sync scheduling', () => {
-  it('M4: a change made while a sync runs is pushed when it ends', async () => {
-    vi.useFakeTimers();
-    try {
-      disk.set('ledger.json', stored([], { settings: { syncFolder: { uri: 'content://x', name: 'x' } } }));
-      const { ledger } = await freshLedger();
-      let finishWrite: (() => void) | undefined;
-      const writes: string[] = [];
-      const io = {
-        pick: async () => ({}),
-        release: async () => undefined,
-        read: async (): Promise<{ data?: string }> => ({}),
-        write: ({ data }: { data: string }) =>
-          new Promise<{ modified?: number }>((resolve) => {
-            writes.push(data);
-            finishWrite = () => resolve({ modified: writes.length });
-          }),
-      };
-      const { FolderSyncState } = await import('../../src/state/sync.svelte');
-      const sync = new FolderSyncState(io);
-      const first = sync.now();
-      await vi.waitFor(() => expect(finishWrite).toBeDefined());
-      // The folder write is in flight, holding the ledger as it was; an entry is saved now.
-      await ledger.saveEntry(makeEntry());
-      sync.soon(); // what main.ts does after every change; ignored while busy
-      finishWrite!();
-      await first;
-      finishWrite = undefined;
-      await vi.advanceTimersByTimeAsync(5_000);
-      await vi.waitFor(() => expect(finishWrite).toBeDefined());
-      finishWrite!();
-      expect(writes).toHaveLength(2);
-      expect(writes[1]).not.toBe(writes[0]);
-    } finally {
-      vi.useRealTimers();
-    }
+describe('backup to a folder', () => {
+  const folder = { syncFolder: { uri: 'content://x', name: 'Drive' } };
+  const b64 = (text: string) => Buffer.from(text, 'utf8').toString('base64');
+  const unb64 = (data: string) => Buffer.from(data, 'base64').toString('utf8');
+  type Read = { data?: string; modified?: number };
+
+  async function setUp(files: Record<string, string> = {}, settings: object = folder) {
+    disk.set('ledger.json', stored([makeEntry({ id: 'mine', city: 'Lisbon', state: 'Portugal' })], { settings }));
+    const { ledger } = await freshLedger();
+    const written: Record<string, string> = {};
+    const io = {
+      pick: async () => ({ uri: 'content://y', name: 'Nextcloud' }),
+      release: async () => undefined,
+      read: async ({ file }: { file: string }): Promise<Read> => (files[file] ? { data: files[file], modified: 5 } : {}),
+      write: async ({ file, data }: { file: string; data: string }) => {
+        written[file] = data;
+        return { modified: 6 };
+      },
+    };
+    const { BackupState, BACKUP_FILE, LEGACY_FILE } = await import('../../src/state/backup.svelte');
+    return { ledger, io, written, backup: new BackupState(io), BACKUP_FILE, LEGACY_FILE };
+  }
+
+  it('writes ledger-backup.json and brings in what another phone backed up', async () => {
+    const theirs = makeEntry({ id: 'theirs', city: 'Kyoto', state: 'Japan' });
+    const { ledger, backup, written, BACKUP_FILE } = await setUp({
+      'ledger-backup.json': b64(JSON.stringify({ app: 'ledger', schemaVersion: 2, entries: [theirs] })),
+    });
+    expect(await backup.now()).toEqual({ brought: 1 });
+    expect(ledger.entries.map((e) => e.id).sort()).toEqual(['mine', 'theirs']);
+    const file = JSON.parse(unb64(written[BACKUP_FILE]!)) as { entries: { id: string }[] };
+    expect(file.entries.map((e) => e.id).sort()).toEqual(['mine', 'theirs']);
+    expect(ledger.settings.lastBackupAt).toBeDefined();
+    expect(ledger.settings.syncBase).toMatchObject({ mine: expect.any(String), theirs: expect.any(String) });
   });
 
-  it('M3: a failed sync is remembered until one succeeds', async () => {
-    disk.set('ledger.json', stored([], { settings: { syncFolder: { uri: 'content://x', name: 'x' } } }));
-    await freshLedger();
-    const io = {
-      pick: async () => ({}),
-      release: async () => undefined,
-      read: async (): Promise<{ data?: string }> => {
-        throw new Error('The sync file is too large');
-      },
-      write: async () => ({ modified: 1 }),
+  it('reads a folder set up before 2.1 from its zip, then writes the .json', async () => {
+    const { zipSync, strToU8 } = await import('fflate');
+    const old = makeEntry({ id: 'old', city: 'Porto', state: 'Portugal' });
+    const zip = zipSync({ 'ledger.json': strToU8(JSON.stringify({ schemaVersion: 2, entries: [old] })) });
+    const { ledger, backup, written, BACKUP_FILE, LEGACY_FILE } = await setUp({ 'Ledger sync.zip': Buffer.from(zip).toString('base64') });
+    expect(await backup.now()).toEqual({ brought: 1 });
+    expect(ledger.find('old')).toBeDefined();
+    expect(written[BACKUP_FILE]).toBeDefined();
+    expect(written[LEGACY_FILE]).toBeUndefined();
+  });
+
+  it('backs up when due, never before, and only with a folder', async () => {
+    const { ledger, backup, written, BACKUP_FILE } = await setUp();
+    await backup.ifDue();
+    expect(written[BACKUP_FILE]).toBeDefined();
+    delete written[BACKUP_FILE];
+    await backup.ifDue(); // daily, and it just ran
+    expect(written[BACKUP_FILE]).toBeUndefined();
+    await ledger.updateSettings({ autoBackup: 'off', lastBackupAt: undefined });
+    await backup.ifDue();
+    expect(written[BACKUP_FILE]).toBeUndefined();
+    await ledger.updateSettings({ autoBackup: 'daily' });
+    await backup.stop();
+    await backup.ifDue();
+    expect(written[BACKUP_FILE]).toBeUndefined();
+    expect(ledger.settings.syncFolder).toBeUndefined();
+  });
+
+  it('remembers a failed backup until one succeeds, and ifDue never throws', async () => {
+    const { ledger, backup, io } = await setUp();
+    io.read = async () => {
+      throw new Error('The backup file is too large');
     };
-    const { FolderSyncState } = await import('../../src/state/sync.svelte');
-    const sync = new FolderSyncState(io);
-    expect(await sync.now()).toBe('failed');
-    expect(sync.failedAt).not.toBeNull();
+    await expect(backup.now()).rejects.toThrow('too large');
+    expect(ledger.settings.backupFailedAt).toBeDefined();
+    await expect(backup.ifDue()).resolves.toBeUndefined();
     io.read = async () => ({});
-    expect(await sync.now()).toBe('synced');
-    expect(sync.failedAt).toBeNull();
+    await backup.now();
+    expect(ledger.settings.backupFailedAt).toBeUndefined();
+  });
+
+  it('a new folder starts fresh: nothing known, nothing counted as deleted', async () => {
+    const { ledger, backup } = await setUp({}, { ...folder, syncBase: { gone: '2025-01-01T00:00:00Z' }, lastBackupAt: '2026-01-01T00:00:00Z' });
+    expect(await backup.choose()).toBe(true);
+    expect(ledger.settings.syncFolder).toEqual({ uri: 'content://y', name: 'Nextcloud' });
+    expect(ledger.settings.syncBase).toEqual({});
+    expect(ledger.settings.lastBackupAt).toBeUndefined();
   });
 });

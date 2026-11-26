@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Sync through a folder the person picks (src/state/sync.svelte.ts): one Ledger
+ * Sync through a folder the person picks (src/state/backup.svelte.ts): one Ledger
  * backup file that Syncthing, Drive, Nextcloud or any other app keeps the
  * same across phones. Ledger reads and writes only that folder, through the
  * permission the system picker grants, so it needs no storage permission.
@@ -118,19 +118,19 @@ public class FolderSyncPlugin extends Plugin {
                 }
                 ContentResolver resolver = getContext().getContentResolver();
                 try (InputStream in = resolver.openInputStream(found.uri)) {
-                    if (in == null) throw new java.io.IOException("Could not open the sync file");
+                    if (in == null) throw new java.io.IOException("Could not open the backup file");
                     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                     byte[] buffer = new byte[64 * 1024];
                     int n;
                     while ((n = in.read(buffer)) != -1) {
                         bytes.write(buffer, 0, n);
-                        if (bytes.size() > MAX_FILE) throw new java.io.IOException("The sync file is too large");
+                        if (bytes.size() > MAX_FILE) throw new java.io.IOException("The backup file is too large");
                     }
                     out.put("data", Base64.encodeToString(bytes.toByteArray(), Base64.NO_WRAP));
                 }
                 call.resolve(out);
             } catch (Exception | OutOfMemoryError e) {
-                call.reject(e.getMessage() == null ? "Could not read the sync folder" : e.getMessage());
+                call.reject(e.getMessage() == null ? "Could not read the backup folder" : e.getMessage());
             }
         });
     }
@@ -158,9 +158,9 @@ public class FolderSyncPlugin extends Plugin {
                         "application/zip",
                         file
                     );
-                if (target == null) throw new java.io.IOException("Could not create the sync file");
+                if (target == null) throw new java.io.IOException("Could not create the backup file");
                 try (OutputStream out = resolver.openOutputStream(target, "wt")) {
-                    if (out == null) throw new java.io.IOException("Could not write the sync file");
+                    if (out == null) throw new java.io.IOException("Could not write the backup file");
                     out.write(Base64.decode(data, Base64.NO_WRAP));
                 }
                 Found written = find(tree, file);
@@ -168,7 +168,7 @@ public class FolderSyncPlugin extends Plugin {
                 result.put("modified", written == null ? 0 : written.modified);
                 call.resolve(result);
             } catch (Exception | OutOfMemoryError e) {
-                call.reject(e.getMessage() == null ? "Could not write to the sync folder" : e.getMessage());
+                call.reject(e.getMessage() == null ? "Could not write to the backup folder" : e.getMessage());
             }
         });
     }

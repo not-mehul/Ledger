@@ -124,10 +124,6 @@ for (const scheme of ['dark', 'light'] as const) {
       await check(page, 'category sheet');
       await page.keyboard.press('Escape');
       await page.keyboard.press('Escape');
-      await page.click('#settingsBack');
-      await page.click('#btnExport');
-      await sheetSettled(page);
-      await check(page, 'export sheet');
     });
   }
 }

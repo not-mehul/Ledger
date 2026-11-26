@@ -1,19 +1,17 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { detectLocale, locale, relativeTime, setLocale, t, type MessageKey } from './i18n/index.svelte';
-  import { applyTheme, shown, toggledTheme } from './platform/theme.svelte';
+  import { applyTheme } from './platform/theme.svelte';
   import { ledger } from './state/ledger.svelte';
   import { ui, type Tab } from './state/ui.svelte';
   import EntryForm from './components/EntryForm.svelte';
-  import ExportOptions from './components/ExportOptions.svelte';
   import IdleStamp from './components/IdleStamp.svelte';
   import LedgerView from './components/LedgerView.svelte';
   import IdleDock from './components/ui/IdleDock.svelte';
   import SettingsView from './components/SettingsView.svelte';
-  import Sheet from './components/Sheet.svelte';
   import Modal from './components/ui/Modal.svelte';
   import Icon from './components/ui/Icon.svelte';
-  import { IconTabs, ThemeToggle, Toast, konami, play, secretTaps } from 'dusk-dawn';
+  import { IconTabs, Toast, konami, markStuck, play, secretTaps } from 'dusk-dawn';
   import { cheer, hatch } from './lib/delight';
 
   type MainTab = Exclude<Tab, 'settings'>;
@@ -30,24 +28,14 @@
       controls: tab.panel,
       label: t(tab.key),
       icon: tab.icon,
-      badge: tab.id === 'ledger' ? ledger.entries.length : undefined,
     })),
   );
   const today = $derived(new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }));
 
-  async function toggleTheme() {
-    try {
-      await ledger.updateSettings({ theme: toggledTheme() });
-    } catch (err) {
-      console.error('Saving settings failed:', err);
-      ui.notify(t('toast.saveFailed'), 'error');
-    }
-  }
-
   $effect(() => applyTheme(ledger.settings.theme));
+  // Always the phone's own language (one of the four, else English).
   $effect(() => {
-    const lang = ledger.settings.language;
-    const next = lang === 'system' ? detectLocale() : lang;
+    const next = detectLocale();
     if (next !== locale()) void setLocale(next);
   });
 
@@ -89,7 +77,6 @@
 
 <div class="container">
   {#snippet actions()}
-    <button type="button" class="btn-icon" id="btnExport" aria-label={t('action.export')} title={t('action.export')} onclick={() => (ui.exportOpen = true)}><Icon name="download" size={20} /></button>
     <button type="button" class="btn-icon" id="tabSettings" aria-label={t('tabs.settings')} title={t('tabs.settings')} onclick={() => ui.go('settings')}><Icon name="settings" size={20} /></button>
   {/snippet}
 
@@ -110,7 +97,6 @@
         <p class="t-tagline">{t('app.tagline')}</p>
       </div>
       <div class="site-actions">
-        <ThemeToggle dawn={!shown.dark} label={t('settings.dawnSwitch')} ontoggle={() => void toggleTheme()} />
         <div class="screen-header-actions">{@render actions()}</div>
       </div>
     </header>
@@ -127,7 +113,7 @@
   {/if}
 
   {#if ui.tab !== 'settings'}
-    <nav class="app-tabs tab-bar-sticky">
+    <nav class="app-tabs tab-bar-sticky" use:markStuck>
       <IconTabs {tabs} value={ui.tab} label={t('tabs.sections')} onselect={(id) => ui.go(id)} />
     </nav>
   {/if}
@@ -150,12 +136,6 @@
   {/if}
 </div>
 
-{#if ui.exportOpen}
-  <Sheet title={t('export.title')} onclose={() => (ui.exportOpen = false)}>
-    <ExportOptions ondone={() => (ui.exportOpen = false)} />
-  </Sheet>
-{/if}
-
 {#if ui.confirmRequest}
   {@const request = ui.confirmRequest}
   <Modal title={request.title} closeLabel={t('action.close')} onclose={() => request.resolve(false)}>
@@ -169,7 +149,7 @@
   </Modal>
 {/if}
 
-<IdleDock label={t('idle.label')} disabled={ui.exportOpen || ui.compareOpen || !!ui.confirmRequest}><IdleStamp /></IdleDock>
+<IdleDock label={t('idle.label')} disabled={ui.compareOpen || !!ui.confirmRequest}><IdleStamp /></IdleDock>
 
 <Toast
   toast={ui.toast}

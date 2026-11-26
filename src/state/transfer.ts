@@ -1,68 +1,28 @@
 // ============================================================
-// Import, export and backups, wired to app state.
+// Restoring a backup: a Ledger backup file (.json, or the .zip backups
+// and folder files made before 2.1), or another app's JSON export (Travel
+// Logbook). Restoring the same file again never duplicates entries.
 // ============================================================
 
-import { locale, t } from '../i18n/index.svelte';
-import { countryName } from '../i18n/countries';
-import { buildCsv } from '../lib/csv';
-import { buildMarkdown, parseMarkdown, type ParsedImport } from '../lib/markdown';
-import { BACKUP_PREFIX, backupsToPrune, isBackupDue } from '../lib/schedule';
-import { datedName, deleteOutput, listOutputs, saveFile, type OutputFile } from '../platform/output';
+import { t } from '../i18n/index.svelte';
 import { ledger, type ImportSummary } from './ledger.svelte';
 
-/** A full .zip backup or a readable Markdown summary. */
-export type ExportFormat = 'markdown' | 'backup' | 'csv';
+/** What a restore brings in, before it is merged with the ledger. */
+export interface ParsedImport {
+  entries: import('../domain/entry').Entry[];
+  /** Entries in the file that couldn't be read. */
+  skipped: number;
+  config?: import('../domain/metrics').MetricConfig;
+}
 
-export const BACKUP_FOLDER = 'Ledger/Backups';
-
-/** The zip library is only needed for backups, so it loads on demand. */
+/** The zip library is only needed for older backups, so it loads on demand. */
 const backupLib = () => import('../lib/backup');
 
-async function backupFile(now = new Date()): Promise<OutputFile> {
-  const { buildBackupZip, buildJson } = await backupLib();
-  return {
-    name: datedName(BACKUP_PREFIX, 'zip', now, true),
-    data: buildBackupZip(buildJson(ledger.entries, ledger.config, now)),
-    mime: 'application/zip',
-  };
-}
-
-export async function buildExport(format: ExportFormat): Promise<OutputFile> {
-  const ctx = { config: ledger.config, t, locale: locale() };
-  switch (format) {
-    case 'markdown':
-      return { name: datedName('ledger', 'md'), data: buildMarkdown(ledger.entries, ctx), mime: 'text/markdown' };
-    case 'backup':
-      return backupFile();
-    case 'csv':
-      return {
-        name: datedName('ledger', 'csv'),
-        data: buildCsv(ledger.entries, { config: ledger.config, t, countryName }),
-        mime: 'text/csv',
-      };
-  }
-}
-
-/** Returns a toast message. */
-export async function exportAs(format: ExportFormat): Promise<{ message: string; ok: boolean }> {
-  if (!ledger.entries.length) return { message: t('export.nothing'), ok: false };
-  try {
-    const { savedTo } = await saveFile(await buildExport(format));
-    if (format === 'backup') await ledger.updateSettings({ lastBackupAt: new Date().toISOString() });
-    return { message: savedTo ? t('export.saved', { path: savedTo }) : t('export.ready'), ok: true };
-  } catch (err) {
-    console.error('Export failed:', err);
-    return { message: t('export.failed'), ok: false };
-  }
-}
-
-export async function readImport(file: File): Promise<ParsedImport> {
+export async function readBackup(file: File): Promise<ParsedImport> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const { isZip, parseBackupZip, parseJson } = await backupLib();
   if (isZip(bytes)) return parseBackupZip(bytes);
-  const text = new TextDecoder().decode(bytes);
-  if (/^\s*[[{]/.test(text)) return parseJson(text);
-  return parseMarkdown(text);
+  return parseJson(new TextDecoder().decode(bytes));
 }
 
 export function describeImport(s: ImportSummary): string {
@@ -73,44 +33,14 @@ export function describeImport(s: ImportSummary): string {
   return t('import.done', { summary: parts.join(', ') });
 }
 
-export async function importFile(file: File): Promise<{ message: string; ok: boolean }> {
+export async function restoreFile(file: File): Promise<{ message: string; ok: boolean }> {
   try {
-    const parsed = await readImport(file);
+    const parsed = await readBackup(file);
     if (!parsed.entries.length) return { message: t('import.none'), ok: false };
     const summary = await ledger.import(parsed);
     return { message: describeImport(summary), ok: true };
   } catch (err) {
-    console.error('Import failed:', err);
+    console.error('Restore failed:', err);
     return { message: t('import.failed'), ok: false };
-  }
-}
-
-// ---------- automatic backups ----------
-
-/** Writes a backup to Documents/Ledger/Backups and prunes old ones. */
-export async function backupNow(): Promise<string> {
-  const now = new Date();
-  const { savedTo } = await saveFile(await backupFile(now), { folder: BACKUP_FOLDER, share: false });
-  await ledger.updateSettings({ lastBackupAt: now.toISOString() });
-  for (const name of backupsToPrune(await listOutputs(BACKUP_FOLDER), ledger.settings.keepBackups)) {
-    await deleteOutput(BACKUP_FOLDER, name).catch(() => undefined);
-  }
-  return savedTo ?? `Documents/${BACKUP_FOLDER}`;
-}
-
-let running = false;
-
-/** Called on launch and when the app returns to the foreground. */
-export async function autoBackupIfDue(): Promise<void> {
-  const { autoBackup, lastBackupAt } = ledger.settings;
-  if (running || ledger.status !== 'ready' || !ledger.entries.length) return;
-  if (!isBackupDue(autoBackup, lastBackupAt)) return;
-  running = true;
-  try {
-    await backupNow();
-  } catch (err) {
-    console.warn('Automatic backup failed:', err);
-  } finally {
-    running = false;
   }
 }

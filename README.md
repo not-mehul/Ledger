@@ -30,12 +30,11 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 ### See the pattern
 
 - **A map** of visited cities and countries, offline, with pinch to zoom. A city the town list doesn't know can be placed by hand, and any pin moved. Under it, your countries and continents as a share of the world.
-- **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category, with a shareable card.
+- **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category, with a shareable card. Its calendar button steps back a year at a time, then to all time, and the rest of Insights follows.
 - **Rankings** by overall score, any category or any single metric, per visit or with each city once.
 - **What you actually value.** Ledger compares each metric with how much you would return to a city and suggests weights that match.
 - **Patterns**: your scores over time with a running average, how they spread across the tiers, and the metrics you rate most generously and most harshly.
 - **Every city across its visits.** "All about" a city shows its visits together: the average, how the score moved, each category over the visits, and every visit's notes.
-- **Home as a baseline.** Choose your home city in Settings and every card shows how its city scores against home.
 - **Context on every entry.** Where the city ranks, where it most beats or falls short of your usual rating, and every visit to it with how its score moved.
 - **Compare** two or three cities side by side, metric by metric, with a one-line verdict.
 - **Find any city.** Search by city, region, notes or country, and filter by country, year or tier.
@@ -43,9 +42,8 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 ### Keep it safe
 
-- **Export** a full `.zip` backup, a readable Markdown summary, or a `.csv` spreadsheet with a column per metric. **Import** either, older JSON exports, and Travel Logbook exports. The most recently saved copy of each entry wins.
-- **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or monthly, keeping the last few), plus Android's own backup of the ledger.
-- **Folder sync**: pick a folder that Syncthing, Drive, Nextcloud or another app keeps the same on your phones. Ledger keeps one file there with your entries, and merges it when you open the app and after each change. The copy saved last wins, and a city deleted on one phone goes from the others.
+- **Backup to a folder**, as BookShelf does it: pick a folder that Google Drive, Nextcloud or Syncthing keeps, and Ledger keeps one file there, `ledger-backup.json`. It backs up daily, weekly or monthly when the app opens or comes back, or only when you tap **Back up now**. Every phone that backs up to the same folder stays in step: the copy saved last wins, and a city deleted on one phone goes from the others. Android also backs up the ledger on its own.
+- **Restore a backup** from any `ledger-backup.json`, or an older `.zip` backup. Restoring the same file twice never duplicates an entry.
 - **A home-screen widget**: how many cities and countries you have rated, and the latest visit with its score. Tap it to open Ledger, or its + to rate a city.
 - **Quick to start.** Share a place from Maps or an address from a browser to Ledger and it starts an entry for that town. Long-press the app icon for **Rate a city**.
 - **Undo** after deleting an entry, instead of a confirmation. A half-rated entry is kept if Android closes the app.
@@ -55,18 +53,16 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 ### Make it yours
 
 - **Dusk and Dawn themes**, or follow the system.
-- **English, Spanish, French and German.**
+- **English, Spanish, French and German**, following your phone's language.
 - **A little delight.** A flurry of passport stamps for your first city or a high score, an idle stamp to play with, and four easter eggs, counted in Settings. All of it respects reduced motion.
 
 ## Private by design
 
-Ledger makes no network calls. "Near me" reads your location only when you tap it, and matches it to the town list on the phone. Your ledger is one file in the app's private storage, and it only leaves the device when you export or back it up.
+Ledger makes no network calls. "Near me" reads your location only when you tap it, and matches it to the town list on the phone. Your ledger is one file in the app's private storage, and it only leaves the device when you back it up.
 
 ## Install
 
 Ledger is an Android app, for Android 10 and later. Download the signed APK from the [latest release](https://github.com/not-mehul/Ledger/releases/latest) and open it on your phone.
-
-**Coming from Travel Logbook?** Ledger installs alongside it. In Travel Logbook tap **Export**, then in Ledger go to **Settings → Data & backups → Import** and choose `logbook.md`.
 
 ## The Dusk & Dawn apps
 

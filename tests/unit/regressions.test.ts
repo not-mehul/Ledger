@@ -6,26 +6,11 @@ import { activeMetrics, defaultConfig, normalizeConfig } from '../../src/domain/
 import { mergeEntries } from '../../src/domain/sync-merge';
 import { yearReview } from '../../src/domain/insights';
 import { formatMonth, normalizeMonth } from '../../src/lib/dates';
-import { buildMarkdown, parseMarkdown } from '../../src/lib/markdown';
 import { isBackupDue } from '../../src/lib/schedule';
 import { widgetLines } from '../../src/platform/widget';
-import { config, ctx, makeEntry, tEn } from './fixtures';
+import { config, makeEntry, tEn } from './fixtures';
 
 describe('imports', () => {
-  it('M1: line and paragraph separators survive a Markdown round trip', () => {
-    for (const notes of ['pasted\u2028text', 'pasted\u2029text', 'end --> here\nline 🏙️ | pipe\tx']) {
-      const parsed = parseMarkdown(buildMarkdown([makeEntry({ notes, city: `A\u2028B` })], ctx));
-      expect(parsed.entries).toHaveLength(1);
-      expect(parsed.entries[0]!.notes).toBe(notes);
-      expect(parsed.entries[0]!.city).toBe('A\u2028B');
-    }
-  });
-
-  it('M1: files exported before the fix, with raw separators, still import', () => {
-    const json = JSON.stringify(makeEntry({ notes: 'a\u2028b' }));
-    expect(parseMarkdown(`<!-- data:${json} -->`).entries).toHaveLength(1);
-  });
-
   it('L1: null, empty and boolean ratings are unrated; numeric strings count', () => {
     const e = normalizeEntry({ city: 'A', state: 'B', date: '2024-01', ratings: { greenery: null, safety: '', internet: true, walkability: '7', temperature: 11 } });
     expect(e!.ratings).toEqual({ walkability: 7, temperature: 10 });

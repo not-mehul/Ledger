@@ -1,16 +1,16 @@
 // ============================================================
-// JSON export and full .zip backups.
-//   ledger.json  → { app, schemaVersion, exportedAt, config, entries }
-//   backup .zip  → ledger.json (older backups also hold photos/, which
-//                  Ledger no longer keeps and ignores on import)
+// The backup file and the older ones it replaced.
+//   ledger-backup.json → { app, schemaVersion, exportedAt, config, entries }
+//   older .zip backups → ledger.json, the same (some also hold photos/,
+//                        which Ledger no longer keeps and ignores)
 // Settings are device preferences and aren't included.
 // ============================================================
 
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
+import { strFromU8, unzipSync } from 'fflate';
 import { SCHEMA_VERSION, migrate } from '../domain/doc';
 import type { Entry } from '../domain/entry';
 import type { MetricConfig } from '../domain/metrics';
-import type { ParsedImport } from './markdown';
+import type { ParsedImport } from '../state/transfer';
 
 export const BACKUP_JSON = 'ledger.json';
 
@@ -36,10 +36,6 @@ export function parseJson(text: string): ParsedImport {
     skipped: count - doc.entries.length,
     ...(hasConfig ? { config: doc.config } : {}),
   };
-}
-
-export function buildBackupZip(json: string): Uint8Array {
-  return zipSync({ [BACKUP_JSON]: strToU8(json) }, { level: 6 });
 }
 
 export function parseBackupZip(bytes: Uint8Array): ParsedImport {

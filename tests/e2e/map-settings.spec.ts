@@ -14,28 +14,38 @@ test('maps picked and typed cities', async ({ page }) => {
   await expect(page.locator('.map-note')).toContainText("1 city isn't on the map yet");
 
   await page.locator('.pin[aria-label="Kyoto, Japan"]').dispatchEvent('click');
+  // Its two actions are icons in one row.
+  const actions = page.locator('.map-selected .selected-actions .btn-icon');
+  await expect(actions).toHaveCount(2);
+  await page.waitForTimeout(600); // the card's entrance
+  const [a, b] = [(await actions.nth(0).boundingBox())!, (await actions.nth(1).boundingBox())!];
+  expect(Math.abs(a.y + a.height / 2 - (b.y + b.height / 2))).toBeLessThan(1);
+  expect(b.x).toBeGreaterThan(a.x + a.width - 1);
+  await expect(page.locator('#btnMovePin')).toHaveAccessibleName('Move pin');
   await page.getByRole('button', { name: 'Open in ledger' }).click();
   await expect(page.locator('.entry-card.open .entry-city-name')).toContainText('Kyoto');
 });
 
-test('switches theme and language, and remembers them', async ({ page }) => {
+test('switches theme in Settings, and remembers it', async ({ page }) => {
   await openApp(page);
   await page.click('#tabSettings');
   await page.click('[data-theme-option="light"]');
-  await page.click('#languageSelect');
-  await page.click('.dd-option[data-value="de"]');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   // Settings is its own screen: a back button and its title.
-  await expect(page.locator('.screen-header-title')).toHaveText('Einstellungen');
-  await expect(page.locator('#settingsBack')).toHaveAccessibleName('Zurück');
+  await expect(page.locator('.screen-header-title')).toHaveText('Settings');
   await page.click('#settingsBack');
-  await expect(page.locator('#tabSettings')).toHaveAccessibleName('Einstellungen');
-  await expect(page.locator('#tabInsights')).toHaveText('Auswertung');
-
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
+
+test('follows the phone\'s language', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'de-DE' });
+  const page = await context.newPage();
+  await openApp(page);
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
   await expect(page.locator('#tabNew')).toHaveText('Eintrag');
+  await expect(page.locator('#tabInsights')).toHaveText('Auswertung');
+  await context.close();
 });
 
 test('hides easter eggs, counts them once, and lists the count in Settings', async ({ page }) => {
