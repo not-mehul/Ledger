@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Select } from 'dusk-dawn';
-  import { inYear, rank, type RankKey } from '../../domain/insights';
+  import { inYear, rank, rankCities, type RankKey, type Ranked } from '../../domain/insights';
   import { RATING_MAX, activeCategories, activeMetrics } from '../../domain/metrics';
   import { scoreTier } from '../../domain/score';
   import { categoryName, metricName, t } from '../../i18n/index.svelte';
@@ -17,6 +17,8 @@
   /** "score", "category:<id>" or "metric:<id>" — a plain string so it can drive a Select. */
   let by = $state('score');
   let showAll = $state(false);
+  /** Every visit, or each city once (averaged over its visits). */
+  let per = $state<'visit' | 'city'>('visit');
 
   const key = $derived.by((): RankKey => {
     const [kind, id] = by.split(':') as ['score' | 'category' | 'metric', string | undefined];
@@ -28,7 +30,11 @@
     if (key.kind === 'metric' && !activeMetrics(ledger.config).some((m) => m.id === key.id)) by = 'score';
   });
 
-  const ranked = $derived(rank(inYear(ledger.entries, year), ledger.config, key));
+  const ranked = $derived<(Ranked & { visits?: number })[]>(
+    per === 'city' ? rankCities(inYear(ledger.entries, year), ledger.config, key) : rank(inYear(ledger.entries, year), ledger.config, key),
+  );
+  // Only worth offering when some city has more than one visit.
+  const hasRepeats = $derived(new Set(ledger.entries.map((e) => `${e.city.toLowerCase()}|${e.state.toLowerCase()}`)).size < ledger.entries.length);
   const shown = $derived(showAll ? ranked : ranked.slice(0, TOP));
   const max = $derived(key.kind === 'score' ? 100 : RATING_MAX);
 
@@ -56,6 +62,12 @@
       onchange={() => (showAll = false)}
     />
   </label>
+  {#if hasRepeats}
+    <div class="segmented rank-per" role="radiogroup" aria-label={t('rank.per')}>
+      <button type="button" role="radio" data-per="visit" aria-checked={per === 'visit'} onclick={() => ((per = 'visit'), (showAll = false))}>{t('rank.perVisit')}</button>
+      <button type="button" role="radio" data-per="city" aria-checked={per === 'city'} onclick={() => ((per = 'city'), (showAll = false))}>{t('rank.perCity')}</button>
+    </div>
+  {/if}
 
   {#if !ranked.length}
     <p class="t-hint">{t('rank.empty')}</p>
@@ -67,7 +79,7 @@
             <span class="pos" class:podium={i < 3}>{i + 1}</span>
             <span class="who">
               <span class="city">{r.entry.city}</span>
-              <span class="region">{r.entry.state}</span>
+              <span class="region">{r.visits && r.visits > 1 ? `${r.entry.state} · ${t('rank.visits', { count: r.visits })}` : r.entry.state}</span>
             </span>
             <span class="bar" aria-hidden="true">
               <span class="grow-x" style:width="{(r.value / max) * 100}%" style:background="var({scoreTier((r.value / max) * 100).cssVar})"></span>
@@ -90,6 +102,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .rank-per {
     margin-bottom: 1rem;
   }
   .ranking {

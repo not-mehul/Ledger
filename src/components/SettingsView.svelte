@@ -11,11 +11,21 @@
   import ExportOptions from './ExportOptions.svelte';
   import MetricsEditor from './MetricsEditor.svelte';
   import Sheet from './Sheet.svelte';
+  import { citiesOf } from '../domain/insights';
 
   const settings = $derived(ledger.settings);
   let importing = $state(false);
   let backingUp = $state(false);
   let metricsOpen = $state(false);
+  let homeOpen = $state(false);
+  const cities = $derived(citiesOf(ledger.entries));
+  const isHome = (c: { city: string; state: string }) =>
+    !!settings.homeCity && settings.homeCity.city.toLowerCase() === c.city.toLowerCase() && settings.homeCity.state.toLowerCase() === c.state.toLowerCase();
+
+  async function setHome(home: { city: string; state: string } | undefined) {
+    homeOpen = false;
+    await update({ homeCity: home });
+  }
   const metricCount = $derived(ledger.config.metrics.filter((m) => !m.archived && !ledger.config.categories.find((c) => c.id === m.cat)?.archived).length);
   const hiddenCount = $derived(ledger.config.metrics.length - metricCount);
 
@@ -114,8 +124,39 @@
         </span>
         <Icon name="chevronRight" class="settings-row-chevron" />
       </button>
+      <button type="button" class="settings-row" id="homeCity" aria-haspopup="dialog" disabled={!cities.length} onclick={() => (homeOpen = true)}>
+        <span class="settings-row-icon"><Icon name="home" size={20} /></span>
+        <span class="settings-row-text">
+          <span class="settings-row-title">{t('home.title')}</span>
+          <span class="settings-row-hint"
+            >{settings.homeCity ? `${settings.homeCity.city}, ${settings.homeCity.state}` : cities.length ? t('home.hint') : t('home.needEntry')}</span
+          >
+        </span>
+        <Icon name="chevronRight" class="settings-row-chevron" />
+      </button>
     </div>
   </div>
+  {#if homeOpen}
+    <Sheet title={t('home.title')} onclose={() => (homeOpen = false)}>
+      <p class="t-hint">{t('home.explain')}</p>
+      <div class="settings-group" id="homeList" role="radiogroup" aria-label={t('home.title')}>
+        {#each cities as c (`${c.city}|${c.state}`)}
+          <button type="button" class="settings-row" role="radio" aria-checked={isHome(c)} onclick={() => setHome({ city: c.latest.city, state: c.latest.state })}>
+            <span class="settings-row-text">
+              <span class="settings-row-title">{c.latest.city}</span>
+              <span class="settings-row-hint">{c.latest.state}</span>
+            </span>
+            {#if isHome(c)}<span class="settings-row-icon"><Icon name="home" size={20} /></span>{/if}
+          </button>
+        {/each}
+        {#if settings.homeCity}
+          <button type="button" class="settings-row" role="radio" aria-checked="false" onclick={() => setHome(undefined)}>
+            <span class="settings-row-text"><span class="settings-row-title">{t('home.none')}</span></span>
+          </button>
+        {/if}
+      </div>
+    </Sheet>
+  {/if}
   {#if metricsOpen}
     <Sheet title={t('metrics.title')} onclose={() => (metricsOpen = false)}>
       <MetricsEditor />

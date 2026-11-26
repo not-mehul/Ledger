@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { metricAverages, placing, scoreChange, standouts, visitsTo, type Standout } from '../domain/context';
+  import { metricAverages, placing, samePlace, scoreChange, standouts, visitsTo, type Standout } from '../domain/context';
   import type { Entry } from '../domain/entry';
   import { HEAVY_WEIGHT, RATING_MAX, activeCategories, metricsIn } from '../domain/metrics';
   import { categoryName, locale, metricName, t } from '../i18n/index.svelte';
@@ -8,6 +8,8 @@
   import CategoryIcon from './ui/CategoryIcon.svelte';
   import Icon from './ui/Icon.svelte';
   import ScoreDial from './ScoreDial.svelte';
+  import CityView from './CityView.svelte';
+  import Sheet from './Sheet.svelte';
 
   interface Props {
     entry: Entry;
@@ -40,6 +42,14 @@
   const stand = $derived(standouts(entry, ledger.config, usual, others.length));
   const rank = $derived(score === null ? null : placing(score, ledger.scores, entry.id));
 
+  // Against your latest rating of home, when you've chosen one (Settings).
+  const home = $derived(ledger.settings.homeCity);
+  const isHome = $derived(!!home && samePlace(entry, home));
+  const homeVisit = $derived(home && !isHome ? visitsTo(ledger.entries, home).at(-1) : undefined);
+  const homeScore = $derived(homeVisit ? ledger.scoreOf(homeVisit) : null);
+  const vsHome = $derived(score !== null && homeScore !== null ? Math.round((score - homeScore) * 10) / 10 : null);
+  let cityOpen = $state(false);
+
   const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : '±'}${Math.abs(n).toFixed(1)}`;
 
   function standoutLine(s: Standout): string {
@@ -67,7 +77,7 @@
       <span class="entry-meta"
         >{formatMonth(entry.date, locale())}{visits.length > 1
           ? ` · ${t('ledger.visitN', { n: visitNumber })}`
-          : ''}</span
+          : ''}{isHome ? ` · ${t('home.thisIsHome')}` : ''}</span
       >
     </span>
     <Icon name="chevronDown" class="entry-chevron" />
@@ -75,12 +85,19 @@
 
   {#if open}
     <div class="entry-detail settle-in" id="detail-{entry.id}">
-      {#if rank || stand}
+      {#if rank || stand || vsHome !== null}
         <dl class="context hairline-grid" data-testid="entry-context">
           {#if rank}
             <div class="context-tile" data-context="rank">
               <dt class="t-field-label">{t('ledger.rank')}</dt>
               <dd class="context-value tabular">{t('ledger.rankValue', { position: rank.position, of: rank.of })}</dd>
+            </div>
+          {/if}
+          {#if vsHome !== null && homeVisit}
+            <div class="context-tile" data-context="home">
+              <dt class="t-field-label">{t('home.vs')}</dt>
+              <dd class="context-value tabular">{signed(vsHome)}</dd>
+              <dd class="context-sub" class:up={vsHome > 0} class:down={vsHome < 0}>{t('home.on', { city: homeVisit.city })}</dd>
             </div>
           {/if}
           {#if stand}
@@ -152,7 +169,19 @@
               </li>
             {/each}
           </ol>
+          <button type="button" class="city-link" data-action="city" onclick={() => (cityOpen = true)}>{t('city.open', { city: entry.city })}</button>
         </div>
+        {#if cityOpen}
+          <Sheet title={`${entry.city}, ${entry.state}`} onclose={() => (cityOpen = false)}>
+            <CityView
+              place={entry}
+              onvisit={(id) => {
+                cityOpen = false;
+                if (id !== entry.id) onvisit?.(id);
+              }}
+            />
+          </Sheet>
+        {/if}
       {/if}
 
       {#if entry.notes}
@@ -176,6 +205,21 @@
 </article>
 
 <style>
+  /* A quiet word with a full-size touch target. */
+  .city-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
   .entry-card.comparing {
     border-color: rgba(var(--accent-amber-rgb), 0.55);
   }

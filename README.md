@@ -29,11 +29,13 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 ### See the pattern
 
-- **A map** of visited cities and countries, offline, with pinch to zoom. A city the town list doesn't know can be placed by hand, and any pin moved.
+- **A map** of visited cities and countries, offline, with pinch to zoom. A city the town list doesn't know can be placed by hand, and any pin moved. Under it, your countries and continents as a share of the world.
 - **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category, with a shareable card.
-- **Rankings** by overall score, any category or any single metric.
+- **Rankings** by overall score, any category or any single metric, per visit or with each city once.
 - **What you actually value.** Ledger compares each metric with how much you would return to a city and suggests weights that match.
 - **Patterns**: your scores over time with a running average, how they spread across the tiers, and the metrics you rate most generously and most harshly.
+- **Every city across its visits.** "All about" a city shows its visits together: the average, how the score moved, each category over the visits, and every visit's notes.
+- **Home as a baseline.** Choose your home city in Settings and every card shows how its city scores against home.
 - **Context on every entry.** Where the city ranks, where it most beats or falls short of your usual rating, and every visit to it with how its score moved.
 - **Compare** two or three cities side by side, metric by metric, with a one-line verdict.
 - **Find any city.** Search by city, region, notes or country, and filter by country, year or tier.
