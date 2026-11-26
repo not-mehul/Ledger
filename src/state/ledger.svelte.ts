@@ -6,7 +6,7 @@
 
 import { loadDoc, saveDoc } from '../data/doc-store';
 import { emptyDoc, type LedgerDoc, type Settings } from '../domain/doc';
-import { applyUpserts, mergeImported, type Entry } from '../domain/entry';
+import { applyUpserts, mergeImported, nextSavedAt, type Entry } from '../domain/entry';
 import { mergeConfig, type MetricConfig } from '../domain/metrics';
 import { calcScore } from '../domain/score';
 import { mergeEntries, type SyncBase, type SyncMerge } from '../domain/sync-merge';
@@ -114,6 +114,28 @@ class LedgerState {
         return { ...e, country: p.country, lat: p.lat, lon: p.lon };
       });
       return [placed ? { ...doc, entries } : doc, placed];
+    });
+  }
+
+  /**
+   * Puts an entry where you placed it by hand on the map, with the country
+   * found there, or with `null` takes its pin away. A save like any edit, so
+   * it syncs; it returns the entry as it was, for Undo.
+   */
+  pinEntry(id: string, pin: { lat: number; lon: number; country?: string } | null): Promise<Entry | undefined> {
+    return this.mutate((doc) => {
+      const before = doc.entries.find((e) => e.id === id);
+      if (!before) throw new EntryGone(id);
+      const after: Entry = { ...before, savedAt: nextSavedAt(before.savedAt) };
+      delete after.lat;
+      delete after.lon;
+      if (pin) {
+        after.lat = pin.lat;
+        after.lon = pin.lon;
+        if (pin.country) after.country = pin.country;
+        else delete after.country;
+      }
+      return [{ ...doc, entries: applyUpserts(doc.entries, [after]) }, before];
     });
   }
 

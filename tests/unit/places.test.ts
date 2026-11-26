@@ -1,7 +1,7 @@
 import { readWorldPlaces } from 'dusk-dawn/places/vite';
 import { parsePlaces } from 'dusk-dawn/places';
 import { describe, expect, it } from 'vitest';
-import { buildIndex, describe as describePlace, fold, matchPlace, regionFor, searchPlaces } from '../../src/lib/places';
+import { buildIndex, describe as describePlace, fold, matchPlace, nearbyPlaces, regionFor, searchPlaces } from '../../src/lib/places';
 import { QUICK_MIN_RANK } from '../../src/lib/places-tiers';
 
 // The same file the app ships: towns only, from dusk-dawn.
@@ -76,5 +76,18 @@ describe('places', () => {
   it('maps ISO numeric codes for map shapes', () => {
     expect(index.numericToIso.get(840)).toBe('US');
     expect(index.numericToIso.get(392)).toBe('JP');
+  });
+});
+
+describe('nearbyPlaces', () => {
+  it('puts the city you are in before the towns closer to its centre point', () => {
+    // The Praça do Comércio, Lisbon.
+    const near = nearbyPlaces(index, 38.7077, -9.1365);
+    expect(near[0]?.name).toBe('Lisbon');
+    expect(near.length).toBeGreaterThan(1);
+    // A field outside a small town: the town itself.
+    const town = nearbyPlaces(index, 47.5622, 13.6493);
+    expect(town.some((p) => p.name === 'Hallstatt')).toBe(true);
+    expect(nearbyPlaces(index, 0, -30)).toEqual([]);
   });
 });

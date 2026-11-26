@@ -7,7 +7,8 @@
   import { calcScore, scoreTier } from '../domain/score';
   import { categoryName, locale, t } from '../i18n/index.svelte';
   import { currentMonthString, formatMonth } from '../lib/dates';
-  import { loadPlaces, matchPlace, regionFor, type Place } from '../lib/places';
+  import { loadPlaces, matchPlace, nearbyPlaces, regionFor, type Place } from '../lib/places';
+  import Sheet from './Sheet.svelte';
   import { liftToastAbove } from 'dusk-dawn';
   import { EntryGone, ledger } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
@@ -181,6 +182,45 @@
     else writeDraft(draft);
   });
 
+  // "Near me": the phone's location, asked for only on this tap, matched to
+  // the offline town list here on the phone. Nothing is sent anywhere.
+  let locating = $state(false);
+  let nearby = $state.raw<(Place & { km: number })[] | null>(null);
+
+  function position(): Promise<GeolocationPosition> {
+    return new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 20_000, maximumAge: 300_000 }),
+    );
+  }
+
+  async function nearMe() {
+    if (locating) return;
+    if (!('geolocation' in navigator)) return ui.notify(t('form.locationFailed'), 'error');
+    locating = true;
+    ui.notify(t('form.locating'));
+    try {
+      const [pos, index] = await Promise.all([position(), loadPlaces()]);
+      const found = nearbyPlaces(index, pos.coords.latitude, pos.coords.longitude);
+      if (!found.length) ui.notify(t('form.nearNone'), 'error');
+      else {
+        if (ui.toast) ui.dismissToast(ui.toast.key);
+        nearby = found;
+      }
+    } catch (err) {
+      const denied = (err as GeolocationPositionError | undefined)?.code === 1;
+      if (!denied) console.warn('Location failed:', err);
+      ui.notify(denied ? t('form.locationDenied') : t('form.locationFailed'), 'error');
+    } finally {
+      locating = false;
+    }
+  }
+
+  function pickNearby(place: Place) {
+    nearby = null;
+    city = place.name;
+    pickPlace(place);
+  }
+
   function pickPlace(place: Place) {
     region = regionFor(place);
     located = { country: place.country, lat: place.lat, lon: place.lon };
@@ -276,7 +316,12 @@
     </div>
     <div class="city-row">
       <div class="field-group">
-        <label class="t-field-label" for="inputCity">{t('form.city')}</label>
+        <div class="label-row">
+          <label class="t-field-label" for="inputCity">{t('form.city')}</label>
+          <button type="button" class="near-me" id="btnNearMe" disabled={locating} onclick={nearMe}>
+            <Icon name="locate" size={16} />{t('form.nearMe')}
+          </button>
+        </div>
         <CityField bind:city onpick={pickPlace} ontype={() => (located = {})} />
       </div>
       <div class="field-group">
@@ -386,6 +431,23 @@
     <textarea class="textarea" id="inputNotes" placeholder={t('form.notesPlaceholder')} bind:value={notes}></textarea>
   </div>
 
+  {#if nearby}
+    <Sheet title={t('form.nearTitle')} onclose={() => (nearby = null)}>
+      <div class="settings-group" id="nearbyList">
+        {#each nearby as place (place.id)}
+          <button type="button" class="settings-row" onclick={() => pickNearby(place)}>
+            <span class="settings-row-icon"><Icon name="pin" size={20} /></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">{place.name}</span>
+              <span class="settings-row-hint">{[place.admin1, place.countryName].filter(Boolean).join(', ')}</span>
+            </span>
+            <span class="settings-row-value">{t('form.nearAway', { km: place.km < 1 ? '<1' : Math.round(place.km) })}</span>
+          </button>
+        {/each}
+      </div>
+    </Sheet>
+  {/if}
+
   <!-- Held at the bottom of the screen while you rate (style.md §8.22): the
        live score, Clear and Save. -->
   <div class="action-bar" id="entryActions" use:liftToastAbove>
@@ -404,6 +466,38 @@
 </div>
 
 <style>
+  /* The city's label with "Near me" at the far end of its line. */
+  .label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  /* A quiet word with a full-size touch target, like Skip. */
+  .near-me {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .near-me::before {
+    content: '';
+    position: absolute;
+    inset: -14px -8px;
+  }
+  .near-me:disabled {
+    opacity: 0.55;
+  }
   .bar-text {
     display: flex;
     flex-direction: column;

@@ -5,6 +5,13 @@
          WebView bridge. No storage permission is needed: exports go to
          Documents/ (app-created files) and the share sheet. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- "Near me" on the entry form, asked for only when tapped: the location
+         is matched to the offline town list on the phone and never sent. On
+         Android 12 and later the person can choose "approximate". -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
         android:allowBackup="true"

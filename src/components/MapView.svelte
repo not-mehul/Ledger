@@ -1,19 +1,20 @@
 <script lang="ts">
   import Icon from './ui/Icon.svelte';
-  import { geoNaturalEarth1, geoPath, type GeoPermissibleObjects } from 'd3-geo';
+  import { geoContains, geoNaturalEarth1, geoPath, type GeoPermissibleObjects } from 'd3-geo';
   import { select } from 'd3-selection';
   import { zoom as d3zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom';
   import { untrack } from 'svelte';
   import type { Feature, FeatureCollection, Geometry } from 'geojson';
   import { feature } from 'topojson-client';
   import type { Topology } from 'topojson-specification';
-  import type { Entry } from '../domain/entry';
+  import { nextSavedAt, type Entry } from '../domain/entry';
   import { scoreTier } from '../domain/score';
   import { locale, t } from '../i18n/index.svelte';
   import { loadPlaces, matchPlace, type PlaceIndex } from '../lib/places';
   import { ledger, type Placement } from '../state/ledger.svelte';
   import { ui } from '../state/ui.svelte';
   import ScoreDial from './ScoreDial.svelte';
+  import Sheet from './Sheet.svelte';
 
   type Country = Feature<Geometry, { name: string }> & { id?: string | number };
 
@@ -37,7 +38,14 @@
   const path = $derived(projection ? geoPath(projection) : null);
 
   const located = $derived(ledger.entries.filter((e) => e.lat !== undefined && e.lon !== undefined));
-  const unplaced = $derived(ledger.entries.length - located.length);
+  const unplacedEntries = $derived(ledger.entries.filter((e) => e.lat === undefined || e.lon === undefined));
+  const unplaced = $derived(unplacedEntries.length);
+
+  // Placing by hand: choose an entry the town list can't place (or a pin to
+  // move), then tap the map where it is.
+  let choosing = $state(false);
+  let pinningId = $state<string | null>(null);
+  const pinning = $derived(pinningId ? ledger.find(pinningId) : undefined);
   const visitedIso = $derived(new Set(ledger.entries.map((e) => e.country).filter(Boolean)));
   const selected = $derived(selectedId ? ledger.find(selectedId) : undefined);
   const selectedGroup = $derived(selectedIds.length > 1 ? selectedIds.map((id) => ledger.find(id)).filter((e): e is Entry => !!e) : []);
@@ -203,6 +211,55 @@
     svg?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
+  function startPinning(id: string) {
+    choosing = false;
+    selectedIds = [];
+    pinningId = id;
+  }
+
+  /** The country under a point: the map's shapes first, else the nearest town's within 50 km. */
+  async function countryAt(lon: number, lat: number): Promise<string | undefined> {
+    // The town list may still be loading when the map is first tapped.
+    const index = places ?? (await loadPlaces().catch(() => null));
+    if (!index) return undefined;
+    const shape = countries.find((c) => geoContains(c, [lon, lat]));
+    const iso = shape ? index.numericToIso.get(Number(shape.id)) : undefined;
+    return iso ?? index.world.nearest(lat, lon, { limit: 1 })[0]?.country;
+  }
+
+  async function dropPin(ev: MouseEvent) {
+    const entry = pinning;
+    if (!entry || !svg || !projection?.invert) return;
+    const box = svg.getBoundingClientRect();
+    const sx = ((ev.clientX - box.left) / box.width) * width;
+    const sy = ((ev.clientY - box.top) / box.height) * height;
+    const at = projection.invert([(sx - transform.x) / transform.k, (sy - transform.y) / transform.k]);
+    if (!at) return;
+    const [lon, lat] = at;
+    const country = await countryAt(lon, lat);
+    if (!country) return ui.notify(t('map.pinSea'), 'error');
+    if (pinningId !== entry.id) return;
+    pinningId = null;
+    try {
+      const before = await ledger.pinEntry(entry.id, { lat: Math.round(lat * 1e4) / 1e4, lon: Math.round(lon * 1e4) / 1e4, country });
+      selectedIds = [entry.id];
+      ui.notify(t('map.pinned', { city: entry.city }), 'success', {
+        label: t('action.undo'),
+        run: () => {
+          const now = ledger.find(entry.id);
+          if (!before || !now) return;
+          void ledger.saveEntry({ ...before, savedAt: nextSavedAt(now.savedAt) }, { update: true }).catch((err: unknown) => {
+            console.error('Undo failed:', err);
+            ui.notify(t('toast.saveFailed'), 'error');
+          });
+        },
+      });
+    } catch (err) {
+      console.error('Placing a pin failed:', err);
+      ui.notify(t('toast.saveFailed'), 'error');
+    }
+  }
+
   function activate(ev: KeyboardEvent, run: () => void) {
     if (ev.key === 'Enter' || ev.key === ' ') {
       ev.preventDefault();
@@ -224,9 +281,26 @@
     </span>
   </div>
 
+
   <div class="map-frame panel" bind:clientWidth={width}>
     {#if path && countries.length}
-      <svg bind:this={svg} {width} {height} viewBox="0 0 {width} {height}" class="map" role="group" aria-label={t('map.title')}>
+      <!-- While placing a pin, a tap anywhere on the map puts the city there;
+           a drag still pans, as d3-zoom swallows the click after one. -->
+      <svg
+        bind:this={svg}
+        {width}
+        {height}
+        viewBox="0 0 {width} {height}"
+        class="map"
+        class:pinning={!!pinning}
+        role="group"
+        aria-label={t('map.title')}
+        onclickcapture={(ev) => {
+          if (!pinning) return;
+          ev.stopPropagation();
+          void dropPin(ev);
+        }}
+      >
         <rect {width} {height} class="sea" />
         <g transform="translate({transform.x} {transform.y}) scale({transform.k})">
           <path d={path(SPHERE)} class="sphere" />
@@ -299,16 +373,30 @@
     </div>
   {/if}
 
-  {#if selected}
+  <!-- Below the map, so placing a pin never moves the map you're tapping. -->
+  {#if pinning}
+    <div class="notice pin-notice" id="pinNotice" role="status">
+      <Icon name="pin" size={20} />
+      <span class="notice-text">
+        <span class="notice-title">{t('map.pinHint', { city: pinning.city })}</span>
+        <span class="notice-detail">{t('map.pinZoom')}</span>
+      </span>
+      <button type="button" class="btn btn-muted" onclick={() => (pinningId = null)}>{t('action.cancel')}</button>
+    </div>
+  {/if}
+  {#if selected && !pinning}
     {@const score = ledger.scoreOf(selected)}
     <div class="panel map-selected">
       <ScoreDial {score} size={56} stroke={6} labelled />
       <div class="info">
         <div class="entry-city-name">{selected.city}<span class="entry-region">, {selected.state}</span></div>
-        <button type="button" class="btn btn-secondary" onclick={() => ui.showInLedger(selected.id)}>{t('map.open')}</button>
+        <div class="selected-actions">
+          <button type="button" class="btn btn-secondary" onclick={() => ui.showInLedger(selected.id)}>{t('map.open')}</button>
+          <button type="button" class="btn btn-muted" id="btnMovePin" onclick={() => startPinning(selected.id)}>{t('map.movePin')}</button>
+        </div>
       </div>
     </div>
-  {:else if selectedGroup.length}
+  {:else if selectedGroup.length && !pinning}
     <div class="panel map-selected map-group">
       <h3 class="t-section-label">{t('map.groupTitle', { count: selectedGroup.length })}</h3>
       <div class="settings-group">
@@ -328,8 +416,32 @@
 
   {#if !ledger.entries.length}
     <p class="map-note">{t('map.empty')}</p>
-  {:else if unplaced > 0}
-    <p class="map-note">{t('map.unplaced', { count: unplaced })}</p>
+  {:else if unplaced > 0 && !pinning}
+    <div class="map-note unplaced-note">
+      <span>{t('map.unplaced', { count: unplaced })}</span>
+      {#if path && countries.length}
+        <button type="button" class="btn btn-muted" id="btnPlaceByHand" onclick={() => (unplaced === 1 ? startPinning(unplacedEntries[0]!.id) : (choosing = true))}
+          >{t('map.placeByHand')}</button
+        >
+      {/if}
+    </div>
+  {/if}
+
+  {#if choosing}
+    <Sheet title={t('map.pinTitle')} onclose={() => (choosing = false)}>
+      <div class="settings-group" id="unplacedList">
+        {#each unplacedEntries as e (e.id)}
+          <button type="button" class="settings-row" onclick={() => startPinning(e.id)}>
+            <span class="settings-row-icon"><Icon name="pin" size={20} /></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">{e.city}</span>
+              <span class="settings-row-hint">{e.state}</span>
+            </span>
+            <Icon name="chevronRight" class="settings-row-chevron" />
+          </button>
+        {/each}
+      </div>
+    </Sheet>
   {/if}
 
   {#if countryList.length}
@@ -495,6 +607,27 @@
   }
   .map-group {
     display: block;
+  }
+  .selected-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .map.pinning {
+    cursor: crosshair;
+  }
+  .pin-notice {
+    margin-top: 0.75rem;
+  }
+  .pin-notice .btn {
+    flex-shrink: 0;
+  }
+  .unplaced-note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
   }
   .map-group .t-section-label {
     margin: 0 0 0.25rem;

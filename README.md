@@ -25,11 +25,11 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 - **Weighted scoring with a live dial.** The metrics are yours to rename, re-weight, reorder, hide or add, each with its own icon. Skip any metric you can't judge for a city. Scores run from 0 to 100, update everywhere, and only count what an entry actually rated.
 - **A form that knows your ledger.** As you rate, the score panel shows where the city would rank, each category shows its live average, and a city you have visited before offers to start from your last ratings.
-- **City autocomplete, offline.** About 210,000 towns (every town of 1,000 people or more, plus every capital and seat), with old and English names too: "Bombay" finds Mumbai and "Bruges" finds Brugge. Picking one pins the entry where the town really is.
+- **City autocomplete, offline.** About 215,000 towns (every town of 1,000 people or more, every capital and seat, and the villages travellers know, such as Hallstatt), with old, English and local names: "Bombay" finds Mumbai, "Wien" finds Vienna and "Praha" finds Prague. Picking one pins the entry where the town really is. **Near me** offers the towns around you from your phone's location, worked out on the phone, and asks for location only when you tap it.
 
 ### See the pattern
 
-- **A map** of visited cities and countries, offline, with pinch to zoom.
+- **A map** of visited cities and countries, offline, with pinch to zoom. A city the town list doesn't know can be placed by hand, and any pin moved.
 - **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category, with a shareable card.
 - **Rankings** by overall score, any category or any single metric.
 - **What you actually value.** Ledger compares each metric with how much you would return to a city and suggests weights that match.
@@ -57,7 +57,7 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 ## Private by design
 
-Ledger makes no network calls. Your ledger is one file in the app's private storage, and it only leaves the device when you export or back it up.
+Ledger makes no network calls. "Near me" reads your location only when you tap it, and matches it to the town list on the phone. Your ledger is one file in the app's private storage, and it only leaves the device when you export or back it up.
 
 ## Install
 
