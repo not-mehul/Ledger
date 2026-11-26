@@ -1,6 +1,6 @@
 import { strToU8, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { buildBackupZip, buildJson, isZip, parseBackupZip, parseJson } from '../../src/lib/backup';
+import { buildJson, isZip, parseBackupZip, parseJson } from '../../src/lib/backup';
 import { addMetric } from '../../src/domain/metrics';
 import { config, makeEntry } from './fixtures';
 
@@ -23,7 +23,7 @@ describe('json and zip backups', () => {
   });
 
   it('round-trips a zip', () => {
-    const zip = buildBackupZip(buildJson(entries, custom));
+    const zip = zipSync({ 'ledger.json': strToU8(buildJson(entries, custom)) });
     expect(isZip(zip)).toBe(true);
     const parsed = parseBackupZip(zip);
     expect(parsed.entries).toEqual(entries);
@@ -38,7 +38,7 @@ describe('json and zip backups', () => {
   });
 
   it('rejects a zip without ledger.json', () => {
-    expect(() => parseBackupZip(buildBackupZip('{}').slice(0, 10))).toThrow();
+    expect(() => parseBackupZip(zipSync({ 'ledger.json': strToU8('{}') }).slice(0, 10))).toThrow();
     expect(() => parseBackupZip(zipSync({ 'notes.txt': strToU8('x') }))).toThrow();
   });
 });

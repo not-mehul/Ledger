@@ -1,8 +1,8 @@
-// Feature review, Phase D: a city across its visits, rankings by city, a
-// home city to compare with, and world stats under the map.
+// Feature review, Phase D: a city across its visits, rankings by city, and
+// world stats under the map.
 import { expect, test, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { openApp } from './helpers';
+import { openApp, showPeriod } from './helpers';
 
 const all = (v: number) => ({ greenery: v, safety: v, foodQuality: v, returnDesire: v });
 const ENTRIES = [
@@ -16,7 +16,7 @@ async function seed(page: Page, file: string) {
   await writeFile(file, JSON.stringify({ schemaVersion: 2, entries: ENTRIES.map((e) => ({ ...e, savedAt: '2025-01-01T00:00:00Z' })) }));
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
-  await expect(page.locator('#toast')).toContainText('Import complete');
+  await expect(page.locator('#toast')).toContainText('Restored');
 }
 
 test('rankings can rank each city once, averaged over its visits', async ({ page }, info) => {
@@ -24,7 +24,7 @@ test('rankings can rank each city once, averaged over its visits', async ({ page
   await seed(page, info.outputPath('seed.json'));
   await page.click('#settingsBack');
   await page.click('#tabInsights');
-  await page.click('.period [data-year="all"]');
+  await showPeriod(page, 'all');
   const rows = page.locator('#rankingList li');
   await expect(rows).toHaveCount(4);
   await page.click('.rank-per [data-per="city"]');
@@ -35,30 +35,14 @@ test('rankings can rank each city once, averaged over its visits', async ({ page
   await expect(rows.nth(1).locator('.val')).toHaveText('66.7');
 });
 
-test('a home city puts "vs home" on every other card', async ({ page }, info) => {
+test('there is no home city anywhere', async ({ page }, info) => {
   await openApp(page);
   await seed(page, info.outputPath('seed.json'));
-  await expect(page.locator('#homeCity')).toContainText('Set one to see how every city compares with home');
-  await page.click('#homeCity');
-  await page.locator('#homeList .settings-row', { hasText: 'Lisbon' }).click();
-  await expect(page.locator('#homeCity')).toContainText('Lisbon, Portugal');
+  await expect(page.locator('#homeCity')).toHaveCount(0);
   await page.click('#settingsBack');
   await page.click('#tabLogbook');
-
   await page.locator('#card-k .entry-card-header').click();
-  const tile = page.locator('#card-k [data-context="home"]');
-  await expect(tile).toContainText('+22.2');
-  await expect(tile).toContainText('against Lisbon');
-  // Home's own card says so, with no tile.
-  await expect(page.locator('#card-l .entry-meta')).toContainText('Home');
-  await page.locator('#card-l .entry-card-header').click();
-  await expect(page.locator('#card-l [data-context="home"]')).toHaveCount(0);
-
-  // And it can be cleared.
-  await page.click('#tabSettings');
-  await page.click('#homeCity');
-  await page.locator('#homeList .settings-row', { hasText: 'No home city' }).click();
-  await expect(page.locator('#homeCity')).not.toContainText('Lisbon');
+  await expect(page.locator('#card-k [data-context="home"]')).toHaveCount(0);
 });
 
 test('All about a city shows its visits together', async ({ page }, info) => {

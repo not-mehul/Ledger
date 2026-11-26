@@ -398,10 +398,10 @@
       <ScoreDial {score} size={56} stroke={6} labelled />
       <div class="info">
         <div class="entry-city-name">{selected.city}<span class="entry-region">, {selected.state}</span></div>
-        <div class="selected-actions">
-          <button type="button" class="btn btn-secondary" onclick={() => ui.showInLedger(selected.id)}>{t('map.open')}</button>
-          <button type="button" class="btn btn-muted" id="btnMovePin" onclick={() => startPinning(selected.id)}>{t('map.movePin')}</button>
-        </div>
+      </div>
+      <div class="selected-actions">
+        <button type="button" class="btn-icon" id="btnOpenInLedger" aria-label={t('map.open')} title={t('map.open')} onclick={() => ui.showInLedger(selected.id)}><Icon name="book" size={20} /></button>
+        <button type="button" class="btn-icon" id="btnMovePin" aria-label={t('map.movePin')} title={t('map.movePin')} onclick={() => startPinning(selected.id)}><Icon name="pin" size={20} /></button>
       </div>
     </div>
   {:else if selectedGroup.length && !pinning}
@@ -619,19 +619,17 @@
     align-items: center;
   }
   .info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+    flex: 1;
     min-width: 0;
-    align-items: flex-start;
   }
   .map-group {
     display: block;
   }
+  /* Open in Ledger and Move pin: two icons in one row at the card's end. */
   .selected-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-shrink: 0;
+    gap: 0.25rem;
   }
   .map.pinning {
     cursor: crosshair;

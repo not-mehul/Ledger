@@ -473,7 +473,7 @@
        live score, Clear and Save. -->
   <div class="action-bar" id="entryActions" use:liftToastAbove>
     <div class="action-bar-summary" aria-hidden="true">
-      <ScoreDial {score} size={40} stroke={5} labelled />
+      <ScoreDial {score} size={48} stroke={5} labelled />
       <span class="bar-text">
         <span class="bar-tier" style:color={tier ? `var(${tier.cssVar})` : undefined}>{tier ? t(`tierName.${tier.id}`) : '—'}</span>
         {#if placed}<span class="bar-placing">{t('form.placingShort', { position: placed.position, of: placed.of })}</span>{/if}
@@ -527,7 +527,7 @@
   }
   .bar-tier {
     font-family: var(--font-serif);
-    font-size: 1rem;
+    font-size: 1.125rem;
     line-height: 1.2;
     color: var(--text-heading);
   }

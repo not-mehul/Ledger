@@ -127,7 +127,7 @@
     {/if}
 
     <p class="caveat">{t('value.caveat')}</p>
-    <button type="button" class="btn btn-secondary" id="applyWeights" onclick={apply}>{t('value.apply')}</button>
+    <button type="button" class="btn btn-secondary btn-block" id="applyWeights" onclick={apply}>{t('value.apply')}</button>
   {/if}
 </section>
 
@@ -146,6 +146,7 @@
     background: none;
     border: 0;
     border-bottom: 1px solid var(--border-faint);
+    text-align: center;
     cursor: pointer;
   }
   .target {

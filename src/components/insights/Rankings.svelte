@@ -90,7 +90,7 @@
       {/each}
     </ol>
     {#if ranked.length > TOP}
-      <button type="button" class="btn btn-secondary" onclick={() => (showAll = !showAll)}>
+      <button type="button" class="btn btn-secondary btn-block" id="rankShowAll" onclick={() => (showAll = !showAll)}>
         {showAll ? t('rank.showLess') : t('rank.showAll', { count: ranked.length })}
       </button>
     {/if}

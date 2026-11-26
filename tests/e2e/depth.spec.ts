@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { openApp } from './helpers';
+import { openApp, showPeriod } from './helpers';
 
 const BASE = {
   greenery: 5, airQuality: 5, temperature: 5, visualBeauty: 5, cleanliness: 5, walkability: 5,
@@ -20,7 +20,7 @@ async function importLedger(page: Page, info: TestInfo) {
   await writeFile(file, JSON.stringify({ app: 'ledger', schemaVersion: 2, entries }));
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
-  await expect(page.locator('#toast')).toContainText('Import complete');
+  await expect(page.locator('#toast')).toContainText('Restored');
   await page.click('#settingsBack'); // Settings is a secondary screen, with no tabs
 }
 
@@ -95,7 +95,7 @@ test('insights chart scores over time, the tier spread and rating habits', async
   await openApp(page);
   await importLedger(page, info);
   await page.click('#tabInsights');
-  await page.click('[data-year="all"]');
+  await showPeriod(page, 'all');
   await expect(page.locator('#patterns .dot')).toHaveCount(4);
   await expect(page.locator('#tierSpread li')).toHaveCount(5);
   await expect(page.locator('#ratingHabits [data-habit="generous"]')).toContainText('Food Quality');

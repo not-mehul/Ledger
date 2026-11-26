@@ -48,7 +48,6 @@ class UiState {
   /** Card to expand and scroll to when the ledger tab opens. */
   focusEntryId = $state<string | null>(null);
   toast = $state.raw<Toast | null>(null);
-  exportOpen = $state(false);
   confirmRequest = $state.raw<ConfirmRequest | null>(null);
   /** Entries picked for the side-by-side comparison, in the order picked. */
   compareIds = $state<string[]>([]);

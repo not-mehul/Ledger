@@ -11,8 +11,7 @@ import { detectLocale, locale, setLocale, t } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
 import { applyTheme } from './platform/theme.svelte';
 import { ledger } from './state/ledger.svelte';
-import { autoBackupIfDue } from './state/transfer';
-import { folderSync } from './state/sync.svelte';
+import { backup } from './state/backup.svelte';
 import { ui } from './state/ui.svelte';
 import { updateWidget, widgetLines } from './platform/widget';
 import './styles/app.css';
@@ -21,9 +20,9 @@ async function start(): Promise<void> {
   await ledger.init();
 
   // Apply preferences before the first paint; App.svelte keeps them in sync afterwards.
-  const { theme, language } = ledger.settings;
-  applyTheme(theme);
-  await setLocale(language === 'system' ? detectLocale() : language).catch(() => undefined);
+  applyTheme(ledger.settings.theme);
+  // Always the phone's own language (one of the four, else English).
+  await setLocale(detectLocale()).catch(() => undefined);
 
   mount(App, { target: document.getElementById('app')! });
   // An unreadable ledger was moved aside and a new one started: say so (Settings keeps the note).
@@ -36,23 +35,19 @@ async function start(): Promise<void> {
   });
   const refreshWidget = () => updateWidget(widgetLines(ledger.entries, ledger.scoreOf, t, locale()));
   refreshWidget();
-  ledger.onChange(() => {
-    refreshWidget();
-    folderSync.soon();
-  });
+  ledger.onChange(refreshWidget);
+  // Back up on the chosen schedule: when the app opens and whenever it comes back.
   void CapacitorApp.addListener('resume', () => {
-    void autoBackupIfDue();
-    if (folderSync.on) void folderSync.now();
+    void backup.ifDue();
     refreshWidget();
   });
-  if (folderSync.on) void folderSync.now();
   // ledger:// links from Waymark and the other apps (style.md §14.1).
   void listenForLinks({
     add: (prefill) => ui.startEntry(prefill),
     entry: () => ui.go('entry'),
     share: (text) => ui.startShared(text),
   });
-  void autoBackupIfDue();
+  void backup.ifDue();
 }
 
 void start();

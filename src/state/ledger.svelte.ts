@@ -10,7 +10,7 @@ import { applyUpserts, mergeImported, nextSavedAt, type Entry } from '../domain/
 import { mergeConfig, type MetricConfig } from '../domain/metrics';
 import { calcScore } from '../domain/score';
 import { mergeEntries, type SyncBase, type SyncMerge } from '../domain/sync-merge';
-import type { ParsedImport } from '../lib/markdown';
+import type { ParsedImport } from './transfer';
 
 export interface ImportSummary {
   added: number;

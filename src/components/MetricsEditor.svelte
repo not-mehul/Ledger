@@ -172,7 +172,6 @@
     <div class="cat-head">
       <span class="cat-icon"><Icon name={categoryIcon(cat)} size={20} /></span>
       <h3 class="cat-name" id="cat-{cat.id}">{categoryName(cat)}</h3>
-      {#if cat.archived}<span class="tag">{t('metrics.hidden')}</span>{/if}
       <button
         type="button"
         class="btn-icon"
@@ -207,8 +206,8 @@
             <button type="button" class="settings-row" onclick={() => (editing = { kind: 'metric', id: m.id })}>
               <span class="settings-row-text">
                 <span class="settings-row-title">{metricName(m)}</span>
-                {#if m.archived}<span class="settings-row-hint">{t('metrics.hidden')}</span>{/if}
               </span>
+              {#if m.archived}<span class="row-hidden" aria-label={t('metrics.hiddenLabel')} title={t('metrics.hiddenLabel')}><Icon name="eyeOff" size={18} /></span>{/if}
               <span class="settings-row-value">×{m.weight}</span>
               <Icon name="chevronRight" class="settings-row-chevron" />
             </button>
@@ -354,13 +353,6 @@
     color: var(--text-heading);
     overflow-wrap: anywhere;
   }
-  .tag {
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
   .metric-list {
     display: flex;
     flex-direction: column;
@@ -379,6 +371,10 @@
     z-index: 1;
     border-radius: var(--corner-md);
     box-shadow: 0 8px 24px rgba(var(--shadow-rgb), calc(0.5 * var(--shadow-strength)));
+  }
+  .row-hidden {
+    display: inline-flex;
+    color: var(--text-dim);
   }
   .metric-row.archived .settings-row-title {
     color: var(--text-dim);

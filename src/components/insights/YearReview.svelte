@@ -8,12 +8,17 @@
   import { ui } from '../../state/ui.svelte';
   import ScoreDial from '../ScoreDial.svelte';
   import CategoryIcon from '../ui/CategoryIcon.svelte';
+  import Icon from '../ui/Icon.svelte';
 
   interface Props {
     year: number | null;
+    /** The period the period button switches to (null = all time). */
+    next: number | null;
+    onperiod: () => void;
   }
 
-  let { year }: Props = $props();
+  let { year, next, onperiod }: Props = $props();
+  const nextLabel = $derived(next === null ? t('insights.showAllTime') : t('insights.showYear', { year: next }));
   let sharing = $state(false);
 
   const review = $derived(yearReview(ledger.entries, ledger.config, year));
@@ -45,8 +50,15 @@
 </script>
 
 <section class="panel" id="yearReview" aria-labelledby="reviewHeading">
-  <div class="section-head">
+  <div class="section-head review-head">
     <h2 id="reviewHeading">{year === null ? t('insights.reviewTitleAll') : t('insights.reviewTitle', { year })}</h2>
+    <!-- The period for every card on this screen, and sharing this one. -->
+    <span class="head-actions">
+      {#if year !== next}
+        <button type="button" class="btn-icon" id="btnPeriod" aria-label={nextLabel} title={nextLabel} onclick={onperiod}><Icon name="calendar" size={20} /></button>
+      {/if}
+      <button type="button" class="btn-icon" id="shareReview" aria-label={t('insights.share')} title={t('insights.share')} disabled={sharing || !review.cities} onclick={share}><Icon name="share" size={20} /></button>
+    </span>
   </div>
 
   <dl class="stats">
@@ -96,13 +108,25 @@
       {t('insights.latest')}: {review.latest.city} ({formatMonth(review.latest.date, locale())})
     </p>
   {/if}
-
-  <button type="button" class="btn btn-secondary" id="shareReview" disabled={sharing || !review.cities} onclick={share}>
-    {t('insights.share')}{sharing ? ' …' : ''}
-  </button>
 </section>
 
 <style>
+  .review-head {
+    align-items: center;
+  }
+  .review-head h2 {
+    flex: 1;
+    min-width: 0;
+  }
+  #yearReview > :last-child {
+    margin-bottom: 0;
+  }
+  .head-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.25rem;
+    margin-right: -0.5rem;
+  }
   .stats {
     display: grid;
     /* Three across on a phone; fewer when the text is enlarged. */

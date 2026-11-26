@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { openApp, openMetrics, savedFile } from './helpers';
+import { openApp, openMetrics, savedFile, showPeriod } from './helpers';
 
 const BASE = {
   greenery: 5, airQuality: 5, temperature: 5, visualBeauty: 5, cleanliness: 5, walkability: 5,
@@ -26,7 +26,7 @@ async function importCities(page: Page, info: TestInfo, count = CITIES.length) {
   await writeFile(file, JSON.stringify({ app: 'ledger', schemaVersion: 2, entries }));
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
-  await expect(page.locator('#toast')).toContainText('Import complete');
+  await expect(page.locator('#toast')).toContainText('Restored');
   await page.click('#settingsBack'); // Settings is a secondary screen, with no tabs
   await page.click('#tabInsights');
 }
@@ -41,14 +41,19 @@ test('shows an empty state with no entries', async ({ page }) => {
 
 test('summarises each year and all time', async ({ page }, info) => {
   await importCities(page, info);
-  await expect(page.locator('.period button')).toHaveText(['2025', '2024', 'All time']);
+  // Newest year first; the card's period button steps to older years, then all time.
   await expect(page.locator('#reviewHeading')).toHaveText('2025 in Ledger');
+  await expect(page.locator('#btnPeriod')).toHaveAccessibleName('Show 2024');
   await expect(page.locator('[data-stat="cities"] dd')).toHaveText('3');
   await expect(page.locator('[data-stat="countries"] dd')).toHaveText('3');
   await expect(page.locator('.highlight').first()).toContainText('Kyoto, Japan');
 
-  await page.click('[data-year="all"]');
+  await page.click('#btnPeriod');
+  await expect(page.locator('#reviewHeading')).toHaveText('2024 in Ledger');
+  await expect(page.locator('#btnPeriod')).toHaveAccessibleName('Show all time');
+  await page.click('#btnPeriod');
   await expect(page.locator('#reviewHeading')).toHaveText('My Ledger so far');
+  await expect(page.locator('#btnPeriod')).toHaveAccessibleName('Show 2025');
   await expect(page.locator('[data-stat="cities"] dd')).toHaveText('6');
   await expect(page.locator('.countries')).toContainText('Thailand');
 
@@ -57,6 +62,8 @@ test('summarises each year and all time', async ({ page }, info) => {
   await expect(page.locator('.entry-card.open .entry-city-name')).toContainText('Kyoto');
 
   await page.click('#tabInsights');
+  await showPeriod(page, 2025);
+  await expect(page.locator('#shareReview')).toHaveAccessibleName('Share year in review');
   await page.click('#shareReview');
   const card = await savedFile(page, 'CACHE', /^ledger-2025-review\.png$/, true);
   expect(card.data.subarray(1, 4).toString()).toBe('PNG');
@@ -64,7 +71,7 @@ test('summarises each year and all time', async ({ page }, info) => {
 
 test('ranks cities by score, category or metric', async ({ page }, info) => {
   await importCities(page, info);
-  await page.click('[data-year="all"]');
+  await showPeriod(page, 'all');
   const cities = page.locator('#rankingList .city');
   await expect(cities.first()).toHaveText('Kyoto');
   await page.click('#rankBy');
@@ -74,7 +81,7 @@ test('ranks cities by score, category or metric', async ({ page }, info) => {
   await page.click('.dd-option[data-value="category:people"]');
   await expect(cities.first()).toHaveText('Kyoto');
   // A year filter narrows the list.
-  await page.click('[data-year="2024"]');
+  await showPeriod(page, 2024);
   await expect(cities).toHaveCount(3);
 });
 
@@ -98,22 +105,18 @@ test('explains what drives a verdict and applies suggested weights', async ({ pa
   await expect(page.locator('.metric-row[data-metric="internet"] .settings-row-value')).toHaveText('×0.5');
 });
 
-test('the jump links bring each section up under the tabs', async ({ page }, info) => {
+test('the period and share sit in the review card, and the wide buttons span the card', async ({ page }, info) => {
   await importCities(page, info);
-  await page.click('#tabInsights');
-  const tabs = page.locator('.tab-bar-sticky');
-  for (const id of ['valueSignals', 'rankings', 'patterns', 'yearReview']) {
-    await page.click(`.jump [data-jump="${id}"]`);
-    await expect(page.locator(`#${id} h2`)).toBeFocused();
-    // Just under the tabs (after the smooth scroll), unless the page cannot scroll that far.
-    await expect
-      .poll(async () => {
-        const [section, bar] = [(await page.locator(`#${id}`).boundingBox())!, (await tabs.boundingBox())!];
-        const gap = section.y - (bar.y + bar.height);
-        const atBottom = await page.evaluate(() => Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight);
-        return gap >= 0 && (gap < 24 || atBottom);
-      })
-      .toBe(true);
+  await expect(page.locator('.period, .jump')).toHaveCount(0);
+  for (const id of ['#btnPeriod', '#shareReview']) {
+    await expect(page.locator(`#yearReview .section-head ${id}`)).toBeVisible();
+  }
+  await showPeriod(page, 'all');
+  for (const id of ['#applyWeights', '#valueShowAll']) {
+    const [btn, panel] = [(await page.locator(id).boundingBox())!, (await page.locator(id).locator('xpath=ancestor::section[1]').boundingBox())!];
+    // Full width inside its card: equal margins left and right.
+    expect(Math.abs(btn.x - panel.x - (panel.x + panel.width - btn.x - btn.width))).toBeLessThan(2);
+    expect(btn.width).toBeGreaterThan(panel.width * 0.8);
   }
 });
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { continentOf } from '../../src/domain/continents';
-import { normalizeSettings } from '../../src/domain/doc';
 import { citiesOf, rankCities, worldStats } from '../../src/domain/insights';
 import { config, makeEntry, ratingsOf } from './fixtures';
 
@@ -45,14 +44,5 @@ describe('world stats', () => {
       ],
     });
     expect(worldStats([makeEntry({ country: undefined })])).toEqual({ countries: 0, continents: [] });
-  });
-});
-
-describe('home city setting', () => {
-  it('keeps a well-formed home and drops anything else', () => {
-    expect(normalizeSettings({ homeCity: { city: ' Austin ', state: 'Texas' } }).homeCity).toEqual({ city: 'Austin', state: 'Texas' });
-    expect(normalizeSettings({ homeCity: { city: '', state: 'Texas' } }).homeCity).toBeUndefined();
-    expect(normalizeSettings({ homeCity: 'Austin' }).homeCity).toBeUndefined();
-    expect(normalizeSettings({}).homeCity).toBeUndefined();
   });
 });

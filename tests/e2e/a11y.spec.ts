@@ -41,10 +41,10 @@ test('every tab fits with text at 200%', async ({ page }) => {
   }
 });
 
-test('settings always offer automatic backups and folder sync', async ({ page }) => {
+test('settings always offer backup to a folder', async ({ page }) => {
   await page.click('#tabSettings');
-  await expect(page.getByRole('radiogroup', { name: 'Automatic backup' })).toBeVisible();
-  // The test build has no folder picker: choosing one fails gently.
-  await page.getByRole('button', { name: 'Choose a folder' }).click();
-  await expect(page.locator('#toast')).toHaveText('Sync failed. Your entries here are unchanged.');
+  await expect(page.getByRole('radiogroup', { name: 'Back up automatically' })).toBeVisible();
+  // The test build has no folder picker: choosing one fails gently, in the backup's own status line.
+  await page.getByRole('button', { name: 'Choose' }).click();
+  await expect(page.locator('#backupNotice')).toHaveText("The backup didn't finish. Check that the folder is still there, and try again.");
 });

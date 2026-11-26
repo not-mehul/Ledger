@@ -1,7 +1,7 @@
 // Feature review, Phase A: skip a metric, keep a draft, filter the ledger,
 // export a spreadsheet.
 import { expect, test } from '@playwright/test';
-import { importPlaces, openApp, saveEntry, savedFile } from './helpers';
+import { importPlaces, openApp, saveEntry } from './helpers';
 
 test('a skipped metric is left out of the score and the entry', async ({ page }) => {
   await openApp(page);
@@ -98,26 +98,4 @@ test('filters by country, year and tier, and search finds a country by name', as
   await expect(page.locator('#noMatch')).toHaveText('Nothing in your ledger matches these filters.');
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(cards).toHaveCount(3);
-});
-
-test('exports a spreadsheet with a column per metric', async ({ page }) => {
-  await openApp(page);
-  await page.fill('#inputCity', 'Lisbon');
-  await page.fill('#inputState', 'Portugal');
-  await page.locator('#sl-greenery').fill('8');
-  await page.getByRole('button', { name: 'Skip Internet Speed' }).click();
-  await page.fill('#inputNotes', '=cheap, "lovely"');
-  await saveEntry(page);
-  await page.click('#btnExport');
-  await page.click('.sheet [data-format="csv"]');
-  await expect(page.locator('#toast')).toContainText('Saved to Documents/Ledger/');
-  const { data } = await savedFile(page, 'DOCUMENTS/Ledger', /^ledger-\d{4}-\d{2}-\d{2}\.csv$/);
-  const text = data.toString('utf8');
-  const [header, row] = text.replace(/^\uFEFF/, '').trimEnd().split('\r\n');
-  expect(header).toMatch(/^City,Region,Country,Month,Score,Tier,Greenery & Nature Access,/);
-  expect(row).toMatch(/^Lisbon,Portugal,,\d{4}-\d{2},[\d.]+,\w+,8,/);
-  // The skipped metric is an empty cell, and a note that looks like a formula stays text.
-  const cols = header!.split(',');
-  expect(row!.split(',')[cols.indexOf('Internet Speed')]).toBe('');
-  expect(row!.endsWith(`"'=cheap, ""lovely"""`)).toBe(true);
 });

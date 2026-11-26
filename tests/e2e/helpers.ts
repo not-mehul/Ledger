@@ -31,7 +31,7 @@ export async function addEntry(page: Page, city: string, region: string, ratings
 
 /**
  * The newest file the app saved under a Capacitor directory, e.g.
- * savedFile(page, 'DOCUMENTS/Ledger', /\.md$/). In the test build
+ * savedFile(page, 'CACHE', /\.png$/). In the test build
  * @capacitor/filesystem keeps files in IndexedDB; text is stored as written,
  * binary files as base64.
  */
@@ -103,6 +103,17 @@ export async function importPlaces(page: Page, file: string, places: readonly Se
   await writeFile(file, JSON.stringify({ schemaVersion: 2, entries }));
   await page.click('#tabSettings');
   await page.setInputFiles('#importFile', file);
-  await expect(page.locator('#toast')).toContainText('Import complete');
+  await expect(page.locator('#toast')).toContainText('Restored');
   await page.click('#settingsBack');
+}
+
+/** Steps the Year in Review card's period button until the card shows this year, or all time. */
+export async function showPeriod(page: Page, period: number | 'all'): Promise<void> {
+  const heading = page.locator('#reviewHeading');
+  const want = period === 'all' ? 'My Ledger so far' : `${period} in Ledger`;
+  for (let i = 0; i < 12; i++) {
+    if ((await heading.textContent()) === want) return;
+    await page.click('#btnPeriod');
+  }
+  await expect(heading).toHaveText(want);
 }
