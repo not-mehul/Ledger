@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { scoreTier } from '../domain/score';
+  import { TIER_LINES, scoreTier } from '../domain/score';
 
   interface Props {
     score: number | null;
@@ -19,7 +19,7 @@
   const ARC = CIRC * 0.75;
   const offset = $derived(score === null ? ARC : ARC - (score / 100) * ARC);
   /** Tier thresholds (domain/score.ts), as marks along the 270° arc. */
-  const TIER_MARKS = [42, 58, 72, 85].map((s) => {
+  const TIER_MARKS = [TIER_LINES.mixed, TIER_LINES.decent, TIER_LINES.strong, TIER_LINES.exceptional].map((s) => {
     const a = ((135 + (s / 100) * 270) * Math.PI) / 180;
     return { s, x1: 50 + 45.5 * Math.cos(a), y1: 50 + 45.5 * Math.sin(a), x2: 50 + 49 * Math.cos(a), y2: 50 + 49 * Math.sin(a) };
   });

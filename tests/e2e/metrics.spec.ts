@@ -36,16 +36,17 @@ test('custom metrics change the form and the score', async ({ page }) => {
   await page.click('#settingsBack');
   await page.click('#tabNew');
   await expect(page.locator('#sl-airQuality')).toHaveCount(0);
-  await expect(page.getByLabel('Coffee')).toBeVisible();
+  await expect(page.getByLabel('Coffee', { exact: true })).toBeVisible();
   await expect(page.locator('#viewNew .slider-weight').filter({ hasText: '×5' })).toHaveCount(1);
 
   await page.locator('#sl-internet').fill('10');
-  // Weights now total 20 (Air Quality hidden, Coffee ×1, Internet ×5): (5×15 + 10×5) / 200.
-  await expect(page.locator('#scoreDisplay')).toHaveText('62.5');
+  // Weights now total 20 (Air Quality hidden, Coffee ×1, Internet ×5). A 5 is 4/9 of the way up,
+  // a 10 all the way: (4/9 × 15 + 1 × 5) / 20 → 58.3.
+  await expect(page.locator('#scoreDisplay')).toHaveText('58.3');
 
   // Survives a reload.
   await page.reload();
-  await expect(page.getByLabel('Coffee')).toBeVisible();
+  await expect(page.getByLabel('Coffee', { exact: true })).toBeVisible();
 });
 
 test('keeps at least one metric visible', async ({ page }) => {

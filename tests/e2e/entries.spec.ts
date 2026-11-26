@@ -9,14 +9,14 @@ test('validates, saves, dedupes, edits and deletes entries', async ({ page }) =>
 
   await pickCity(page, 'Aust', 'Texas');
   await expect(page.locator('#inputState')).toHaveValue('Texas');
-  await expect(page.locator('#scorePlacing')).toHaveText('Every metric starts at 5. Move the sliders to rate this city.');
+  await expect(page.locator('#scorePlacing')).toHaveText("Every metric starts at 5. Move the sliders to rate this city, and skip any you can't judge.");
   const untouched = await page.locator('#scoreDisplay').textContent();
   expect(untouched).toMatch(/^\d+\.\d$/);
   await page.locator('#sl-safety').fill('2');
-  await expect(page.locator('#scoreDisplay')).toHaveText('46.6');
+  await expect(page.locator('#scoreDisplay')).toHaveText('40.6');
   await page.fill('#inputNotes', 'Tacos <b>everywhere</b>');
   await saveEntry(page);
-  await expect(page.locator('#toast')).toHaveText('Saved: Austin, Texas — 46.6/100');
+  await expect(page.locator('#toast')).toHaveText('Saved: Austin, Texas — 40.6/100');
   await expect(page.locator('#tabLogbook .badge')).toHaveText('1');
 
   // Same city and month again: the form offers the logged entry, and Save

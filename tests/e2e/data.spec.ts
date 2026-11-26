@@ -21,7 +21,7 @@ test('exports Markdown and a full backup, and restores it', async ({ page }, inf
   const md = await exportFormat(page, 'markdown', /^ledger-\d{4}-\d{2}-\d{2}\.md$/);
   expect(md.data.toString('utf8')).toContain('## Lisbon · Portugal');
   await page.click('#btnExport');
-  await expect(page.locator('.sheet [data-format]')).toHaveCount(2);
+  await expect(page.locator('.sheet [data-format]')).toHaveCount(3);
   await page.locator('.sheet .sheet-close').click();
 
   const backup = await exportFormat(page, 'backup', /^ledger-backup-\d{4}-\d{2}-\d{2}-\d{4}\.zip$/, true);
@@ -68,6 +68,6 @@ test('imports a Travel Logbook export', async ({ page }, info) => {
   await page.click('#settingsBack');
   await page.click('#tabLogbook');
   await expect(page.locator('.entry-meta')).toContainText('March 2024');
-  // Only the two rated metrics count: (9×2 + 8×2) / (2+2) → 85.
-  await expect(page.getByRole('img', { name: 'Score 85 out of 100' })).toBeVisible();
+  // Only the two rated metrics count: 9 and 8, both ×2, are 8/9 and 7/9 of the way up → 83.3.
+  await expect(page.getByRole('img', { name: 'Score 83.3 out of 100' })).toBeVisible();
 });

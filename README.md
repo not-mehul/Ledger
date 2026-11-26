@@ -23,7 +23,7 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 ### Rate a city
 
-- **Weighted scoring with a live dial.** The metrics are yours to rename, re-weight, reorder, hide or add, each with its own icon. Scores update everywhere and only count what an entry actually rated.
+- **Weighted scoring with a live dial.** The metrics are yours to rename, re-weight, reorder, hide or add, each with its own icon. Skip any metric you can't judge for a city. Scores run from 0 to 100, update everywhere, and only count what an entry actually rated.
 - **A form that knows your ledger.** As you rate, the score panel shows where the city would rank, each category shows its live average, and a city you have visited before offers to start from your last ratings.
 - **City autocomplete, offline.** About 210,000 towns (every town of 1,000 people or more, plus every capital and seat), with old and English names too: "Bombay" finds Mumbai and "Bruges" finds Brugge. Picking one pins the entry where the town really is.
 
@@ -36,15 +36,16 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 - **Patterns**: your scores over time with a running average, how they spread across the tiers, and the metrics you rate most generously and most harshly.
 - **Context on every entry.** Where the city ranks, where it most beats or falls short of your usual rating, and every visit to it with how its score moved.
 - **Compare** two or three cities side by side, metric by metric, with a one-line verdict.
+- **Find any city.** Search by city, region, notes or country, and filter by country, year or tier.
 - **Small memories.** The ledger groups cities by year with a count and average, and reminds you where you were this month in earlier years.
 
 ### Keep it safe
 
-- **Export** a full `.zip` backup, or a readable Markdown summary. **Import** either, older JSON exports, and Travel Logbook exports. The most recently saved copy of each entry wins.
+- **Export** a full `.zip` backup, a readable Markdown summary, or a `.csv` spreadsheet with a column per metric. **Import** either, older JSON exports, and Travel Logbook exports. The most recently saved copy of each entry wins.
 - **Automatic backups** to `Documents/Ledger/Backups` (daily, weekly or monthly, keeping the last few), plus Android's own backup of the ledger.
 - **Folder sync**: pick a folder that Syncthing, Drive, Nextcloud or another app keeps the same on your phones. Ledger keeps one file there with your entries, and merges it when you open the app and after each change. The copy saved last wins, and a city deleted on one phone goes from the others.
 - **A home-screen widget**: how many cities and countries you have rated, and the latest visit with its score. Tap it to open Ledger.
-- **Undo** after deleting an entry, instead of a confirmation.
+- **Undo** after deleting an entry, instead of a confirmation. A half-rated entry is kept if Android closes the app.
 - **Share a city card** as an image.
 - **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in. `ledger://open` just opens Ledger.
 

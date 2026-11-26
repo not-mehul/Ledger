@@ -1,6 +1,6 @@
 import { normalizeMonth } from '../lib/dates';
 import { RATING_MAX, RATING_MIN } from './metrics';
-import type { Ratings } from './score';
+import { scoreTier, type Ratings, type TierId } from './score';
 
 export interface Entry {
   id: string;
@@ -112,15 +112,56 @@ export function isSameVisit(a: Visit, b: Visit): boolean {
   );
 }
 
-export function filterEntries(entries: readonly Entry[], query: string): Entry[] {
+/**
+ * Entries whose city, region or notes hold the query, or whose country's name
+ * does: US, Canadian and Australian entries store the state, so "United
+ * States" would otherwise find none of them. `countryNames` gives the names to
+ * match for a country code (the reader's language and English, say).
+ */
+export function filterEntries(
+  entries: readonly Entry[],
+  query: string,
+  countryNames: (code: string) => readonly string[] = () => [],
+): Entry[] {
   const q = query.trim().toLowerCase();
   if (!q) return [...entries];
   return entries.filter(
     (e) =>
       e.city.toLowerCase().includes(q) ||
       e.state.toLowerCase().includes(q) ||
-      e.notes.toLowerCase().includes(q),
+      e.notes.toLowerCase().includes(q) ||
+      (!!e.country && countryNames(e.country).some((n) => n.toLowerCase().includes(q))),
   );
+}
+
+/** Narrowing the ledger to one country, year or tier. An empty field lets everything through. */
+export interface EntryFilter {
+  /** ISO 3166-1 alpha-2. */
+  country?: string;
+  /** "YYYY". */
+  year?: string;
+  tier?: TierId;
+}
+
+export function isFiltering(f: EntryFilter): boolean {
+  return !!(f.country || f.year || f.tier);
+}
+
+export function applyFilter(
+  entries: readonly Entry[],
+  f: EntryFilter,
+  scoreOf: (e: Entry) => number | null = () => null,
+): Entry[] {
+  if (!isFiltering(f)) return [...entries];
+  return entries.filter((e) => {
+    if (f.country && e.country !== f.country) return false;
+    if (f.year && !e.date.startsWith(`${f.year}-`)) return false;
+    if (f.tier) {
+      const s = scoreOf(e);
+      if (s === null || scoreTier(s).id !== f.tier) return false;
+    }
+    return true;
+  });
 }
 
 export function sortEntries(
