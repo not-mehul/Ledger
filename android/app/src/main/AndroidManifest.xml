@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Ledger works fully offline; INTERNET is required by the Capacitor
-         WebView bridge. No storage permission is needed: exports go to
-         Documents/ (app-created files) and the share sheet. -->
+         WebView bridge. No storage permission is needed: backups go to a
+         folder the person picks (FolderSyncPlugin.java), and shared cards
+         go through the cache and the share sheet. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- "Near me" on the entry form, asked for only when tapped: the location
          is matched to the offline town list on the phone and never sent. On

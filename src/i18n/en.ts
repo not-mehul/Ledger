@@ -28,7 +28,6 @@ const en = {
   'card.share': 'Share',
   'action.share': 'Share card',
   'action.edit': 'Edit',
-  'action.done': 'Done',
   'action.compare': 'Compare',
 
   'form.location': 'Location & Date',
@@ -95,7 +94,6 @@ const en = {
   'toast.deleted': 'Entry deleted.',
   'toast.saveFailed': 'Save failed — your entry is still in the form.',
   'toast.deleteFailed': 'Delete failed.',
-  'toast.storageFailed': 'Could not open on-device storage.',
   'toast.shareFailed': 'Could not create the share card.',
 
   'ledger.title': 'Your Cities',
@@ -283,7 +281,6 @@ const en = {
   'metrics.moveDown': 'Move down',
   'metrics.remove': 'Remove',
   'metrics.icon': 'Choose an icon',
-  'metrics.iconFor': 'Icon for {name}',
   'icon.leaf': 'Nature',
   'icon.building': 'City',
   'icon.utensils': 'Food',
@@ -303,7 +300,6 @@ const en = {
   'metrics.restore': 'Restore default metrics',
   'metrics.restoreTitle': 'Restore defaults?',
   'metrics.restoreMessage': 'Built-in metrics return to their original names and weights, and are shown again. Your own metrics are hidden. Ratings are kept.',
-  'metrics.saved': 'Metrics updated.',
 
   'backup.title': 'Backup',
   'backup.hint': 'A copy of your ledger in a folder that Google Drive, Nextcloud or Syncthing keeps. Every phone that backs up to the same folder stays in step.',

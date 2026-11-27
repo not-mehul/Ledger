@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { detectLocale, locale, relativeTime, setLocale, t, type MessageKey } from './i18n/index.svelte';
-  import { applyTheme } from './platform/theme.svelte';
+  import { applyTheme } from './platform/theme';
   import { ledger } from './state/ledger.svelte';
   import { ui, type Tab } from './state/ui.svelte';
   import EntryForm from './components/EntryForm.svelte';

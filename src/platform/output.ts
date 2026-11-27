@@ -1,11 +1,7 @@
 // ============================================================
-// Writing user-visible files: saves to Documents/<folder>/ (Android 11+
-// lets an app create files there without storage permission) and
-// optionally opens the share sheet. If the public write fails — e.g. a
-// same-named file left by a previous install — the file goes to the
-// cache and is shared from there.
-// Ledger is an Android app. The web build exists only to run the tests,
-// where @capacitor/filesystem keeps these files in IndexedDB.
+// Sharing a generated file (a city or Year in Review card): written to the
+// cache, handed to the share sheet, never kept. Backups go to the folder the
+// person picked instead (state/backup.svelte.ts).
 // ============================================================
 
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
@@ -18,54 +14,10 @@ export interface OutputFile {
   mime: string;
 }
 
-export interface OutputResult {
-  /** Human-readable location, or null if the file only went to the share sheet. */
-  savedTo: string | null;
-}
-
-/** "ledger-2026-10-30.md", or with `withTime` "ledger-backup-2026-10-30-1435.zip" (sorts chronologically). */
-export function datedName(prefix: string, ext: string, now = new Date(), withTime = false): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  const time = withTime ? `-${pad(now.getHours())}${pad(now.getMinutes())}` : '';
-  return `${prefix}-${date}${time}.${ext}`;
-}
-
 function payload(file: OutputFile) {
   return typeof file.data === 'string'
     ? { data: file.data, encoding: Encoding.UTF8 }
     : { data: bytesToBase64(file.data) };
-}
-
-export async function saveFile(
-  file: OutputFile,
-  { folder = 'Ledger', share = true }: { folder?: string; share?: boolean } = {},
-): Promise<OutputResult> {
-  let uri: string;
-  let savedTo: string | null;
-  try {
-    ({ uri } = await Filesystem.writeFile({
-      path: `${folder}/${file.name}`,
-      directory: Directory.Documents,
-      recursive: true,
-      ...payload(file),
-    }));
-    savedTo = `Documents/${folder}/${file.name}`;
-  } catch (err) {
-    if (!share) throw err;
-    console.warn('Could not write to Documents, sharing from cache instead:', err);
-    ({ uri } = await Filesystem.writeFile({ path: file.name, directory: Directory.Cache, ...payload(file) }));
-    savedTo = null;
-  }
-
-  if (share) {
-    try {
-      await Share.share({ title: file.name, files: [uri] });
-    } catch {
-      // The user dismissed the share sheet — not an error.
-    }
-  }
-  return { savedTo };
 }
 
 /** Shares a generated file (e.g. a city card) without keeping a copy. */
@@ -76,18 +28,4 @@ export async function shareFile(file: OutputFile, title: string): Promise<void> 
   } catch {
     // Dismissed.
   }
-}
-
-/** Lists files in Documents/<folder>/ that this app created. */
-export async function listOutputs(folder: string): Promise<string[]> {
-  try {
-    const { files } = await Filesystem.readdir({ path: folder, directory: Directory.Documents });
-    return files.filter((f) => f.type === 'file').map((f) => f.name);
-  } catch {
-    return [];
-  }
-}
-
-export async function deleteOutput(folder: string, name: string): Promise<void> {
-  await Filesystem.deleteFile({ path: `${folder}/${name}`, directory: Directory.Documents });
 }

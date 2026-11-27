@@ -44,12 +44,6 @@ export const WEIGHT_STEP = 0.5;
 /** Metrics at or above this weight get an accent colour. */
 export const HEAVY_WEIGHT = 2;
 
-export const BUILTIN_CATEGORY_IDS = ['env', 'city', 'food', 'people', 'practical', 'overall'] as const;
-export const BUILTIN_METRIC_IDS = [
-  'greenery', 'airQuality', 'temperature', 'visualBeauty', 'cleanliness', 'walkability',
-  'foodQuality', 'foodAffordability', 'safety', 'friendliness', 'internet', 'returnDesire',
-] as const;
-
 export function defaultConfig(): MetricConfig {
   const cat = (id: string, icon: string): Category => ({ id, icon, builtin: true });
   const metric = (id: string, catId: string, weight: number): Metric => ({ id, cat: catId, weight, builtin: true });

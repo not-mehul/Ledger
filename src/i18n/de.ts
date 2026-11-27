@@ -26,7 +26,6 @@ const de: Messages = {
   'card.share': 'Teilen',
   'action.share': 'Karte teilen',
   'action.edit': 'Bearbeiten',
-  'action.done': 'Fertig',
   'action.compare': 'Vergleichen',
 
   'form.location': 'Ort und Datum',
@@ -92,7 +91,6 @@ const de: Messages = {
   'toast.deleted': 'Eintrag gelöscht.',
   'toast.saveFailed': 'Speichern fehlgeschlagen — dein Eintrag ist noch im Formular.',
   'toast.deleteFailed': 'Löschen fehlgeschlagen.',
-  'toast.storageFailed': 'Der Gerätespeicher konnte nicht geöffnet werden.',
   'toast.shareFailed': 'Die Karte konnte nicht erstellt werden.',
 
   'ledger.title': 'Deine Städte',
@@ -276,7 +274,6 @@ const de: Messages = {
   'metrics.moveDown': 'Nach unten',
   'metrics.remove': 'Entfernen',
   'metrics.icon': 'Symbol wählen',
-  'metrics.iconFor': 'Symbol für {name}',
   'icon.leaf': 'Natur',
   'icon.building': 'Stadt',
   'icon.utensils': 'Essen',
@@ -296,7 +293,6 @@ const de: Messages = {
   'metrics.restore': 'Standardkriterien wiederherstellen',
   'metrics.restoreTitle': 'Standards wiederherstellen?',
   'metrics.restoreMessage': 'Die integrierten Kriterien erhalten ihre ursprünglichen Namen und Gewichte zurück und werden wieder angezeigt. Eigene Kriterien werden ausgeblendet. Bewertungen bleiben erhalten.',
-  'metrics.saved': 'Kriterien aktualisiert.',
 
   'backup.title': 'Sicherung',
   'backup.hint': 'Eine Kopie deines Ledgers in einem Ordner, den Google Drive, Nextcloud oder Syncthing abgleicht. Alle Telefone, die in denselben Ordner sichern, bleiben auf demselben Stand.',

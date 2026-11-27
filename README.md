@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/icon-source.svg" width="88" height="88" alt=""></p>
+<p align="center"><img src="assets/icon-source.svg" width="96" height="96" alt=""></p>
 
 <h1 align="center">Ledger</h1>
 
@@ -14,9 +14,9 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 <p align="center">
   <img src="docs/screenshots/ledger.webp" width="200" alt="The ledger: cities grouped by year, each with its score dial">
-  <img src="docs/screenshots/insights.webp" width="200" alt="Insights: the year in Ledger with cities, countries, distance, highest and lowest rated, and the best city in each category">
-  <img src="docs/screenshots/map.webp" width="200" alt="The offline map with a pin for each visited city">
-  <img src="docs/screenshots/entry-dawn.webp" width="200" alt="Rating a city in the light Dawn theme: the live weighted score and metric sliders">
+  <img src="docs/screenshots/insights.webp" width="200" alt="Insights: the year in Ledger, with its period and share buttons, cities, countries, distance and highest and lowest rated">
+  <img src="docs/screenshots/map.webp" width="200" alt="The offline map with a pin for each visited city, and a selected city's card">
+  <img src="docs/screenshots/entry-dawn.webp" width="200" alt="Rating a city in the light Dawn theme: metric sliders over the docked score and Save bar">
 </p>
 
 ## Features
@@ -30,7 +30,7 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 ### See the pattern
 
 - **A map** of visited cities and countries, offline, with pinch to zoom. A city the town list doesn't know can be placed by hand, and any pin moved. Under it, your countries and continents as a share of the world.
-- **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category, with a shareable card. Its calendar button steps back a year at a time, then to all time, and the rest of Insights follows.
+- **A year in review**: cities, countries, months on the road, distance, best and worst city and the winner of each category. Its calendar button steps back a year at a time, then to all time, and the rest of Insights follows; its share button makes it a card.
 - **Rankings** by overall score, any category or any single metric, per visit or with each city once.
 - **What you actually value.** Ledger compares each metric with how much you would return to a city and suggests weights that match.
 - **Patterns**: your scores over time with a running average, how they spread across the tiers, and the metrics you rate most generously and most harshly.
@@ -42,23 +42,26 @@ Ledger is a personal ledger of the cities you visit. Rate each one on metrics yo
 
 ### Keep it safe
 
-- **Backup to a folder**, as BookShelf does it: pick a folder that Google Drive, Nextcloud or Syncthing keeps, and Ledger keeps one file there, `ledger-backup.json`. It backs up daily, weekly or monthly when the app opens or comes back, or only when you tap **Back up now**. Every phone that backs up to the same folder stays in step: the copy saved last wins, and a city deleted on one phone goes from the others. Android also backs up the ledger on its own.
-- **Restore a backup** from any `ledger-backup.json`, or an older `.zip` backup. Restoring the same file twice never duplicates an entry.
-- **A home-screen widget**: how many cities and countries you have rated, and the latest visit with its score. Tap it to open Ledger, or its + to rate a city.
-- **Quick to start.** Share a place from Maps or an address from a browser to Ledger and it starts an entry for that town. Long-press the app icon for **Rate a city**.
+- **Backup to a folder.** Pick a folder that Google Drive, Nextcloud or Syncthing keeps in sync, and Ledger keeps one file there, `ledger-backup.json`, with every city and your metrics. It backs up daily, weekly or monthly as the app opens, or only when you tap **Back up now**, and Settings shows when it last did. Phones that back up to the same folder stay in step: the copy saved last wins, and a city deleted on one phone goes from the others. Android's own backup keeps a copy too.
+- **Restore a backup** from any `ledger-backup.json`, or a `.zip` backup from Ledger 2.x. Restoring the same file twice never duplicates a city.
 - **Undo** after deleting an entry, instead of a confirmation. A half-rated entry is kept if Android closes the app.
-- **Share a city card** as an image.
+
+### Always close at hand
+
+- **A home-screen widget**: how many cities and countries you have rated, and the latest visit with its score. Tap it to open Ledger, or its + to rate a city.
+- **Share in.** Share a place from Maps, or an address from a browser, to Ledger and it starts an entry for that town. Long-press the app icon for **Rate a city**.
+- **Share out.** A city, or your Year in Review, as an image card.
 - **Links from the other apps.** `ledger://add?city=Lisbon&country=PT&date=2026-10-02` opens a new entry with the place and month filled in. `ledger://open` just opens Ledger.
 
 ### Make it yours
 
-- **Dusk and Dawn themes**, or follow the system.
+- **Dusk and Dawn themes**, or follow the system, in Settings.
 - **English, Spanish, French and German**, following your phone's language.
 - **A little delight.** A flurry of passport stamps for your first city or a high score, an idle stamp to play with, and four easter eggs, counted in Settings. All of it respects reduced motion.
 
 ## Private by design
 
-Ledger makes no network calls. "Near me" reads your location only when you tap it, and matches it to the town list on the phone. Your ledger is one file in the app's private storage, and it only leaves the device when you back it up.
+Ledger makes no network calls. "Near me" reads your location only when you tap it, and matches it to the town list on the phone. Your ledger is one file in the app's private storage. It leaves the phone only as a backup in the folder you chose, or a card you share.
 
 ## Install
 
