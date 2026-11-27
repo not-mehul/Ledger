@@ -7,9 +7,6 @@ const STORAGE_KEY = 'ledger.theme';
 const media = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
 let current: ThemeSetting = 'system';
 
-/** The theme on screen now, after "system" is resolved. */
-export const shown = $state({ dark: true });
-
 function resolved(setting: ThemeSetting): 'light' | 'dark' {
   if (setting !== 'system') return setting;
   return media?.matches === false ? 'light' : 'dark';
@@ -18,7 +15,6 @@ function resolved(setting: ThemeSetting): 'light' | 'dark' {
 function paint(): void {
   const theme = resolved(current);
   document.documentElement.dataset.theme = theme;
-  shown.dark = theme === 'dark';
   const surface = getComputedStyle(document.documentElement).getPropertyValue('--bg-grad-mid').trim();
   if (surface) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', surface);
   // DARK = light icons for dark backgrounds.
@@ -40,9 +36,4 @@ export function applyTheme(setting: ThemeSetting): void {
     // Private mode: the first paint falls back to the system theme.
   }
   paint();
-}
-
-/** The header switch: picks the side opposite to the one on screen. */
-export function toggledTheme(): ThemeSetting {
-  return shown.dark ? 'light' : 'dark';
 }

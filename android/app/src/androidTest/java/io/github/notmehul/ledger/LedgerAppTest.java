@@ -29,29 +29,28 @@ import org.junit.runner.RunWith;
 public class LedgerAppTest {
 
     private static final long TIMEOUT_MS = 30_000;
-    /** The entry count on the Logbook tab. */
-    private static final String ENTRY_BADGE = "#tabLogbook .badge";
+    /** The live status line: "1 entry", "2 entries", … */
+    private static final String STATUS = "fileStatus";
 
     @Before
     public void clearData() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         deleteRecursively(new File(context.getFilesDir(), "ledger.json"));
-        deleteRecursively(new File(context.getFilesDir(), "photos"));
     }
 
     @Test
     public void savesAnEntryAndKeepsItAcrossRestarts() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            waitForText(Locator.ID, "fileStatus", "0");
+            waitForText(Locator.ID, STATUS, "0 entries");
 
             onWebView().withElement(findElement(Locator.ID, "inputCity")).perform(webKeys("Lisbon"));
             onWebView().withElement(findElement(Locator.ID, "inputState")).perform(webKeys("Portugal"));
             onWebView().withElement(findElement(Locator.ID, "btnSave")).perform(webClick());
-            waitForText(Locator.CSS_SELECTOR, ENTRY_BADGE, "1");
+            waitForText(Locator.ID, STATUS, "1 entry");
 
             scenario.recreate();
 
-            waitForText(Locator.CSS_SELECTOR, ENTRY_BADGE, "1");
+            waitForText(Locator.ID, STATUS, "1 entry");
             onWebView().withElement(findElement(Locator.ID, "tabLogbook")).perform(webClick());
             onWebView()
                 .withElement(findElement(Locator.CSS_SELECTOR, ".entry-city-name"))
@@ -62,8 +61,8 @@ public class LedgerAppTest {
     @Test
     public void opensEveryTab() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            waitForText(Locator.ID, "fileStatus", "0");
-            for (String tab : new String[] { "tabMap", "tabSettings", "tabLogbook", "tabNew" }) {
+            waitForText(Locator.ID, STATUS, "0 entries");
+            for (String tab : new String[] { "tabLogbook", "tabMap", "tabInsights", "tabNew" }) {
                 onWebView().withElement(findElement(Locator.ID, tab)).perform(webClick());
             }
             onWebView()

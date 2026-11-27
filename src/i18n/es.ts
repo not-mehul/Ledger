@@ -26,7 +26,6 @@ const es: Messages = {
   'card.share': 'Compartir',
   'action.share': 'Compartir tarjeta',
   'action.edit': 'Editar',
-  'action.done': 'Listo',
   'action.compare': 'Comparar',
 
   'form.location': 'Lugar y fecha',
@@ -92,7 +91,6 @@ const es: Messages = {
   'toast.deleted': 'Entrada eliminada.',
   'toast.saveFailed': 'No se pudo guardar; tu entrada sigue en el formulario.',
   'toast.deleteFailed': 'No se pudo eliminar.',
-  'toast.storageFailed': 'No se pudo abrir el almacenamiento del dispositivo.',
   'toast.shareFailed': 'No se pudo crear la tarjeta.',
 
   'ledger.title': 'Tus ciudades',
@@ -276,7 +274,6 @@ const es: Messages = {
   'metrics.moveDown': 'Bajar',
   'metrics.remove': 'Quitar',
   'metrics.icon': 'Elige un icono',
-  'metrics.iconFor': 'Icono de {name}',
   'icon.leaf': 'Naturaleza',
   'icon.building': 'Ciudad',
   'icon.utensils': 'Comida',
@@ -296,7 +293,6 @@ const es: Messages = {
   'metrics.restore': 'Restaurar métricas predeterminadas',
   'metrics.restoreTitle': '¿Restaurar valores predeterminados?',
   'metrics.restoreMessage': 'Las métricas integradas recuperan sus nombres y pesos originales y vuelven a mostrarse. Tus propias métricas se ocultan. Las valoraciones se conservan.',
-  'metrics.saved': 'Métricas actualizadas.',
 
   'backup.title': 'Copia de seguridad',
   'backup.hint': 'Una copia de tu ledger en una carpeta que Google Drive, Nextcloud o Syncthing mantienen. Todos los teléfonos que hagan copia en la misma carpeta quedan al día.',

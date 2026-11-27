@@ -26,7 +26,6 @@ const fr: Messages = {
   'card.share': 'Partager',
   'action.share': 'Partager la carte',
   'action.edit': 'Modifier',
-  'action.done': 'Terminé',
   'action.compare': 'Comparer',
 
   'form.location': 'Lieu et date',
@@ -92,7 +91,6 @@ const fr: Messages = {
   'toast.deleted': 'Entrée supprimée.',
   'toast.saveFailed': "Échec de l'enregistrement — votre saisie est toujours dans le formulaire.",
   'toast.deleteFailed': 'Échec de la suppression.',
-  'toast.storageFailed': "Impossible d'ouvrir le stockage de l'appareil.",
   'toast.shareFailed': 'Impossible de créer la carte.',
 
   'ledger.title': 'Vos villes',
@@ -276,7 +274,6 @@ const fr: Messages = {
   'metrics.moveDown': 'Descendre',
   'metrics.remove': 'Retirer',
   'metrics.icon': 'Choisir une icône',
-  'metrics.iconFor': 'Icône pour {name}',
   'icon.leaf': 'Nature',
   'icon.building': 'Ville',
   'icon.utensils': 'Cuisine',
@@ -296,7 +293,6 @@ const fr: Messages = {
   'metrics.restore': 'Rétablir les critères par défaut',
   'metrics.restoreTitle': 'Rétablir les valeurs par défaut ?',
   'metrics.restoreMessage': "Les critères intégrés retrouvent leurs noms et poids d'origine et sont de nouveau affichés. Vos propres critères sont masqués. Les évaluations sont conservées.",
-  'metrics.saved': 'Critères mis à jour.',
 
   'backup.title': 'Sauvegarde',
   'backup.hint': 'Une copie de votre ledger dans un dossier que Google Drive, Nextcloud ou Syncthing garde à jour. Tous les téléphones qui sauvegardent dans le même dossier restent synchronisés.',

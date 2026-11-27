@@ -1,43 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Master icon. `npm run icons` renders every launcher asset from this file:
-       #disk is the circular backdrop, #mark the compass rose drawn over it.
-       Hub circles carry data-hub so the monochrome (themed) icon can drop them. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108">
+  <!-- Master icon. `npm run icons` renders every launcher asset from this file.
+       #backdrop and #frame are the tile (as on BookShelf's icon); #mark is
+       Ledger's score dial, open at the bottom, around a map pin. The adaptive
+       icon uses #mark alone over drawable/ic_launcher_background.xml, and the
+       themed icon the same shapes in white, with the dial's track faint. -->
   <defs>
-    <radialGradient id="bg" cx="50%" cy="50%" r="58%">
-      <stop offset="0%" stop-color="#1a1612"/>
-      <stop offset="55%" stop-color="#14110e"/>
-      <stop offset="100%" stop-color="#0a0807"/>
-    </radialGradient>
-    <radialGradient id="amber" cx="32%" cy="28%" r="70%">
-      <stop offset="0%" stop-color="#d4a574" stop-opacity="0.22"/>
-      <stop offset="55%" stop-color="#d4a574" stop-opacity="0.05"/>
-      <stop offset="100%" stop-color="#d4a574" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="sage" cx="72%" cy="78%" r="60%">
-      <stop offset="0%" stop-color="#9fb3a0" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#9fb3a0" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A1612"/>
+      <stop offset="1" stop-color="#0C0A08"/>
+    </linearGradient>
   </defs>
-  <g id="disk">
-    <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
-    <circle cx="256" cy="256" r="256" fill="url(#amber)"/>
-    <circle cx="256" cy="256" r="256" fill="url(#sage)"/>
-    <circle cx="256" cy="256" r="254" fill="none" stroke="#44403c" stroke-width="1" opacity="0.55"/>
+  <rect id="backdrop" width="108" height="108" rx="20.25" fill="url(#bg)"/>
+  <path id="frame" d="M14,27 V18 A4,4 0 0 1 18,14 H27 M94,81 V90 A4,4 0 0 1 90,94 H81" fill="none" stroke="#D4A574" stroke-opacity="0.7" stroke-width="2.4" stroke-linecap="round"/>
+  <g transform="translate(54 57) scale(1.22) translate(-54 -54)">
+  <g id="mark">
+    <path d="M37.03,70.97 A24,24 0 1 1 70.97,70.97" fill="none" stroke="#3A332C" stroke-width="5.6" stroke-linecap="round" data-track=""/>
+    <path d="M37.03,70.97 A24,24 0 1 1 77.70,50.25" fill="none" stroke="#D4A574" stroke-width="5.6" stroke-linecap="round"/>
+    <circle cx="77.70" cy="50.25" r="3.30" fill="#FCD34D" data-dot=""/>
+    <path d="M54,65.5 C54,65.5 45,57.2 45,49.5 A9,9 0 0 1 63,49.5 C63,57.2 54,65.5 54,65.5 Z M54,46 A3.5,3.5 0 1 0 54,53 A3.5,3.5 0 1 0 54,46 Z" fill="#F5ECD9" fill-rule="evenodd" transform="translate(54 54) scale(1.14) translate(-54 -54)"/>
   </g>
-  <g id="mark" transform="translate(256 256) scale(2.1333)">
-    <g fill="#d4a574">
-      <path d="M 0 -52 L 6 0 L -6 0 Z" transform="rotate(45)"/>
-      <path d="M 0 -52 L 6 0 L -6 0 Z" transform="rotate(135)"/>
-      <path d="M 0 -52 L 6 0 L -6 0 Z" transform="rotate(225)"/>
-      <path d="M 0 -52 L 6 0 L -6 0 Z" transform="rotate(315)"/>
-    </g>
-    <g fill="#f5ecd9">
-      <path d="M 0 -88 L 9 0 L -9 0 Z" transform="rotate(90)"/>
-      <path d="M 0 -88 L 9 0 L -9 0 Z" transform="rotate(180)"/>
-      <path d="M 0 -88 L 9 0 L -9 0 Z" transform="rotate(270)"/>
-    </g>
-    <path d="M 0 -88 L 9 0 L -9 0 Z" fill="#fcd34d"/>
-    <circle data-hub="" r="5.5" fill="#0c0a08"/>
-    <circle data-hub="" r="2.8" fill="#fcd34d"/>
   </g>
 </svg>

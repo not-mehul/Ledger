@@ -9,7 +9,7 @@ import { mount } from 'svelte';
 import App from './App.svelte';
 import { detectLocale, locale, setLocale, t } from './i18n/index.svelte';
 import { listenForLinks } from './platform/incoming';
-import { applyTheme } from './platform/theme.svelte';
+import { applyTheme } from './platform/theme';
 import { ledger } from './state/ledger.svelte';
 import { backup } from './state/backup.svelte';
 import { ui } from './state/ui.svelte';

@@ -16,7 +16,6 @@ export const CONTENT_INSET = 112;
 
 export const SERIF =
   'Fraunces, "Iowan Old Style", "Apple Garamond", Baskerville, Georgia, "Noto Serif", serif';
-export const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 export const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono", "Liberation Mono", monospace';
 
 const TOKENS = [

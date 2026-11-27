@@ -622,6 +622,11 @@
     flex: 1;
     min-width: 0;
   }
+  /* Room for the whole name: it wraps here rather than cutting off at the icons. */
+  .info .entry-city-name {
+    white-space: normal;
+    margin-bottom: 0;
+  }
   .map-group {
     display: block;
   }

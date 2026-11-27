@@ -21,7 +21,7 @@ npm install
 Ledger ships only as an Android app. The web build runs it in a desktop
 browser for UI work and for the Playwright tests: it takes the app's
 Android code path, with `@capacitor/filesystem` keeping files (the ledger,
-exports, backups) in IndexedDB, and the Android-only plugins (folder sync,
+shared cards) in IndexedDB, and the Android-only plugins (the backup folder,
 the widget) failing gently:
 
 ```bash
@@ -45,7 +45,7 @@ copied web assets and plugin glue are generated, not committed.
 |---|---|
 | `dev` | Vite dev server with hot reload |
 | `build` | Typecheck, then build the web bundle to `dist/` |
-| `check` | ESLint + svelte-check + unit tests — run before committing |
+| `check` | dusk-dawn token and contrast checks, ESLint, svelte-check, unit tests — run before committing |
 | `test` / `test:watch` | Unit tests (Vitest) |
 | `test:e2e` | Build, then Playwright end-to-end tests in Chromium at phone size |
 | `sync` | `build` + `cap sync android` |
@@ -60,8 +60,8 @@ Locally, Playwright can reuse an installed Chromium with
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`: one
 job with `npm run check` (tokens, formatting, lint, types, unit tests), then a
 production build and the Playwright suite against it (entries, share
-cards, custom metrics, every export format and backup restore, map, theme and
-language). That's the gate, and it matches the other apps.
+cards, custom metrics, backup and restore, map, Insights, theme, layout and
+accessibility). That's the gate, and it matches the other apps.
 
 The slow suites live in `.github/workflows/full-checks.yml` and run only when
 started by hand (Actions → Full checks → Run workflow), say before a big
@@ -76,17 +76,18 @@ Run the end-to-end suite locally with `npm run test:e2e`.
 ## Project layout
 
 ```
-├── index.html, src/main.ts   # Shell and bootstrap (load data, theme, language)
+├── index.html, src/main.ts   # Shell and bootstrap (load data, theme, language, backup check)
 ├── src/
-│   ├── App.svelte            # Header, tabs, export sheet, toasts
+│   ├── App.svelte            # Header, tabs, settings screen, toasts
 │   ├── components/           # Entry form, ledger, map, settings, …
-│   │   └── ui/               # Modal and empty state (tab rail, toast and theme toggle come from dusk-dawn)
-│   ├── state/                # App state (Svelte runes), import/export, sharing
-│   ├── domain/               # Pure logic: metrics config, scoring, entries, document schema
-│   ├── lib/                  # Markdown/JSON/zip formats, places search, share cards, dates
+│   │   ├── insights/         # Year in Review, patterns, rankings, value signals
+│   │   └── ui/               # Modal, empty state, icons (tabs and toast come from dusk-dawn)
+│   ├── state/                # App state (Svelte runes): ledger, backup, restore, sharing
+│   ├── domain/               # Pure logic: metrics config, scoring, entries, insights, document schema
+│   ├── lib/                  # Backup format, places search, share cards, dates
 │   ├── data/                 # On-device files: the ledger document
-│   ├── platform/             # Save/share files, image processing, theme
-│   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts)
+│   ├── platform/             # Native bridges: backup folder, widget, links, sharing, theme
+│   ├── i18n/                 # en/es/fr/de catalogues (typed against en.ts), chosen from the phone
 │   └── styles/               # app.css (imports dusk-dawn's tokens.css and components.css first)
 ├── tests/unit, tests/e2e     # Vitest and Playwright
 ├── android/                  # Native project (committed)
@@ -108,15 +109,17 @@ them. Schema changes go through `migrate` in
 `src/domain/doc.ts`: bump `SCHEMA_VERSION`, add a step, and never edit
 one that has shipped.
 
-Exports embed each entry's JSON (and the metric configuration), so any
-export can be imported back losslessly.
+### Backup
 
-### Moving data over from Travel Logbook
-
-Ledger has a new application ID (`io.github.notmehul.ledger`), so it
-installs alongside the old app. In Travel Logbook tap **Export**, then in
-Ledger go to **Settings → Data & backups → Import** and choose
-`logbook.md`.
+Backup works as BookShelf's does. The person picks a folder through
+Android's folder picker (`FolderSyncPlugin.java`, `src/state/backup.svelte.ts`)
+and Ledger keeps one file there, `ledger-backup.json`: every entry and the
+metric configuration. When a backup is due (daily, weekly, monthly or never,
+checked as the app opens and resumes) Ledger reads the file, merges it with
+the ledger (newest copy of each entry wins, and deletions carry over through
+`syncBase`), and writes the result back. So two phones that back up to the
+same synced folder stay in step. **Restore a backup** in Settings merges any
+`ledger-backup.json`, or a `.zip` backup from 2.x, in the same way.
 
 ## Releasing
 
@@ -138,10 +141,14 @@ Ledger go to **Settings → Data & backups → Import** and choose
 
 ## App icon
 
-Edit `assets/icon-source.svg` and run `npm run icons`. It renders the
-Android legacy icon, the adaptive-icon foreground (scaled into the 66dp
-safe zone) and the monochrome themed icon. Keep the `#disk` / `#mark` group ids and `data-hub` attributes the
-script relies on.
+The icon is Ledger's score dial, open at the bottom, around a map pin, on the
+same dark tile and amber corner brackets as BookShelf's. Edit
+`assets/icon-source.svg` (drawn on the 108-unit adaptive-icon grid) and run
+`npm run icons`. It renders the legacy icon (the whole tile), the adaptive
+foreground and splash icon (`#mark` alone, inside the safe zone, over
+`drawable/ic_launcher_background.xml`), the monochrome themed icon, and copies
+the source to `public/favicon.svg`. Keep the `#mark` group and the
+`data-track` and `data-dot` attributes the script relies on.
 
 ## Troubleshooting
 
@@ -149,7 +156,6 @@ script relies on.
   first; Gradle needs the generated plugin projects.
 - **JDK errors** — set Android Studio's Gradle JDK to 21.
 - **"Failed to find target android-37"** — install *Android SDK Platform 37*.
-- **Export says "ready to share" instead of "Saved to Documents"** — a file
-  with that name exists from an earlier install. The share sheet still
-  works; delete the old file to save locally again.
+- **"The backup didn't finish"** — the folder was moved, deleted or its
+  permission revoked. Choose it again in Settings → Backup.
 

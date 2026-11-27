@@ -84,16 +84,6 @@ fieldset {
   color: var(--text-heading);
   letter-spacing: -0.01em;
 }
-.weight-tag {
-  font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent-amber);
-  font-family: var(--font-mono);
-  padding: 2px 6px;
-  border: 1px solid rgba(var(--accent-amber-rgb), 0.25);
-  border-radius: var(--radius);
-}
 
 .city-row {
   display: grid;
@@ -401,12 +391,6 @@ input[type='range'].metric-slider::-moz-range-thumb {
 .entry-card-header:active {
   background: var(--hover-bg);
 }
-.entry-score-svg {
-  flex-shrink: 0;
-  width: 64px;
-  height: 64px;
-}
-
 .entry-city-block {
   flex: 1;
   min-width: 0;
@@ -646,15 +630,6 @@ input[type='range'].metric-slider:focus-visible {
   line-height: 1;
   font-style: normal;
   color: rgba(var(--accent-amber-rgb), 0.7);
-}
-
-/* An icon sitting inline with mono metadata. */
-.inline-icon {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  vertical-align: -1px;
-  margin-right: 0.2rem;
 }
 
 /* The title word that tumbles in an easter egg (style.md §11.3). */
